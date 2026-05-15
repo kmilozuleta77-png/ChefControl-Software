@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefControl - Configuración</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="../CSS/custom-styles.css" rel="stylesheet">
+    <style>
+        .config-menu { list-style:none; padding:0; }
+        .config-menu li a { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:8px; color:#616161; font-size:0.9rem; text-decoration:none; transition:all 0.2s; margin-bottom:4px; }
+        .config-menu li a:hover { background:#e0f2f1; color:#00695c; }
+        .config-menu li a.active { background:#00897b; color:white; font-weight:600; }
+        .config-menu li a .material-icons { font-size:20px; }
+        .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #f5f5f5; }
+        .toggle-row:last-child { border-bottom:none; }
+        .toggle-info h6 { font-weight:600; font-size:0.95rem; margin:0 0 2px; }
+        .toggle-info p { font-size:0.82rem; color:#757575; margin:0; }
+        .switch label { font-size:0; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
+        <div class="sidebar-section">Principal</div>
+        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
+        <div class="sidebar-section">Operaciones</div>
+        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
+        <a href="inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
+        <div class="sidebar-section">Administración</div>
+        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
+        <a href="personal.html"><i class="material-icons">badge</i> Personal</a>
+        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
+        <a href="reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
+        <a href="configuracion.html" class="active"><i class="material-icons">settings</i> Configuración</a>
+        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+    </div>
+    <div class="main-content">
+        <div class="top-nav">
+            <h5>Configuración</h5>
+            <div class="top-nav-right"><a href="#" class="btn teal white-text" onclick="mostrarNotificacion('Cambios guardados exitosamente','success')"><i class="material-icons left">save</i>Guardar Cambios</a></div>
+        </div>
+        <div class="container">
+            <div class="row" style="margin-top:24px">
+                <div class="col s12 m3">
+                    <div class="card">
+                        <div class="card-content" style="padding:16px">
+                            <ul class="config-menu">
+                                <li><a href="#" class="active" onclick="showSection('restaurante')"><i class="material-icons">store</i> Restaurante</a></li>
+                                <li><a href="#" onclick="showSection('cuenta')"><i class="material-icons">manage_accounts</i> Mi Cuenta</a></li>
+                                <li><a href="#" onclick="showSection('notificaciones')"><i class="material-icons">notifications</i> Notificaciones</a></li>
+                                <li><a href="#" onclick="showSection('seguridad')"><i class="material-icons">security</i> Seguridad</a></li>
+                                <li><a href="#" onclick="showSection('sistema')"><i class="material-icons">tune</i> Sistema</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m9">
+                    <div id="sec-restaurante" class="card config-section">
+                        <div class="card-content">
+                            <div class="section-header"><h6><i class="material-icons tiny teal-text">store</i> Información del Restaurante</h6></div>
+                            <div class="row">
+                                <div class="input-field col s12 m6"><input type="text" id="nom_rest" value="ChefControl Restaurante"><label for="nom_rest" class="active">Nombre del Restaurante</label></div>
+                                <div class="input-field col s12 m6"><input type="text" id="nit" value="900.123.456-7"><label for="nit" class="active">NIT</label></div>
+                                <div class="input-field col s12 m6"><input type="tel" id="tel_rest" value="+57 300 123 4567"><label for="tel_rest" class="active">Teléfono</label></div>
+                                <div class="input-field col s12 m6"><input type="email" id="email_rest" value="contacto@chefcontrol.com"><label for="email_rest" class="active">Email</label></div>
+                                <div class="input-field col s12"><input type="text" id="dir_rest" value="Calle 123 #45-67, Bogotá, Colombia"><label for="dir_rest" class="active">Dirección</label></div>
+                                <div class="input-field col s12 m4"><input type="time" id="hora_aper" value="07:00"><label for="hora_aper" class="active">Hora Apertura</label></div>
+                                <div class="input-field col s12 m4"><input type="time" id="hora_cierre" value="22:00"><label for="hora_cierre" class="active">Hora Cierre</label></div>
+                                <div class="input-field col s12 m4"><input type="number" id="iva" value="19"><label for="iva" class="active">% IVA</label></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="sec-cuenta" class="card config-section" style="display:none">
+                        <div class="card-content">
+                            <div class="section-header"><h6><i class="material-icons tiny teal-text">manage_accounts</i> Mi Cuenta</h6></div>
+                            <div class="row">
+                                <div class="input-field col s12 m6"><input type="text" value="Administrador"><label class="active">Nombres</label></div>
+                                <div class="input-field col s12 m6"><input type="text" value="Principal"><label class="active">Apellidos</label></div>
+                                <div class="input-field col s12 m6"><input type="email" value="admin@chefcontrol.com"><label class="active">Email</label></div>
+                                <div class="input-field col s12 m6"><input type="tel" value="+57 300 000 0000"><label class="active">Teléfono</label></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="sec-notificaciones" class="card config-section" style="display:none">
+                        <div class="card-content">
+                            <div class="section-header"><h6><i class="material-icons tiny teal-text">notifications</i> Notificaciones</h6></div>
+                            <div class="toggle-row"><div class="toggle-info"><h6>Alertas de stock crítico</h6><p>Notificar cuando un producto esté por agotarse</p></div><div class="switch"><label>Off<input type="checkbox" checked><span class="lever"></span>On</label></div></div>
+                            <div class="toggle-row"><div class="toggle-info"><h6>Nuevos pedidos</h6><p>Alerta cuando llegue un pedido nuevo</p></div><div class="switch"><label>Off<input type="checkbox" checked><span class="lever"></span>On</label></div></div>
+                            <div class="toggle-row"><div class="toggle-info"><h6>Reportes diarios</h6><p>Enviar resumen del día por email</p></div><div class="switch"><label>Off<input type="checkbox"><span class="lever"></span>On</label></div></div>
+                            <div class="toggle-row"><div class="toggle-info"><h6>Notificaciones de empleados</h6><p>Cambios en horarios o asistencia</p></div><div class="switch"><label>Off<input type="checkbox" checked><span class="lever"></span>On</label></div></div>
+                        </div>
+                    </div>
+                    <div id="sec-seguridad" class="card config-section" style="display:none">
+                        <div class="card-content">
+                            <div class="section-header"><h6><i class="material-icons tiny teal-text">security</i> Seguridad</h6></div>
+                            <div class="row">
+                                <div class="input-field col s12 m6"><input type="password" placeholder="••••••••"><label class="active">Contraseña actual</label></div>
+                                <div class="input-field col s12 m6"><input type="password" placeholder="••••••••"><label class="active">Nueva contraseña</label></div>
+                                <div class="input-field col s12 m6"><input type="password" placeholder="••••••••"><label class="active">Confirmar contraseña</label></div>
+                            </div>
+                            <div class="toggle-row"><div class="toggle-info"><h6>Autenticación en dos pasos</h6><p>Mayor seguridad para tu cuenta</p></div><div class="switch"><label>Off<input type="checkbox"><span class="lever"></span>On</label></div></div>
+                            <div class="toggle-row"><div class="toggle-info"><h6>Cerrar sesión automáticamente</h6><p>Después de 30 minutos de inactividad</p></div><div class="switch"><label>Off<input type="checkbox" checked><span class="lever"></span>On</label></div></div>
+                        </div>
+                    </div>
+                    <div id="sec-sistema" class="card config-section" style="display:none">
+                        <div class="card-content">
+                            <div class="section-header"><h6><i class="material-icons tiny teal-text">tune</i> Sistema</h6></div>
+                            <div class="row">
+                                <div class="input-field col s12 m6"><select><option>COP - Peso Colombiano</option><option>USD - Dólar</option></select><label>Moneda</label></div>
+                                <div class="input-field col s12 m6"><select><option>Español</option><option>English</option></select><label>Idioma</label></div>
+                                <div class="input-field col s12 m6"><select><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option></select><label>Formato de Fecha</label></div>
+                                <div class="input-field col s12 m6"><select><option>América/Bogotá (UTC-5)</option></select><label>Zona Horaria</label></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="../JS/app.js"></script>
+    <script>
+        function showSection(name) {
+            document.querySelectorAll('.config-section').forEach(s => s.style.display = 'none');
+            document.getElementById('sec-' + name).style.display = 'block';
+            document.querySelectorAll('.config-menu li a').forEach(a => a.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

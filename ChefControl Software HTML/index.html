@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefControl - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="CSS/custom-styles.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h5>🍽️ ChefControl</h5>
+            <p>Gestión de Restaurante</p>
+        </div>
+        <div class="sidebar-section">Principal</div>
+        <a href="index.html" class="active"><i class="material-icons">dashboard</i> Dashboard</a>
+        <div class="sidebar-section">Operaciones</div>
+        <a href="PAGES/pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
+        <a href="PAGES/inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="PAGES/menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
+        <div class="sidebar-section">Administración</div>
+        <a href="PAGES/clientes.html"><i class="material-icons">people</i> Clientes</a>
+        <a href="PAGES/personal.html"><i class="material-icons">badge</i> Personal</a>
+        <a href="PAGES/facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
+        <a href="PAGES/reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
+        <a href="PAGES/configuracion.html"><i class="material-icons">settings</i> Configuración</a>
+        <div class="sidebar-footer">
+            <span>Administrador</span>
+            <p>admin@chefcontrol.com</p>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content">
+        <div class="top-nav">
+            <h5>Dashboard</h5>
+            <div class="top-nav-right">
+                <span class="date-badge" id="fecha-actual"></span>
+                <a href="#"><i class="material-icons" style="color:#757575;vertical-align:middle">notifications</i></a>
+                <a href="#"><i class="material-icons" style="color:#757575;vertical-align:middle">account_circle</i></a>
+            </div>
+        </div>
+
+        <div class="container">
+
+            <!-- ESTADÍSTICAS -->
+            <div class="row" style="margin-top:24px">
+                <div class="col s12 m6 l3">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="stat-icon" style="background:#e0f2f1">
+                                <i class="material-icons teal-text text-darken-2" style="font-size:24px">shopping_cart</i>
+                            </div>
+                            <p class="stat-val teal-text text-darken-2">24</p>
+                            <p class="stat-label">Pedidos Hoy</p>
+                            <p class="stat-change green-text">↑ 12% vs ayer</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6 l3">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="stat-icon" style="background:#fff8e1">
+                                <i class="material-icons" style="color:#f9a825;font-size:24px">attach_money</i>
+                            </div>
+                            <p class="stat-val" style="color:#f9a825">$1.2M</p>
+                            <p class="stat-label">Ventas del Día</p>
+                            <p class="stat-change green-text">↑ 8% vs ayer</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6 l3">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="stat-icon" style="background:#ffebee">
+                                <i class="material-icons red-text text-darken-2" style="font-size:24px">warning</i>
+                            </div>
+                            <p class="stat-val red-text text-darken-2">8</p>
+                            <p class="stat-label">Alertas Inventario</p>
+                            <p class="stat-change red-text">3 productos críticos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6 l3">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="stat-icon" style="background:#e3f2fd">
+                                <i class="material-icons" style="color:#1565c0;font-size:24px">people</i>
+                            </div>
+                            <p class="stat-val" style="color:#1565c0">12</p>
+                            <p class="stat-label">Empleados Activos</p>
+                            <p class="stat-change grey-text">3 de descanso</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PEDIDOS + MESAS -->
+            <div class="row">
+                <div class="col s12 l8">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header">
+                                <h6><i class="material-icons tiny teal-text">shopping_cart</i> Pedidos Recientes</h6>
+                                <a href="PAGES/pedidos.html">Ver todos →</a>
+                            </div>
+                            <table class="striped responsive-table highlight">
+                                <thead>
+                                    <tr>
+                                        <th>#Pedido</th>
+                                        <th>Mesa</th>
+                                        <th>Mesero</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>001</td>
+                                        <td>Mesa 5</td>
+                                        <td>Juan Pérez</td>
+                                        <td><strong>$45.470</strong></td>
+                                        <td><span class="chip orange white-text">Pendiente</span></td>
+                                        <td><a href="PAGES/pedidos.html" class="btn-small teal white-text">Ver</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>002</td>
+                                        <td>Mesa 8</td>
+                                        <td>María López</td>
+                                        <td><strong>$26.990</strong></td>
+                                        <td><span class="chip blue white-text">Preparando</span></td>
+                                        <td><a href="PAGES/pedidos.html" class="btn-small teal white-text">Ver</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>003</td>
+                                        <td>Mesa 3</td>
+                                        <td>Carlos Ruiz</td>
+                                        <td><strong>$65.460</strong></td>
+                                        <td><span class="chip green white-text">Listo</span></td>
+                                        <td><a href="PAGES/pedidos.html" class="btn-small teal white-text">Ver</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>004</td>
+                                        <td>Mesa 12</td>
+                                        <td>Ana Martínez</td>
+                                        <td><strong>$32.980</strong></td>
+                                        <td><span class="chip teal white-text">Entregado</span></td>
+                                        <td><a href="PAGES/facturacion.html" class="btn-small orange white-text">Facturar</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 l4">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header">
+                                <h6><i class="material-icons tiny teal-text">table_bar</i> Estado de Mesas</h6>
+                            </div>
+                            <div class="mesa-grid">
+                                <div class="mesa-item mesa-disponible">1<span>Libre</span></div>
+                                <div class="mesa-item mesa-ocupada">2<span>Ocupada</span></div>
+                                <div class="mesa-item mesa-disponible">3<span>Libre</span></div>
+                                <div class="mesa-item mesa-ocupada">4<span>Ocupada</span></div>
+                                <div class="mesa-item mesa-reservada">5<span>Reservada</span></div>
+                                <div class="mesa-item mesa-disponible">6<span>Libre</span></div>
+                                <div class="mesa-item mesa-ocupada">7<span>Ocupada</span></div>
+                                <div class="mesa-item mesa-disponible">8<span>Libre</span></div>
+                            </div>
+                            <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap">
+                                <span style="font-size:0.78rem;display:flex;align-items:center;gap:4px">
+                                    <span style="width:10px;height:10px;border-radius:50%;background:#43a047;display:inline-block"></span>Libre (4)
+                                </span>
+                                <span style="font-size:0.78rem;display:flex;align-items:center;gap:4px">
+                                    <span style="width:10px;height:10px;border-radius:50%;background:#c62828;display:inline-block"></span>Ocupada (3)
+                                </span>
+                                <span style="font-size:0.78rem;display:flex;align-items:center;gap:4px">
+                                    <span style="width:10px;height:10px;border-radius:50%;background:#1565c0;display:inline-block"></span>Reservada (1)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ALERTAS INVENTARIO -->
+            <div class="row">
+                <div class="col s12">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header">
+                                <h6><i class="material-icons tiny red-text">warning</i> Alertas de Inventario</h6>
+                                <a href="PAGES/inventario.html">Ver inventario →</a>
+                            </div>
+                            <table class="striped responsive-table highlight">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Producto</th>
+                                        <th>Categoría</th>
+                                        <th>Stock Actual</th>
+                                        <th>Stock Mínimo</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>INV-001</td>
+                                        <td><strong>Tomates</strong></td>
+                                        <td>Verduras</td>
+                                        <td class="red-text"><strong>5 Kg</strong></td>
+                                        <td>20 Kg</td>
+                                        <td><span class="chip red white-text">Crítico</span></td>
+                                        <td><a href="PAGES/inventario.html" class="btn-small orange white-text">Reponer</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>INV-002</td>
+                                        <td><strong>Lechuga Romana</strong></td>
+                                        <td>Verduras</td>
+                                        <td class="orange-text"><strong>15 Uds</strong></td>
+                                        <td>30 Uds</td>
+                                        <td><span class="chip orange white-text">Bajo</span></td>
+                                        <td><a href="PAGES/inventario.html" class="btn-small orange white-text">Reponer</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>INV-003</td>
+                                        <td><strong>Queso Mozzarella</strong></td>
+                                        <td>Lácteos</td>
+                                        <td class="green-text"><strong>45 Kg</strong></td>
+                                        <td>15 Kg</td>
+                                        <td><span class="chip green white-text">Normal</span></td>
+                                        <td><a href="PAGES/inventario.html" class="btn-small teal white-text">Ver</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="JS/app.js"></script>
+    <script>
+    const ahora = new Date();
+    const opciones = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+    const fechaTexto = ahora.toLocaleDateString('es-CO', opciones);
+    document.getElementById('fecha-actual').textContent = 
+        fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+</script>
+</body>
+</html>

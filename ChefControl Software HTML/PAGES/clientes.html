@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefControl - Clientes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="../CSS/custom-styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
+        <div class="sidebar-section">Principal</div>
+        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
+        <div class="sidebar-section">Operaciones</div>
+        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
+        <a href="inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
+        <div class="sidebar-section">Administración</div>
+        <a href="clientes.html" class="active"><i class="material-icons">people</i> Clientes</a>
+        <a href="personal.html"><i class="material-icons">badge</i> Personal</a>
+        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
+        <a href="reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
+        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
+        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+    </div>
+    <div class="main-content">
+        <div class="top-nav">
+            <h5>Gestión de Clientes</h5>
+            <div class="top-nav-right"><a href="#modal-cliente" class="btn teal white-text modal-trigger"><i class="material-icons left">person_add</i>Nuevo Cliente</a></div>
+        </div>
+        <div class="container">
+            <div class="row" style="margin-top:24px">
+                <div class="col s12 m4"><div class="card-panel teal lighten-5 center"><h5 class="teal-text text-darken-2">142</h5><p class="grey-text">Total Clientes</p></div></div>
+                <div class="col s12 m4"><div class="card-panel green lighten-5 center"><h5 class="green-text">28</h5><p class="grey-text">Clientes Este Mes</p></div></div>
+                <div class="col s12 m4"><div class="card-panel orange lighten-5 center"><h5 class="orange-text">4.7★</h5><p class="grey-text">Satisfacción Promedio</p></div></div>
+            </div>
+            <div class="row">
+                <div class="col s12 m8"><div class="input-field"><i class="material-icons prefix">search</i><input type="text" id="buscar_cli"><label for="buscar_cli">Buscar por nombre, cédula o email...</label></div></div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header"><h6><i class="material-icons tiny teal-text">people</i> Lista de Clientes</h6><span class="grey-text" style="font-size:0.82rem">142 clientes</span></div>
+                            <table class="striped responsive-table highlight">
+                                <thead><tr><th>#</th><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Email</th><th>Visitas</th><th>Estado</th><th>Acciones</th></tr></thead>
+                                <tbody>
+                                    <tr><td>001</td><td><strong>Carlos Pérez</strong></td><td>1234567890</td><td>300 123 4567</td><td>carlos@email.com</td><td>12</td><td><span class="chip green white-text">Activo</span></td><td><a href="#" class="btn-small teal white-text">Ver</a> <a href="#" class="btn-small orange white-text">Editar</a></td></tr>
+                                    <tr><td>002</td><td><strong>Ana María González</strong></td><td>0987654321</td><td>310 234 5678</td><td>ana@email.com</td><td>8</td><td><span class="chip green white-text">Activo</span></td><td><a href="#" class="btn-small teal white-text">Ver</a> <a href="#" class="btn-small orange white-text">Editar</a></td></tr>
+                                    <tr><td>003</td><td><strong>Luis Rodríguez</strong></td><td>1122334455</td><td>320 345 6789</td><td>luis@email.com</td><td>5</td><td><span class="chip green white-text">Activo</span></td><td><a href="#" class="btn-small teal white-text">Ver</a> <a href="#" class="btn-small orange white-text">Editar</a></td></tr>
+                                    <tr><td>004</td><td><strong>Sofía Torres</strong></td><td>5544332211</td><td>315 456 7890</td><td>sofia@email.com</td><td>19</td><td><span class="chip green white-text">Activo</span></td><td><a href="#" class="btn-small teal white-text">Ver</a> <a href="#" class="btn-small orange white-text">Editar</a></td></tr>
+                                    <tr><td>005</td><td><strong>Pedro Mora</strong></td><td>9988776655</td><td>312 567 8901</td><td>pedro@email.com</td><td>3</td><td><span class="chip grey white-text">Inactivo</span></td><td><a href="#" class="btn-small teal white-text">Ver</a> <a href="#" class="btn-small orange white-text">Editar</a></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-cliente" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <h4><i class="material-icons left">person_add</i>Nuevo Cliente</h4>
+            <div class="row">
+                <div class="input-field col s12 m6"><input type="text" id="nom_cli"><label for="nom_cli">Nombres *</label></div>
+                <div class="input-field col s12 m6"><input type="text" id="ape_cli"><label for="ape_cli">Apellidos *</label></div>
+                <div class="input-field col s12 m6"><input type="text" id="ced_cli"><label for="ced_cli">Cédula</label></div>
+                <div class="input-field col s12 m6"><input type="tel" id="tel_cli"><label for="tel_cli">Teléfono</label></div>
+                <div class="input-field col s12"><input type="email" id="email_cli"><label for="email_cli">Email</label></div>
+                <div class="input-field col s12"><input type="text" id="dir_cli"><label for="dir_cli">Dirección</label></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cancelar</a>
+            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Cliente registrado exitosamente','success')"><i class="material-icons left">save</i>Guardar</a>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="../JS/app.js"></script>
+</body>
+</html>

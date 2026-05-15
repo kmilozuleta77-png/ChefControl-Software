@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefControl - Personal</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="../CSS/custom-styles.css" rel="stylesheet">
+    <style>
+        .emp-detail { font-size:0.85rem; color:#616161; margin-bottom:5px; display:flex; align-items:center; gap:6px; }
+        .emp-detail .material-icons { font-size:15px; color:#00897b; }
+        .emp-footer { display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:14px; border-top:1px solid #f0f0f0; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
+        <div class="sidebar-section">Principal</div>
+        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
+        <div class="sidebar-section">Operaciones</div>
+        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
+        <a href="inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
+        <div class="sidebar-section">Administración</div>
+        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
+        <a href="personal.html" class="active"><i class="material-icons">badge</i> Personal</a>
+        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
+        <a href="reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
+        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
+        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-nav">
+            <h5>Gestión de Personal</h5>
+            <div class="top-nav-right">
+                <a href="#modal-nuevo-empleado" class="btn teal white-text modal-trigger">
+                    <i class="material-icons left">person_add</i>Nuevo Empleado
+                </a>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- STATS -->
+            <div class="row" style="margin-top:24px">
+                <div class="col s12 m3"><div class="card-panel teal lighten-5 center"><h5 class="teal-text text-darken-2">15</h5><p class="grey-text">Total Empleados</p></div></div>
+                <div class="col s12 m3"><div class="card-panel green lighten-5 center"><h5 class="green-text">12</h5><p class="grey-text">Activos Hoy</p></div></div>
+                <div class="col s12 m3"><div class="card-panel orange lighten-5 center"><h5 class="orange-text">3</h5><p class="grey-text">De Descanso</p></div></div>
+                <div class="col s12 m3"><div class="card-panel blue lighten-5 center"><h5 class="blue-text">8.3h</h5><p class="grey-text">Promedio Horas</p></div></div>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="row">
+                <div class="col s12 m5">
+                    <div class="input-field">
+                        <i class="material-icons prefix">search</i>
+                        <input id="buscar_emp" type="text">
+                        <label for="buscar_emp">Buscar empleado...</label>
+                    </div>
+                </div>
+                <div class="col s12 m4">
+                    <div class="input-field">
+                        <select><option value="">Todos los cargos</option><option>Mesero</option><option>Cocinero</option><option>Cajero</option><option>Gerente</option></select>
+                        <label>Cargo</label>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="input-field">
+                        <select><option value="">Todos los estados</option><option>Activo</option><option>Descanso</option><option>Vacaciones</option></select>
+                        <label>Estado</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TARJETAS EMPLEADOS -->
+            <div class="row">
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="card-content">
+                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                                <img src="https://via.placeholder.com/56/00695c/ffffff?text=JP" class="circle" style="width:56px;height:56px" alt="JP">
+                                <div><span class="card-title" style="margin:0">Juan Pérez</span><p class="grey-text" style="margin:0;font-size:0.85rem">Mesero</p></div>
+                            </div>
+                            <div class="emp-detail"><i class="material-icons">email</i> juan.perez@restaurant.com</div>
+                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 123 4567</div>
+                            <div class="emp-detail"><i class="material-icons">schedule</i> 8:00 AM — 4:00 PM</div>
+                            <div class="emp-footer">
+                                <span class="chip green white-text">Activo</span>
+                                <div>
+                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
+                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #1','info')">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="card-content">
+                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                                <img src="https://via.placeholder.com/56/e91e63/ffffff?text=ML" class="circle" style="width:56px;height:56px" alt="ML">
+                                <div><span class="card-title" style="margin:0">María López</span><p class="grey-text" style="margin:0;font-size:0.85rem">Mesera</p></div>
+                            </div>
+                            <div class="emp-detail"><i class="material-icons">email</i> maria.lopez@restaurant.com</div>
+                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 234 5678</div>
+                            <div class="emp-detail"><i class="material-icons">schedule</i> 12:00 PM — 8:00 PM</div>
+                            <div class="emp-footer">
+                                <span class="chip green white-text">Activo</span>
+                                <div>
+                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
+                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #2','info')">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="card-content">
+                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                                <img src="https://via.placeholder.com/56/ff6f00/ffffff?text=CR" class="circle" style="width:56px;height:56px" alt="CR">
+                                <div><span class="card-title" style="margin:0">Carlos Ruiz</span><p class="grey-text" style="margin:0;font-size:0.85rem">Cocinero</p></div>
+                            </div>
+                            <div class="emp-detail"><i class="material-icons">email</i> carlos.ruiz@restaurant.com</div>
+                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 345 6789</div>
+                            <div class="emp-detail"><i class="material-icons">schedule</i> 10:00 AM — 6:00 PM</div>
+                            <div class="emp-footer">
+                                <span class="chip green white-text">Activo</span>
+                                <div>
+                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
+                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #3','info')">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="card-content">
+                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                                <img src="https://via.placeholder.com/56/9c27b0/ffffff?text=AM" class="circle" style="width:56px;height:56px" alt="AM">
+                                <div><span class="card-title" style="margin:0">Ana Martínez</span><p class="grey-text" style="margin:0;font-size:0.85rem">Cajera</p></div>
+                            </div>
+                            <div class="emp-detail"><i class="material-icons">email</i> ana.martinez@restaurant.com</div>
+                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 456 7890</div>
+                            <div class="emp-detail"><i class="material-icons">schedule</i> 9:00 AM — 5:00 PM</div>
+                            <div class="emp-footer">
+                                <span class="chip green white-text">Activo</span>
+                                <div>
+                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
+                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #4','info')">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="card-content">
+                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                                <img src="https://via.placeholder.com/56/2196f3/ffffff?text=LG" class="circle" style="width:56px;height:56px" alt="LG">
+                                <div><span class="card-title" style="margin:0">Luis García</span><p class="grey-text" style="margin:0;font-size:0.85rem">Cocinero</p></div>
+                            </div>
+                            <div class="emp-detail"><i class="material-icons">email</i> luis.garcia@restaurant.com</div>
+                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 567 8901</div>
+                            <div class="emp-detail"><i class="material-icons">schedule</i> 11:00 AM — 7:00 PM</div>
+                            <div class="emp-footer">
+                                <span class="chip orange white-text">Descanso</span>
+                                <div>
+                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
+                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #5','info')">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="card-content">
+                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                                <img src="https://via.placeholder.com/56/43a047/ffffff?text=SR" class="circle" style="width:56px;height:56px" alt="SR">
+                                <div><span class="card-title" style="margin:0">Sofía Rodríguez</span><p class="grey-text" style="margin:0;font-size:0.85rem">Gerente</p></div>
+                            </div>
+                            <div class="emp-detail"><i class="material-icons">email</i> sofia.rodriguez@restaurant.com</div>
+                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 678 9012</div>
+                            <div class="emp-detail"><i class="material-icons">schedule</i> 7:00 AM — 3:00 PM</div>
+                            <div class="emp-footer">
+                                <span class="chip green white-text">Activo</span>
+                                <div>
+                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
+                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #6','info')">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO EMPLEADO -->
+    <div id="modal-nuevo-empleado" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <h4><i class="material-icons left">person_add</i>Nuevo Empleado</h4>
+            <div class="row">
+                <div class="input-field col s12 m6"><i class="material-icons prefix">person</i><input type="text" id="nombres"><label for="nombres">Nombres *</label></div>
+                <div class="input-field col s12 m6"><i class="material-icons prefix">person</i><input type="text" id="apellidos"><label for="apellidos">Apellidos *</label></div>
+                <div class="input-field col s12 m6"><i class="material-icons prefix">badge</i><input type="text" id="cedula"><label for="cedula">Cédula *</label></div>
+                <div class="input-field col s12 m6"><i class="material-icons prefix">email</i><input type="email" id="email_emp"><label for="email_emp">Email *</label></div>
+                <div class="input-field col s12 m6"><i class="material-icons prefix">phone</i><input type="tel" id="telefono"><label for="telefono">Teléfono</label></div>
+                <div class="input-field col s12 m6"><select id="cargo"><option value="" disabled selected>Seleccione cargo</option><option>Mesero</option><option>Cocinero</option><option>Cajero</option><option>Gerente</option><option>Administrador</option></select><label>Cargo *</label></div>
+                <div class="input-field col s12 m6"><i class="material-icons prefix">event</i><input type="date" id="fecha_ing"><label for="fecha_ing" class="active">Fecha de Ingreso</label></div>
+                <div class="input-field col s12 m6"><i class="material-icons prefix">attach_money</i><input type="number" id="salario"><label for="salario">Salario</label></div>
+                <div class="input-field col s12 m6"><i class="material-icons prefix">schedule</i><input type="time" id="hora_ent"><label for="hora_ent" class="active">Hora Entrada</label></div>
+                <div class="input-field col s12 m6"><i class="material-icons prefix">schedule</i><input type="time" id="hora_sal"><label for="hora_sal" class="active">Hora Salida</label></div>
+                <div class="input-field col s12"><i class="material-icons prefix">home</i><textarea id="direccion" class="materialize-textarea"></textarea><label for="direccion">Dirección</label></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cancelar</a>
+            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Empleado registrado exitosamente','success')">
+                <i class="material-icons left">save</i>Guardar
+            </a>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE EMPLEADO -->
+    <div id="modal-detalle-empleado" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <h4>Perfil del Empleado</h4>
+            <div class="row">
+                <div class="col s12 m4 center">
+                    <img src="https://via.placeholder.com/120/00695c/ffffff?text=JP" class="circle" style="width:120px;height:120px" alt="perfil">
+                    <h5>Juan Pérez</h5>
+                    <p class="grey-text">Mesero</p>
+                    <span class="chip green white-text">Activo</span>
+                </div>
+                <div class="col s12 m8">
+                    <h6><strong>Información Personal</strong></h6>
+                    <p><i class="material-icons tiny">badge</i> <strong>Cédula:</strong> 1234567890</p>
+                    <p><i class="material-icons tiny">email</i> <strong>Email:</strong> juan.perez@restaurant.com</p>
+                    <p><i class="material-icons tiny">phone</i> <strong>Teléfono:</strong> +57 300 123 4567</p>
+                    <p><i class="material-icons tiny">home</i> <strong>Dirección:</strong> Calle 123 #45-67</p>
+                    <div class="divider" style="margin:12px 0"></div>
+                    <h6><strong>Información Laboral</strong></h6>
+                    <p><i class="material-icons tiny">event</i> <strong>Ingreso:</strong> 01/01/2024</p>
+                    <p><i class="material-icons tiny">schedule</i> <strong>Horario:</strong> 8:00 AM — 4:00 PM</p>
+                    <p><i class="material-icons tiny">attach_money</i> <strong>Salario:</strong> $1.200.000</p>
+                    <div class="divider" style="margin:12px 0"></div>
+                    <h6><strong>Estadísticas del Mes</strong></h6>
+                    <p><i class="material-icons tiny">assessment</i> <strong>Pedidos atendidos:</strong> 243</p>
+                    <p><i class="material-icons tiny">star</i> <strong>Calificación:</strong> 4.8 / 5.0</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cerrar</a>
+            <a href="#!" class="btn orange white-text"><i class="material-icons left">edit</i>Editar</a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="../JS/app.js"></script>
+</body>
+</html>

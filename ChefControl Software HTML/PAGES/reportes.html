@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefControl - Reportes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="../CSS/custom-styles.css" rel="stylesheet">
+    <style>
+        .bar-chart { display:flex; align-items:flex-end; gap:8px; height:160px; padding:0 8px; margin-top:16px; }
+        .bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+        .bar { width:100%; background:#00897b; border-radius:6px 6px 0 0; transition:opacity 0.2s; }
+        .bar:hover { opacity:0.8; }
+        .bar-label { font-size:0.75rem; color:#757575; }
+        .bar-val { font-size:0.72rem; font-weight:700; color:#00695c; }
+        .period-btns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+        .period-btn { padding:6px 16px; border-radius:20px; border:2px solid #e0e0e0; background:white; cursor:pointer; font-size:0.82rem; font-weight:500; transition:all 0.2s; }
+        .period-btn.active { border-color:#00897b; background:#00897b; color:white; }
+        .rank { width:28px; height:28px; border-radius:8px; background:#00897b; color:white; font-weight:700; font-size:0.82rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .rank.gold { background:#f9a825; color:#1a1a1a; }
+        .rank.silver { background:#90a4ae; }
+        .rank.bronze { background:#a1887f; }
+        .top-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f5f5f5; }
+        .top-item:last-child { border-bottom:none; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
+        <div class="sidebar-section">Principal</div>
+        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
+        <div class="sidebar-section">Operaciones</div>
+        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
+        <a href="inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
+        <div class="sidebar-section">Administración</div>
+        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
+        <a href="personal.html"><i class="material-icons">badge</i> Personal</a>
+        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
+        <a href="reportes.html" class="active"><i class="material-icons">bar_chart</i> Reportes</a>
+        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
+        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+    </div>
+    <div class="main-content">
+        <div class="top-nav">
+            <h5>Reportes</h5>
+            <div class="top-nav-right">
+                <a href="#" class="btn grey white-text" onclick="mostrarNotificacion('Exportando PDF...','info')"><i class="material-icons left">picture_as_pdf</i>PDF</a>
+                <a href="#" class="btn teal white-text" onclick="mostrarNotificacion('Exportando Excel...','info')"><i class="material-icons left">table_chart</i>Excel</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="period-btns" style="margin-top:24px">
+                <button class="period-btn">Hoy</button>
+                <button class="period-btn">Esta semana</button>
+                <button class="period-btn active">Este mes</button>
+                <button class="period-btn">Este año</button>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header"><h6>📈 Ventas por Día — Marzo 2026</h6><span class="grey-text" style="font-size:0.82rem">Total: $4.2M</span></div>
+                            <div class="bar-chart">
+                                <div class="bar-wrap"><div class="bar-val">$1.1M</div><div class="bar" style="height:70%"></div><div class="bar-label">Lun</div></div>
+                                <div class="bar-wrap"><div class="bar-val">$0.9M</div><div class="bar" style="height:57%"></div><div class="bar-label">Mar</div></div>
+                                <div class="bar-wrap"><div class="bar-val">$1.3M</div><div class="bar" style="height:82%"></div><div class="bar-label">Mié</div></div>
+                                <div class="bar-wrap"><div class="bar-val">$0.8M</div><div class="bar" style="height:50%"></div><div class="bar-label">Jue</div></div>
+                                <div class="bar-wrap"><div class="bar-val">$1.5M</div><div class="bar" style="height:95%"></div><div class="bar-label">Vie</div></div>
+                                <div class="bar-wrap"><div class="bar-val">$1.8M</div><div class="bar" style="height:100%;background:#f9a825"></div><div class="bar-label">Sáb</div></div>
+                                <div class="bar-wrap"><div class="bar-val">$1.6M</div><div class="bar" style="height:89%"></div><div class="bar-label">Dom</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12 m6">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header"><h6>🏆 Productos más vendidos</h6></div>
+                            <div class="top-item"><div class="rank gold">1</div><div style="flex:1"><strong>Hamburguesa Clásica</strong><br><span class="grey-text" style="font-size:0.82rem">243 unidades</span></div><strong class="teal-text">$3.1M</strong></div>
+                            <div class="top-item"><div class="rank silver">2</div><div style="flex:1"><strong>Pizza Margherita</strong><br><span class="grey-text" style="font-size:0.82rem">198 unidades</span></div><strong class="teal-text">$3.1M</strong></div>
+                            <div class="top-item"><div class="rank bronze">3</div><div style="flex:1"><strong>Limonada Natural</strong><br><span class="grey-text" style="font-size:0.82rem">412 unidades</span></div><strong class="teal-text">$1.4M</strong></div>
+                            <div class="top-item"><div class="rank">4</div><div style="flex:1"><strong>Pasta Carbonara</strong><br><span class="grey-text" style="font-size:0.82rem">156 unidades</span></div><strong class="teal-text">$2.1M</strong></div>
+                            <div class="top-item"><div class="rank">5</div><div style="flex:1"><strong>Ensalada César</strong><br><span class="grey-text" style="font-size:0.82rem">134 unidades</span></div><strong class="teal-text">$1.3M</strong></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header"><h6>👥 Rendimiento por Empleado</h6></div>
+                            <table class="striped">
+                                <thead><tr><th>Empleado</th><th>Pedidos</th><th>Ventas</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Juan Pérez</td><td>243</td><td>$3.1M</td></tr>
+                                    <tr><td>María López</td><td>198</td><td>$2.8M</td></tr>
+                                    <tr><td>Carlos Ruiz</td><td>176</td><td>$2.4M</td></tr>
+                                    <tr><td>Ana Martínez</td><td>312</td><td>$4.2M</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="../JS/app.js"></script>
+    <script>
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

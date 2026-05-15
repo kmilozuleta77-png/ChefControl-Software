@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefControl - Pedidos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="../CSS/custom-styles.css" rel="stylesheet">
+    <style>
+        .order-card { border-left: 4px solid; }
+        .order-card.pendiente  { border-color: #e65100; }
+        .order-card.preparando { border-color: #1565c0; }
+        .order-card.listo      { border-color: #2e7d32; }
+        .order-card.entregado  { border-color: #6a1b9a; }
+        .order-meta { font-size: 0.85rem; color: #757575; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .order-meta .material-icons { font-size: 15px; }
+        .order-items { list-style: none; padding: 0; margin: 10px 0; }
+        .order-items li { font-size: 0.85rem; color: #616161; padding: 4px 0; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between; }
+        .order-total { font-size: 1.1rem; font-weight: 700; color: #00695c; margin: 10px 0; }
+        .status-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .status-tab { padding: 6px 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-size: 0.82rem; font-weight: 500; transition: all 0.2s; }
+        .status-tab.active { border-color: #00897b; background: #00897b; color: white; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
+        <div class="sidebar-section">Principal</div>
+        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
+        <div class="sidebar-section">Operaciones</div>
+        <a href="pedidos.html" class="active"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
+        <a href="inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
+        <div class="sidebar-section">Administración</div>
+        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
+        <a href="personal.html"><i class="material-icons">badge</i> Personal</a>
+        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
+        <a href="reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
+        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
+        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-nav">
+            <h5>Gestión de Pedidos</h5>
+            <div class="top-nav-right">
+                <a href="#modal-nuevo-pedido" class="btn teal white-text modal-trigger">
+                    <i class="material-icons left">add</i>Nuevo Pedido
+                </a>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="status-tabs">
+                <button class="status-tab active">Todos (4)</button>
+                <button class="status-tab">🔴 Pendientes (1)</button>
+                <button class="status-tab">🔵 Preparando (1)</button>
+                <button class="status-tab">🟢 Listos (1)</button>
+                <button class="status-tab">✅ Entregados (1)</button>
+            </div>
+
+            <div class="row">
+                <!-- PEDIDO 1 -->
+                <div class="col s12 m6 l4">
+                    <div class="card order-card pendiente">
+                        <div class="card-content">
+                            <span class="card-title">Pedido #001 <span class="chip orange white-text right">Pendiente</span></span>
+                            <div class="order-meta"><i class="material-icons">table_restaurant</i> Mesa 5</div>
+                            <div class="order-meta"><i class="material-icons">person</i> Juan Pérez</div>
+                            <div class="order-meta"><i class="material-icons">access_time</i> 12:30 PM</div>
+                            <ul class="order-items">
+                                <li><span>2x Hamburguesa Clásica</span><span>$25.980</span></li>
+                                <li><span>1x Pizza Margherita</span><span>$15.990</span></li>
+                                <li><span>2x Limonada Natural</span><span>$7.000</span></li>
+                            </ul>
+                            <p class="order-total">Total: $48.970</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Pedido #001 en preparación', 'success')">
+                                <i class="material-icons left">restaurant</i>Preparar
+                            </a>
+                            <a href="#modal-detalle-pedido" class="btn-small teal white-text modal-trigger">
+                                <i class="material-icons left">visibility</i>Ver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PEDIDO 2 -->
+                <div class="col s12 m6 l4">
+                    <div class="card order-card preparando">
+                        <div class="card-content">
+                            <span class="card-title">Pedido #002 <span class="chip blue white-text right">Preparando</span></span>
+                            <div class="order-meta"><i class="material-icons">table_restaurant</i> Mesa 8</div>
+                            <div class="order-meta"><i class="material-icons">person</i> María López</div>
+                            <div class="order-meta"><i class="material-icons">access_time</i> 12:45 PM</div>
+                            <ul class="order-items">
+                                <li><span>1x Pasta Carbonara</span><span>$13.500</span></li>
+                                <li><span>1x Ensalada César</span><span>$9.990</span></li>
+                                <li><span>1x Limonada Natural</span><span>$3.500</span></li>
+                            </ul>
+                            <p class="order-total">Total: $26.990</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="btn-small green white-text" onclick="mostrarNotificacion('Pedido #002 listo', 'success')">
+                                <i class="material-icons left">check_circle</i>Listo
+                            </a>
+                            <a href="#modal-detalle-pedido" class="btn-small teal white-text modal-trigger">
+                                <i class="material-icons left">visibility</i>Ver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PEDIDO 3 -->
+                <div class="col s12 m6 l4">
+                    <div class="card order-card listo">
+                        <div class="card-content">
+                            <span class="card-title">Pedido #003 <span class="chip green white-text right">Listo</span></span>
+                            <div class="order-meta"><i class="material-icons">table_restaurant</i> Mesa 3</div>
+                            <div class="order-meta"><i class="material-icons">person</i> Carlos Ruiz</div>
+                            <div class="order-meta"><i class="material-icons">access_time</i> 11:50 AM</div>
+                            <ul class="order-items">
+                                <li><span>3x Pizza Margherita</span><span>$47.970</span></li>
+                                <li><span>3x Limonada Natural</span><span>$10.500</span></li>
+                                <li><span>1x Brownie c/Helado</span><span>$7.990</span></li>
+                            </ul>
+                            <p class="order-total">Total: $66.460</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="btn-small blue white-text" onclick="mostrarNotificacion('Pedido #003 entregado', 'success')">
+                                <i class="material-icons left">delivery_dining</i>Entregar
+                            </a>
+                            <a href="#modal-detalle-pedido" class="btn-small teal white-text modal-trigger">
+                                <i class="material-icons left">visibility</i>Ver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PEDIDO 4 -->
+                <div class="col s12 m6 l4">
+                    <div class="card order-card entregado">
+                        <div class="card-content">
+                            <span class="card-title">Pedido #004 <span class="chip purple white-text right">Entregado</span></span>
+                            <div class="order-meta"><i class="material-icons">table_restaurant</i> Mesa 12</div>
+                            <div class="order-meta"><i class="material-icons">person</i> Ana Martínez</div>
+                            <div class="order-meta"><i class="material-icons">access_time</i> 11:30 AM</div>
+                            <ul class="order-items">
+                                <li><span>2x Hamburguesa Clásica</span><span>$25.980</span></li>
+                                <li><span>2x Limonada Natural</span><span>$7.000</span></li>
+                            </ul>
+                            <p class="order-total">Total: $32.980</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="facturacion.html" class="btn-small teal white-text">
+                                <i class="material-icons left">receipt_long</i>Facturar
+                            </a>
+                            <a href="#modal-detalle-pedido" class="btn-small grey white-text modal-trigger">
+                                <i class="material-icons left">visibility</i>Ver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO PEDIDO -->
+    <div id="modal-nuevo-pedido" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <h4><i class="material-icons left">shopping_cart</i>Nuevo Pedido</h4>
+            <div class="row">
+                <div class="input-field col s12 m6">
+                    <i class="material-icons prefix">table_restaurant</i>
+                    <input id="mesa" type="number" min="1" class="validate">
+                    <label for="mesa">Número de Mesa *</label>
+                </div>
+                <div class="input-field col s12 m6">
+                    <i class="material-icons prefix">person</i>
+                    <select id="mesero">
+                        <option value="" disabled selected>Seleccione mesero</option>
+                        <option>Juan Pérez</option>
+                        <option>María López</option>
+                        <option>Carlos Ruiz</option>
+                        <option>Ana Martínez</option>
+                    </select>
+                    <label>Mesero *</label>
+                </div>
+                <div class="col s12">
+                    <h6>Seleccionar Productos</h6>
+                    <p><label><input type="checkbox"><span>Hamburguesa Clásica — $12.990</span></label></p>
+                    <p><label><input type="checkbox"><span>Pizza Margherita — $15.990</span></label></p>
+                    <p><label><input type="checkbox"><span>Ensalada César — $9.990</span></label></p>
+                    <p><label><input type="checkbox"><span>Pasta Carbonara — $13.500</span></label></p>
+                    <p><label><input type="checkbox"><span>Limonada Natural — $3.500</span></label></p>
+                </div>
+                <div class="input-field col s12">
+                    <i class="material-icons prefix">note</i>
+                    <textarea id="obs" class="materialize-textarea"></textarea>
+                    <label for="obs">Observaciones especiales</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cancelar</a>
+            <a href="#!" class="btn teal white-text" onclick="mostrarNotificacion('Pedido creado exitosamente', 'success')">
+                <i class="material-icons left">save</i>Crear Pedido
+            </a>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE PEDIDO -->
+    <div id="modal-detalle-pedido" class="modal">
+        <div class="modal-content">
+            <h4>Detalle del Pedido #001</h4>
+            <div class="row">
+                <div class="col s12 m6">
+                    <p><strong>Mesa:</strong> 5</p>
+                    <p><strong>Mesero:</strong> Juan Pérez</p>
+                    <p><strong>Hora:</strong> 12:30 PM</p>
+                    <p><strong>Estado:</strong> <span class="chip orange white-text">Pendiente</span></p>
+                </div>
+                <div class="col s12 m6">
+                    <p><strong>Cliente:</strong> No especificado</p>
+                    <p><strong>Método de pago:</strong> Efectivo</p>
+                </div>
+            </div>
+            <table class="striped">
+                <thead><tr><th>Platillo</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                    <tr><td>Hamburguesa Clásica</td><td>2</td><td>$12.990</td><td>$25.980</td></tr>
+                    <tr><td>Pizza Margherita</td><td>1</td><td>$15.990</td><td>$15.990</td></tr>
+                    <tr><td>Limonada Natural</td><td>2</td><td>$3.500</td><td>$7.000</td></tr>
+                </tbody>
+            </table>
+            <div class="right-align" style="margin-top:16px">
+                <h5 class="teal-text text-darken-2">Total: $48.970</h5>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cerrar</a>
+            <a href="#!" class="btn orange white-text"><i class="material-icons left">print</i>Imprimir</a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="../JS/app.js"></script>
+</body>
+</html>

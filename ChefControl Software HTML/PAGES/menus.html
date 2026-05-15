@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefControl - Menús</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="../CSS/custom-styles.css" rel="stylesheet">
+    <style>
+        .cat-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+        .cat-tab { padding:6px 18px; border-radius:20px; border:2px solid #e0e0e0; background:white; cursor:pointer; font-size:0.82rem; font-weight:500; transition:all 0.2s; }
+        .cat-tab.active { border-color:#00897b; background:#00897b; color:white; }
+        .product-img { height:120px; display:flex; align-items:center; justify-content:center; font-size:50px; border-radius:10px 10px 0 0; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
+        <div class="sidebar-section">Principal</div>
+        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
+        <div class="sidebar-section">Operaciones</div>
+        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
+        <a href="inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="menus.html" class="active"><i class="material-icons">restaurant_menu</i> Menús</a>
+        <div class="sidebar-section">Administración</div>
+        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
+        <a href="personal.html"><i class="material-icons">badge</i> Personal</a>
+        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
+        <a href="reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
+        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
+        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+    </div>
+    <div class="main-content">
+        <div class="top-nav">
+            <h5>Menús y Productos</h5>
+            <div class="top-nav-right">
+                <a href="#modal-producto" class="btn teal white-text modal-trigger"><i class="material-icons left">add</i>Nuevo Producto</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row" style="margin-top:24px">
+                <div class="col s12">
+                    <div class="input-field"><i class="material-icons prefix">search</i><input type="text" id="buscar_prod"><label for="buscar_prod">Buscar producto...</label></div>
+                </div>
+            </div>
+            <div class="cat-tabs">
+                <button class="cat-tab active">Todos (24)</button>
+                <button class="cat-tab">🥗 Entradas (4)</button>
+                <button class="cat-tab">🍔 Platos Fuertes (8)</button>
+                <button class="cat-tab">🥤 Bebidas (6)</button>
+                <button class="cat-tab">🍰 Postres (4)</button>
+                <button class="cat-tab">🎁 Combos (2)</button>
+            </div>
+            <div class="row">
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="product-img" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2)">🍔</div>
+                        <div class="card-content">
+                            <span class="card-title">Hamburguesa Clásica</span>
+                            <p class="grey-text">Carne, lechuga, tomate, queso cheddar</p>
+                            <p class="teal-text text-darken-2" style="font-size:1.3rem;font-weight:700">$12.990</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="orange-text" onclick="mostrarNotificacion('Editando Hamburguesa Clásica','info')">Editar</a>
+                            <a href="#" class="red-text" onclick="mostrarNotificacion('Producto eliminado','error')">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="product-img" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9)">🍕</div>
+                        <div class="card-content">
+                            <span class="card-title">Pizza Margherita</span>
+                            <p class="grey-text">Salsa de tomate, mozzarella, albahaca</p>
+                            <p class="teal-text text-darken-2" style="font-size:1.3rem;font-weight:700">$15.990</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="orange-text" onclick="mostrarNotificacion('Editando Pizza Margherita','info')">Editar</a>
+                            <a href="#" class="red-text" onclick="mostrarNotificacion('Producto eliminado','error')">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="product-img" style="background:linear-gradient(135deg,#e3f2fd,#bbdefb)">🥗</div>
+                        <div class="card-content">
+                            <span class="card-title">Ensalada César</span>
+                            <p class="grey-text">Lechuga romana, crutones, parmesano</p>
+                            <p class="teal-text text-darken-2" style="font-size:1.3rem;font-weight:700">$9.990</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="orange-text" onclick="mostrarNotificacion('Editando Ensalada César','info')">Editar</a>
+                            <a href="#" class="red-text" onclick="mostrarNotificacion('Producto eliminado','error')">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="product-img" style="background:linear-gradient(135deg,#fce4ec,#f8bbd0)">🍝</div>
+                        <div class="card-content">
+                            <span class="card-title">Pasta Carbonara</span>
+                            <p class="grey-text">Spaghetti, tocino, huevo, parmesano</p>
+                            <p class="teal-text text-darken-2" style="font-size:1.3rem;font-weight:700">$13.500</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="orange-text" onclick="mostrarNotificacion('Editando Pasta Carbonara','info')">Editar</a>
+                            <a href="#" class="red-text" onclick="mostrarNotificacion('Producto eliminado','error')">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="product-img" style="background:linear-gradient(135deg,#e0f7fa,#b2ebf2)">🍋</div>
+                        <div class="card-content">
+                            <span class="card-title">Limonada Natural</span>
+                            <p class="grey-text">Limón fresco, agua, azúcar, hielo</p>
+                            <p class="teal-text text-darken-2" style="font-size:1.3rem;font-weight:700">$3.500</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="orange-text" onclick="mostrarNotificacion('Editando Limonada Natural','info')">Editar</a>
+                            <a href="#" class="red-text" onclick="mostrarNotificacion('Producto eliminado','error')">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m6 l4">
+                    <div class="card">
+                        <div class="product-img" style="background:linear-gradient(135deg,#f3e5f5,#e1bee7)">🍫</div>
+                        <div class="card-content">
+                            <span class="card-title">Brownie con Helado</span>
+                            <p class="grey-text">Brownie de chocolate, helado vainilla</p>
+                            <p class="teal-text text-darken-2" style="font-size:1.3rem;font-weight:700">$7.990</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="#" class="orange-text" onclick="mostrarNotificacion('Editando Brownie con Helado','info')">Editar</a>
+                            <a href="#" class="red-text" onclick="mostrarNotificacion('Producto eliminado','error')">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-producto" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <h4><i class="material-icons left">restaurant_menu</i>Nuevo Producto</h4>
+            <div class="row">
+                <div class="input-field col s12"><input type="text" id="nom_prod"><label for="nom_prod">Nombre del Producto *</label></div>
+                <div class="input-field col s12 m6"><select><option value="" disabled selected>Categoría</option><option>Entradas</option><option>Platos Fuertes</option><option>Bebidas</option><option>Postres</option><option>Combos</option></select><label>Categoría *</label></div>
+                <div class="input-field col s12 m6"><input type="number" id="precio_prod"><label for="precio_prod">Precio *</label></div>
+                <div class="input-field col s12"><textarea id="desc_prod" class="materialize-textarea"></textarea><label for="desc_prod">Descripción</label></div>
+                <div class="input-field col s12 m6"><input type="number" id="stock_prod"><label for="stock_prod">Stock</label></div>
+                <div class="input-field col s12 m6"><input type="number" id="stock_min_prod"><label for="stock_min_prod">Stock Mínimo</label></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cancelar</a>
+            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Producto guardado exitosamente','success')"><i class="material-icons left">save</i>Guardar</a>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="../JS/app.js"></script>
+    <script>
+        document.querySelectorAll('.cat-tab').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
