@@ -1,12 +1,14 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
+...
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChefControl - Dashboard</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="CSS/custom-styles.css" rel="stylesheet">
+    <link href="{% static 'CSS/custom-styles.css' %}" rel="stylesheet">
 </head>
 <body>
 
@@ -28,6 +30,9 @@
         <a href="PAGES/facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
         <a href="PAGES/reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
         <a href="PAGES/configuracion.html"><i class="material-icons">settings</i> Configuración</a>
+        <a href="{% url 'logout' %}" class="red-text text-darken-2" style="margin-top: 20px;">
+            <i class="material-icons">exit_to_app</i> Cerrar Sesión
+        </a>
         <div class="sidebar-footer">
             <span>Administrador</span>
             <p>admin@chefcontrol.com</p>
@@ -40,6 +45,7 @@
             <h5>Dashboard</h5>
             <div class="top-nav-right">
                 <span class="date-badge" id="fecha-actual"></span>
+                <span>Hola, {{ request.user.first_name|default:request.user.username }}
                 <a href="#"><i class="material-icons" style="color:#757575;vertical-align:middle">notifications</i></a>
                 <a href="#"><i class="material-icons" style="color:#757575;vertical-align:middle">account_circle</i></a>
             </div>
@@ -61,7 +67,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col s12 m6 l3">
+               <div class="col s12 m6 l3">
                     <div class="card">
                         <div class="card-content">
                             <div class="stat-icon" style="background:#fff8e1">
@@ -249,7 +255,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="JS/app.js"></script>
+    <script src="{% static 'JS/app.js' %}"></script>
     <script>
     const ahora = new Date();
     const opciones = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
