@@ -86,6 +86,9 @@ class Cargo(models.Model):
     class Meta:
         managed = False
         db_table = 'cargo'
+    # NUEVO: Le decimos a Django que muestre el 'nombre' del cargo
+    def __str__(self):
+        return self.nombre
 
 
 class Categoria(models.Model):
@@ -190,6 +193,9 @@ class Empleado(models.Model):
     class Meta:
         managed = False
         db_table = 'empleado'
+    # NUEVO: Le decimos que junte el nombre y el apellido
+    def __str__(self):
+        return f"{self.nombres} {self.apellidos}"
 
 
 class Factura(models.Model):
@@ -237,6 +243,9 @@ class Pedido(models.Model):
     class Meta:
         managed = False
         db_table = 'pedido'
+    # NUEVO: Mostrará algo como "Pedido #1"
+    def __str__(self):
+        return f"Pedido #{self.id_pedido}"
 
 
 class Producto(models.Model):

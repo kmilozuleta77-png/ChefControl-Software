@@ -1,36 +1,74 @@
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib import messages # Para enviar mensajes de error a la pantalla
 from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
-# Vista para la pantalla de Login
+# NUEVO: Importamos herramientas matemáticas de Django
+from django.db.models import Sum, F
+
+# Importamos las tablas de MySQL que el Dashboard necesita
+from .models import Empleado, Pedido, Producto
+
+# -------------------------------------------------------------------
+# VISTA 1: LOGIN
+# -------------------------------------------------------------------
 def login_view(request):
-    # 1. Preguntamos si el navegador nos está enviando datos (POST)
     if request.method == 'POST':
-        # 2. Capturamos lo que el usuario escribió en las cajas de texto (los 'name' que pusiste)
         usu = request.POST.get('username')
         pas = request.POST.get('password')
         
-        # 3. Django verifica si esas credenciales existen en la base de datos
         usuario_valido = authenticate(request, username=usu, password=pas)
         
         if usuario_valido is not None:
-            # 4. Si es correcto, iniciamos la sesión (crea la cookie)
             login(request, usuario_valido)
-            # 5. Redirigimos directamente al dashboard
             return redirect('dashboard')
         else:
-            # 6. Si es incorrecto, preparamos un mensaje de error
             messages.error(request, 'Usuario o contraseña incorrectos.')
             
-    # Si no es POST (es decir, solo entró a la página a mirar), le mostramos el HTML vacío
     return render(request, 'login.html')
 
-# Vista para el Dashboard principal
-@login_required(login_url='login')  # Este es el guardia
-def dashboard_view(request):
-    return render(request, 'index.html')
+# -------------------------------------------------------------------
+# VISTA 2: CERRAR SESIÓN
+# -------------------------------------------------------------------
 def logout_view(request):
-    logout(request) # Esto destruye la sesión
-    return redirect('login') # Y lo manda de vuelta a la pantalla de inicio
+    logout(request)
+    return redirect('login')
+
+# -------------------------------------------------------------------
+# VISTA 3: DASHBOARD PRINCIPAL (Con datos 100% reales)
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def dashboard_view(request):
+    # 1. Total de empleados
+    total_empleados = Empleado.objects.count()
+    
+    # 2. Total de pedidos
+    total_pedidos = Pedido.objects.count()
+    
+    # 3. Ventas totales (Sumamos la columna 'total' de todos los pedidos)
+    suma_ventas = Pedido.objects.aggregate(Sum('total'))['total__sum']
+    ventas_dia = suma_ventas if suma_ventas is not None else 0
+    
+    # 4. Alertas de Inventario (Comparamos la columna stock vs stock_minimo)
+    alertas_inventario = Producto.objects.filter(stock__lte=F('stock_minimo')).count()
+    
+    # 5. Últimos 5 Pedidos (select_related nos trae la info de la mesa y el empleado vinculados)
+    pedidos_recientes = Pedido.objects.select_related('id_mesa', 'id_empleado').order_by('-fecha_pedido')[:5]
+    
+    # Empacamos los datos calculados en la caja (context)
+    context = {
+        'cantidad_empleados': total_empleados,
+        'total_pedidos': total_pedidos,
+        'ventas_dia': ventas_dia,
+        'alertas_inventario': alertas_inventario,
+        'pedidos_recientes': pedidos_recientes,
+    }
+    
+    return render(request, 'index.html', context)
+
+# -------------------------------------------------------------------
+# VISTA 4: INVENTARIO (Ruta de Sofía)
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def inventario_view(request):
+    return render(request, 'inventario.html')

@@ -22,7 +22,7 @@
         <a href="index.html" class="active"><i class="material-icons">dashboard</i> Dashboard</a>
         <div class="sidebar-section">Operaciones</div>
         <a href="PAGES/pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
-        <a href="PAGES/inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="{% url 'inventario' %}"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
         <a href="PAGES/menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
         <div class="sidebar-section">Administración</div>
         <a href="PAGES/clientes.html"><i class="material-icons">people</i> Clientes</a>
@@ -61,7 +61,7 @@
                             <div class="stat-icon" style="background:#e0f2f1">
                                 <i class="material-icons teal-text text-darken-2" style="font-size:24px">shopping_cart</i>
                             </div>
-                            <p class="stat-val teal-text text-darken-2">24</p>
+                            <p class="stat-val teal-text text-darken-2">{{ total_pedidos }}</p>
                             <p class="stat-label">Pedidos Hoy</p>
                             <p class="stat-change green-text">↑ 12% vs ayer</p>
                         </div>
@@ -73,7 +73,7 @@
                             <div class="stat-icon" style="background:#fff8e1">
                                 <i class="material-icons" style="color:#f9a825;font-size:24px">attach_money</i>
                             </div>
-                            <p class="stat-val" style="color:#f9a825">$1.2M</p>
+                            <p class="stat-val" style="color:#f9a825; font-size: clamp(1.2rem, 1.8vw, 1.6rem); font-weight: bold; word-break: break-word; line-height: 1.2;">${{ ventas_dia|floatformat:"0g" }}</p>
                             <p class="stat-label">Ventas del Día</p>
                             <p class="stat-change green-text">↑ 8% vs ayer</p>
                         </div>
@@ -85,7 +85,7 @@
                             <div class="stat-icon" style="background:#ffebee">
                                 <i class="material-icons red-text text-darken-2" style="font-size:24px">warning</i>
                             </div>
-                            <p class="stat-val red-text text-darken-2">8</p>
+                            <p class="stat-val red-text text-darken-2">{{ alertas_inventario }}</p>
                             <p class="stat-label">Alertas Inventario</p>
                             <p class="stat-change red-text">3 productos críticos</p>
                         </div>
@@ -97,7 +97,7 @@
                             <div class="stat-icon" style="background:#e3f2fd">
                                 <i class="material-icons" style="color:#1565c0;font-size:24px">people</i>
                             </div>
-                            <p class="stat-val" style="color:#1565c0">12</p>
+                            <p class="stat-val" style="color:#1565c0">{{ cantidad_empleados }}</p>
                             <p class="stat-label">Empleados Activos</p>
                             <p class="stat-change grey-text">3 de descanso</p>
                         </div>
@@ -124,40 +124,25 @@
                                         <th>Estado</th>
                                         <th>Acción</th>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>001</td>
-                                        <td>Mesa 5</td>
-                                        <td>Juan Pérez</td>
-                                        <td><strong>$45.470</strong></td>
-                                        <td><span class="chip orange white-text">Pendiente</span></td>
-                                        <td><a href="PAGES/pedidos.html" class="btn-small teal white-text">Ver</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>002</td>
-                                        <td>Mesa 8</td>
-                                        <td>María López</td>
-                                        <td><strong>$26.990</strong></td>
-                                        <td><span class="chip blue white-text">Preparando</span></td>
-                                        <td><a href="PAGES/pedidos.html" class="btn-small teal white-text">Ver</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>003</td>
-                                        <td>Mesa 3</td>
-                                        <td>Carlos Ruiz</td>
-                                        <td><strong>$65.460</strong></td>
-                                        <td><span class="chip green white-text">Listo</span></td>
-                                        <td><a href="PAGES/pedidos.html" class="btn-small teal white-text">Ver</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>004</td>
-                                        <td>Mesa 12</td>
-                                        <td>Ana Martínez</td>
-                                        <td><strong>$32.980</strong></td>
-                                        <td><span class="chip teal white-text">Entregado</span></td>
-                                        <td><a href="PAGES/facturacion.html" class="btn-small orange white-text">Facturar</a></td>
-                                    </tr>
+                                </thead>                            
+                                    <tbody>
+                                    {% for pedido in pedidos_recientes %}
+                                        <tr>
+                                            <td>{{ pedido.id_pedido }}</td>
+                                            <td>Mesa {{ pedido.id_mesa.numero_mesa }}</td>
+                                            <td>{{ pedido.id_empleado.nombres }}</td>
+                                            <td><strong>${{ pedido.total }}</strong></td>
+                                            <td><span class="chip teal white-text">{{ pedido.estado }}</span></td>
+                                            <td><a href="#" class="btn-small teal white-text">Ver</a></td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6" style="text-align: center; padding: 30px; color: #9e9e9e;">
+                                                <i class="material-icons" style="font-size: 3rem; opacity: 0.5;">inbox</i><br>
+                                                No hay pedidos recientes en la base de datos.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>
