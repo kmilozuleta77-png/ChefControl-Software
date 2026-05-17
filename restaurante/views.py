@@ -142,3 +142,54 @@ def crear_pedido_view(request):
     }
     
     return render(request, 'crear_pedido.html', context)
+# -------------------------------------------------------------------
+# VISTA 6: PANTALLA DE COCINA (KDS - Kitchen Display System)
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def cocina_view(request):
+    # La cocina solo ve órdenes en estado 'Pendiente', las más antiguas primero
+    pedidos_cocina = Pedido.objects.filter(estado='Pendiente').order_by('fecha_pedido')
+    
+    context = {
+        'pedidos': pedidos_cocina
+    }
+    return render(request, 'cocina.html', context)
+
+
+# -------------------------------------------------------------------
+# MINI-API: CAMBIAR ESTADO A LISTO DESDE COCINA
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def completar_pedido_api(request, id_pedido):
+    if request.method == 'POST':
+        try:
+            # Buscamos el pedido en MySQL
+            pedido = Pedido.objects.get(id_pedido=id_pedido)
+            pedido.estado = 'Listo' # Cambiamos el estado
+            pedido.save()
+            return JsonResponse({'status': 'success', 'mensaje': 'Orden completada'})
+        except Pedido.DoesNotExist:
+            return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado'})
+# -------------------------------------------------------------------
+# VISTA 7: CAJA Y FACTURACIÓN
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def facturacion_view(request):
+    # El cajero solo ve los pedidos que ya salieron de la cocina ('Listo')
+    pedidos_listos = Pedido.objects.filter(estado='Listo').order_by('fecha_pedido')
+    return render(request, 'facturacion.html', {'pedidos': pedidos_listos})
+
+# -------------------------------------------------------------------
+# MINI-API: PROCESAR PAGO
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def pagar_pedido_api(request, id_pedido):
+    if request.method == 'POST':
+        try:
+            pedido = Pedido.objects.get(id_pedido=id_pedido)
+            pedido.estado = 'Pagado' # Cerramos el ciclo de vida del pedido
+            # NOTA PARA EL FUTURO: Aquí podríamos insertar el registro en la tabla Factura
+            pedido.save()
+            return JsonResponse({'status': 'success'})
+        except Pedido.DoesNotExist:
+            return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado'})
