@@ -8,4 +8,5 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'), # Ruta del dashboard
     path('logout/', views.logout_view, name='logout'), # Ruta para cerrar sesión
     path('inventario/', views.inventario_view, name='inventario'), # Ruta para el inventario
+    path('nuevo-pedido/', views.crear_pedido_view, name='crear_pedido'), # Ruta para crear un nuevo pedido mesero
 ]    

@@ -1,13 +1,14 @@
+import json
+from django.http import JsonResponse
+from django.db import transaction
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-
-# NUEVO: Importamos herramientas matemáticas de Django
 from django.db.models import Sum, F
 
 # Importamos las tablas de MySQL que el Dashboard necesita
-from .models import Empleado, Pedido, Producto
+from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, Cliente, Cargo, Factura
 
 # -------------------------------------------------------------------
 # VISTA 1: LOGIN
@@ -72,3 +73,72 @@ def dashboard_view(request):
 @login_required(login_url='login')
 def inventario_view(request):
     return render(request, 'inventario.html')
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# VISTA 5: PUNTO DE VENTA POS (Avanzado - API JSON)
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def crear_pedido_view(request):
+    # 1. SI RECIBIMOS DATOS DE JAVASCRIPT (GUARDAR PEDIDO)
+    if request.method == 'POST':
+        try:
+            # Desempacamos el paquete JSON que nos envía JavaScript
+            data = json.loads(request.body)
+            
+            # Extraemos los datos generales del pedido
+            id_empleado_front = data['id_empleado']
+            id_mesa_front = data['id_mesa']
+            tipo_pedido_front = data['tipo_pedido']
+            observaciones_front = data.get('observaciones', '')
+            total_front = data['total']
+            lista_productos = data['productos'] # Esto es una lista de los platos elegidos
+            
+            # Abrimos la bóveda de seguridad de la base de datos
+            with transaction.atomic():
+                # A. Buscamos los objetos reales en la base de datos
+                empleado_obj = Empleado.objects.get(id_empleado=id_empleado_front)
+                mesa_obj = Mesa.objects.get(id_mesa=id_mesa_front)
+                
+                # B. Guardamos el PADRE (La tabla Pedido)
+                nuevo_pedido = Pedido.objects.create(
+                    id_empleado=empleado_obj,
+                    id_mesa=mesa_obj,
+                    tipo_pedido=tipo_pedido_front,
+                    observaciones=observaciones_front,
+                    total=total_front,
+                    estado='Pendiente' # El estado inicial para que la cocina lo vea
+                )
+                
+                # C. Guardamos los HIJOS (La tabla Detallepedido)
+                for item in lista_productos:
+                    producto_obj = Producto.objects.get(id_producto=item['id'])
+                    Detallepedido.objects.create(
+                        id_pedido=nuevo_pedido, # Lo amarramos al pedido que acabamos de crear
+                        id_producto=producto_obj,
+                        cantidad=item['cantidad'],
+                        precio_unitario=producto_obj.precio,
+                        
+                    )
+            
+            # Si todo salió perfecto, le respondemos a JavaScript con éxito
+            return JsonResponse({'status': 'success', 'mensaje': 'Pedido guardado en Maestro-Detalle correctamente.'})
+            
+        except Exception as e:
+            # Si algo explota (ej. falta un dato), le avisamos a JavaScript el error
+            return JsonResponse({'status': 'error', 'mensaje': str(e)})
+
+    # 2. SI ABRIMOS LA PÁGINA NORMALMENTE (GET)
+    categorias_menu = Categoria.objects.all()
+    productos_menu = Producto.objects.all()
+    # Como ya no usamos forms.py, enviamos las listas manualmente al HTML
+    empleados_activos = Empleado.objects.filter(id_cargo__nombre='Mesero')
+    mesas_activas = Mesa.objects.all()
+    
+    context = {
+        'categorias': categorias_menu,
+        'productos': productos_menu,
+        'empleados': empleados_activos,
+        'mesas': mesas_activas
+    }
+    
+    return render(request, 'crear_pedido.html', context)

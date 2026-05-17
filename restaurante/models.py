@@ -100,6 +100,8 @@ class Categoria(models.Model):
     class Meta:
         managed = False
         db_table = 'categoria'
+    def __str__(self):
+        return self.nombre
 
 
 class Cliente(models.Model):
@@ -116,6 +118,8 @@ class Cliente(models.Model):
     class Meta:
         managed = False
         db_table = 'cliente'
+    def __str__(self):
+        return f"{self.nombres} {self.apellidos}"
 
 
 class Detallepedido(models.Model):
@@ -124,7 +128,7 @@ class Detallepedido(models.Model):
     id_producto = models.ForeignKey('Producto', models.DO_NOTHING, db_column='id_producto')
     cantidad = models.IntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    #subtotal = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     observaciones = models.CharField(max_length=300, blank=True, null=True)
 
     class Meta:
@@ -227,6 +231,8 @@ class Mesa(models.Model):
     class Meta:
         managed = False
         db_table = 'mesa'
+    def __str__(self):
+        return f"Mesa {self.numero_mesa}"
 
 
 class Pedido(models.Model):
@@ -263,3 +269,5 @@ class Producto(models.Model):
     class Meta:
         managed = False
         db_table = 'producto'
+    def __str__(self):
+        return self.nombre

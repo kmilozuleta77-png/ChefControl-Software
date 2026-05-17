@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS | ChefControl</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #121212; /* Fondo negro mate */
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* Ocultar barra de scroll para look de app nativa */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1e1e1e; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        .pos-container { height: 100vh; margin: 0; display: flex; flex-wrap: wrap; }
+        
+        /* PANEL MENÚ (Izquierda) */
+        .menu-panel { 
+            height: 100vh; overflow-y: auto; padding: 20px; 
+            background-color: #121212;
+        }
+        .categoria-titulo {
+            color: #a0a0a0; font-size: 1.2rem; font-weight: 600; text-transform: uppercase;
+            border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px;
+        }
+        .producto-card { 
+            background-color: #1e1e1e; border-radius: 16px; border: 1px solid #2c2c2c;
+            cursor: pointer; transition: all 0.2s ease; margin-bottom: 15px;
+        }
+        .producto-card:active { transform: scale(0.95); border-color: #fce4ec; }
+        .producto-nombre { font-size: 1.1rem; font-weight: 600; display: block; margin-bottom: 5px;}
+        .producto-precio { color: #fff59d; font-weight: bold; font-size: 1.2rem; }
+
+        /* PANEL TICKET (Derecha) */
+        .ticket-panel { 
+            height: 100vh; background-color: #1a1a1a; padding: 20px; 
+            display: flex; flex-direction: column; border-left: 1px solid #2c2c2c;
+        }
+        .ticket-header { margin-top: 0; font-weight: bold; font-size: 1.5rem; color: #fff;}
+        
+        #ticket-items { 
+            flex-grow: 1; overflow-y: auto; margin: 15px 0; padding-right: 5px;
+        }
+        
+        /* Item del carrito */
+        .cart-item {
+            background-color: #252525; border-radius: 12px; padding: 15px;
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .cart-item-info { flex-grow: 1; }
+        .cart-item-controls { display: flex; align-items: center; gap: 15px; }
+        .btn-qty { 
+            background: #333; border: none; color: white; width: 35px; height: 35px; 
+            border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; justify-content: center; align-items: center;
+        }
+        .btn-delete { color: #ef5350; cursor: pointer; }
+
+        /* Inputs de Materialize adaptados al Dark Mode */
+        .input-field select { background-color: #252525; color: white; border: 1px solid #444; border-radius: 8px;}
+        .dropdown-content { background-color: #252525; }
+        .dropdown-content li>a, .dropdown-content li>span { color: #fff; }
+
+        /* Botón de Cobro */
+        .btn-cobrar {
+            background-color: #00bfa5 !important; color: #121212 !important; 
+            border-radius: 12px; height: 60px; font-weight: bold; font-size: 1.3rem;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="row pos-container">
+        
+        <div class="col s12 l8 menu-panel">
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <h4 style="margin:0; font-weight:bold;">Toma de Pedidos</h4>
+                <a href="{% url 'dashboard' %}" class="grey-text"><i class="material-icons">arrow_back</i> Dashboard</a>
+            </div>
+            
+            {% for categoria in categorias %}
+                <div class="categoria-titulo">{{ categoria.nombre }}</div>
+                <div class="row">
+                    {% for producto in productos %}
+                        {% if producto.id_categoria == categoria %}
+                        <div class="col s6 m4 l3">
+                            <div class="producto-card z-depth-2" onclick="agregarAlCarrito({{ producto.id_producto }}, '{{ producto.nombre|escapejs }}', {{ producto.precio|stringformat:'f' }})">
+                                <div style="padding: 15px;">
+                                    <span class="producto-nombre truncate">{{ producto.nombre }}</span>
+                                    <span class="producto-precio">${{ producto.precio|floatformat:"0g" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% empty %}
+                <p class="grey-text">Cargando menú...</p>
+            {% endfor %}
+        </div>
+
+        <div class="col s12 l4 ticket-panel">
+            
+            <div class="row" style="margin-bottom: 0;">
+                <div class="input-field col s4">
+                    <select id="select_empleado">
+                        <option value="" disabled selected>Mesero...</option>
+                        {% for empleado in empleados %}
+                            <option value="{{ empleado.id_empleado }}">{{ empleado }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-field col s4">
+                    <select id="select_mesa">
+                        <option value="" disabled selected>Mesa...</option>
+                        {% for mesa in mesas %}
+                            <option value="{{ mesa.id_mesa }}">Mesa {{ mesa.numero_mesa }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-field col s4">
+                    <select id="select_tipo">
+                        <option value="En mesa" selected>En mesa</option>
+                        <option value="Para llevar">Para llevar</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="ticket-header">Comanda</div>
+            
+            <div id="ticket-items">
+                <div class="center-align grey-text" style="margin-top: 40px;">
+                    <i class="material-icons" style="font-size: 3rem; opacity: 0.5;">restaurant</i>
+                    <p>El pedido está vacío</p>
+                </div>
+            </div>
+
+            <div class="input-field" style="margin-top: 10px; margin-bottom: 20px;">
+                <i class="material-icons prefix" style="color: #a0a0a0;">edit_note</i>
+                <input type="text" id="input_observaciones" placeholder="Notas (Ej: Hamburguesa sin tomate...)" style="color: white; border-bottom: 1px solid #444;">
+            </div>
+
+            <button class="waves-effect waves-light btn btn-cobrar" onclick="enviarPedido()">
+                <span>ENVIAR ORDEN</span>
+                <span id="total-display">$0</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        // Inicializamos los selects
+        document.addEventListener('DOMContentLoaded', function() {
+            var elems = document.querySelectorAll('select');
+            M.FormSelect.init(elems);
+        });
+
+        // El "Cerebro" del Carrito (Array de objetos)
+        let carrito = [];
+
+        function agregarAlCarrito(id, nombre, precio) {
+            // Buscamos si el producto ya está en el carrito
+            let itemExistente = carrito.find(item => item.id === id);
+            
+            if (itemExistente) {
+                itemExistente.cantidad++; // Si ya existe, sumamos 1
+            } else {
+                carrito.push({ id: id, nombre: nombre, precio: parseFloat(precio), cantidad: 1 });
+            }
+            renderizarCarrito();
+        }
+
+        function cambiarCantidad(id, delta) {
+            let item = carrito.find(item => item.id === id);
+            if(item) {
+                item.cantidad += delta;
+                if(item.cantidad <= 0) {
+                    carrito = carrito.filter(i => i.id !== id); // Lo borramos si llega a 0
+                }
+            }
+            renderizarCarrito();
+        }
+
+        function renderizarCarrito() {
+            const container = document.getElementById('ticket-items');
+            const totalDisplay = document.getElementById('total-display');
+            
+            if(carrito.length === 0) {
+                container.innerHTML = `<div class="center-align grey-text" style="margin-top: 40px;"><i class="material-icons" style="font-size: 3rem; opacity: 0.5;">restaurant</i><p>El pedido está vacío</p></div>`;
+                totalDisplay.innerText = '$0';
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+
+            carrito.forEach(item => {
+                let subtotal = item.precio * item.cantidad;
+                total += subtotal;
+                
+                html += `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div style="font-weight: 600; font-size: 1.1rem;">${item.nombre}</div>
+                        <div style="color: #00bfa5;">$${subtotal.toLocaleString('es-CO')}</div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="btn-qty" onclick="cambiarCantidad(${item.id}, -1)"><i class="material-icons">remove</i></button>
+                        <span style="font-size: 1.2rem; font-weight: bold; width: 20px; text-align: center;">${item.cantidad}</span>
+                        <button class="btn-qty" onclick="cambiarCantidad(${item.id}, 1)"><i class="material-icons">add</i></button>
+                        <i class="material-icons btn-delete" onclick="cambiarCantidad(${item.id}, -${item.cantidad})">delete</i>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            totalDisplay.innerText = '$' + total.toLocaleString('es-CO');
+        }
+
+        // FUNCION PARA ENVIAR A PYTHON USANDO FETCH API
+        function enviarPedido() {
+            let idEmpleado = document.getElementById('select_empleado').value;
+            let idMesa = document.getElementById('select_mesa').value;
+            let tipoPedido = document.getElementById('select_tipo').value;
+            let observaciones = document.getElementById('input_observaciones').value;
+
+            if(!idEmpleado || !idMesa || carrito.length === 0) {
+                M.toast({html: 'Selecciona Mesero, Mesa y añade productos.', classes: 'rounded red'});
+                return;
+            }
+
+            let total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+
+            // Empacamos el JSON con los nuevos campos
+            let payload = {
+                id_empleado: idEmpleado,
+                id_mesa: idMesa,
+                tipo_pedido: tipoPedido,
+                observaciones: observaciones,
+                total: total,
+                productos: carrito
+            };
+
+            // Lo enviamos por la tubería POST
+            fetch('/nuevo-pedido/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Seguridad de Django
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    M.toast({html: '¡Orden enviada a cocina!', classes: 'rounded green'});
+                    setTimeout(() => { window.location.href = '/dashboard/'; }, 1500);
+                } else {
+                    M.toast({html: 'Error: ' + data.mensaje, classes: 'rounded red'});
+                }
+            });
+        }
+    </script>
+</body>
+</html>
