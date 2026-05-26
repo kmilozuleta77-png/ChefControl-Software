@@ -146,7 +146,7 @@
                 <input type="text" id="input_observaciones" placeholder="Notas (Ej: Hamburguesa sin tomate...)" style="color: white; border-bottom: 1px solid #444;">
             </div>
 
-            <button class="waves-effect waves-light btn btn-cobrar" onclick="enviarPedido()">
+            <button class="waves-effect waves-light btn btn-cobrar" id="btn-enviar-orden">
                 <span>ENVIAR ORDEN</span>
                 <span id="total-display">$0</span>
             </button>
@@ -155,10 +155,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
-        // Inicializamos los selects
         document.addEventListener('DOMContentLoaded', function() {
-            var elems = document.querySelectorAll('select');
-            M.FormSelect.init(elems);
+            M.FormSelect.init(document.querySelectorAll('select'));
+            // Botón principal sin onclick inline
+            document.getElementById('btn-enviar-orden').addEventListener('click', enviarPedido);
         });
 
         // El "Cerebro" del Carrito (Array de objetos)

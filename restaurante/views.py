@@ -233,6 +233,40 @@ def cocina_view(request):
 
 
 # -----------------------------------------------------------------------
+# MINI-API: POLLING DE PEDIDOS PENDIENTES PARA KDS (reemplaza location.reload)
+# -----------------------------------------------------------------------
+
+@login_required(login_url='login')
+def api_pedidos_cocina(request):
+    """Devuelve los pedidos pendientes en JSON para el polling del KDS."""
+    pedidos_qs = (
+        Pedido.objects
+        .filter(estado='Pendiente')
+        .prefetch_related('detallepedido_set__id_producto')
+        .select_related('id_mesa')
+        .order_by('fecha_pedido')
+    )
+
+    pedidos_data = []
+    for pedido in pedidos_qs:
+        detalles = [
+            {
+                'cantidad': d.cantidad,
+                'producto': d.id_producto.nombre,
+            }
+            for d in pedido.detallepedido_set.all()
+        ]
+        pedidos_data.append({
+            'id': pedido.id_pedido,
+            'mesa': pedido.id_mesa.numero_mesa if pedido.id_mesa else '—',
+            'observaciones': pedido.observaciones or '',
+            'detalles': detalles,
+        })
+
+    return JsonResponse({'pedidos': pedidos_data})
+
+
+# -----------------------------------------------------------------------
 # MINI-API: CAMBIAR ESTADO A LISTO DESDE COCINA
 # -----------------------------------------------------------------------
 

@@ -8,43 +8,57 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         body { background-color: #121212; color: #ffffff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .caja-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 25px; margin-top: 20px;}
+        .caja-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 25px; margin-top: 20px; }
         .factura-card { background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
-        .total-text { font-size: 2.2rem; color: #00e676; font-weight: bold; margin: 10px 0; border-bottom: 1px solid #333; padding-bottom: 10px;}
-        
-        .input-field select { background-color: #252525; color: white; border: 1px solid #444; border-radius: 8px; margin-bottom: 15px;}
+        .total-text { font-size: 2.2rem; color: #00e676; font-weight: bold; margin: 10px 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .input-field select { background-color: #252525; color: white; border: 1px solid #444; border-radius: 8px; margin-bottom: 15px; }
         .dropdown-content { background-color: #252525; }
         .dropdown-content li>a, .dropdown-content li>span { color: #fff; }
-        .input-pago { color: white !important; font-size: 1.5rem !important; border-bottom: 2px solid #00bfa5 !important; margin-bottom: 5px !important;}
-        
-        .cambio-text { font-size: 1.3rem; color: #ffca28; font-weight: bold; min-height: 30px;}
-        .resumen-item { display: flex; justify-content: space-between; font-size: 1.1rem; color: #a0a0a0; margin-bottom: 5px;}
-        
-        .badge-premium { background-color: #311b92; color: #b388ff; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; float: right;}
+        .input-pago { color: white !important; font-size: 1.5rem !important; border-bottom: 2px solid #00bfa5 !important; margin-bottom: 5px !important; }
+        .cambio-text { font-size: 1.3rem; color: #ffca28; font-weight: bold; min-height: 30px; }
+        .resumen-item { display: flex; justify-content: space-between; font-size: 1.1rem; color: #a0a0a0; margin-bottom: 5px; }
+        .badge-premium { background-color: #311b92; color: #b388ff; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; float: right; }
     </style>
 </head>
 <body>
     {% csrf_token %}
 
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px;">
-        <h4 style="margin: 0; font-weight: bold;"><i class="material-icons left" style="font-size: 2.5rem; color: #00bfa5;">point_of_sale</i> Terminal de Facturación</h4>
-        <a href="{% url 'dashboard' %}" class="btn-flat grey-text waves-effect"><i class="material-icons left">arrow_back</i> Volver al Dashboard</a>
+        <h4 style="margin: 0; font-weight: bold;">
+            <i class="material-icons left" style="font-size: 2.5rem; color: #00bfa5;">point_of_sale</i>
+            Terminal de Facturación
+        </h4>
+        <a href="{% url 'dashboard' %}" class="btn-flat grey-text waves-effect">
+            <i class="material-icons left">arrow_back</i> Volver al Dashboard
+        </a>
     </div>
 
     <div class="caja-grid">
         {% for pedido in pedidos %}
-            <div class="factura-card" id="caja-pedido-{{ pedido.id_pedido }}" data-subtotal="{{ pedido.total|stringformat:'f' }}">
-                
+            <div class="factura-card"
+                 id="caja-pedido-{{ pedido.id_pedido }}"
+                 data-pedido-id="{{ pedido.id_pedido }}"
+                 data-subtotal="{{ pedido.total|stringformat:'f' }}">
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <span style="font-size: 1.4rem;"><b>Mesa {{ pedido.id_mesa.numero_mesa }}</b></span>
-                    <span class="grey-text"><i class="material-icons left" style="font-size: 1.2rem; margin-right: 5px;">person</i>{{ pedido.id_empleado }}</span>
+                    <span class="grey-text">
+                        <i class="material-icons left" style="font-size: 1.2rem; margin-right: 5px;">person</i>
+                        {{ pedido.id_empleado }}
+                    </span>
                 </div>
 
-                <div class="resumen-item"><span>Subtotal (Con INC 8%):</span> <span>${{ pedido.total|floatformat:"0g" }}</span></div>
-                <div class="resumen-item"><span>Propina Voluntaria (10%):</span> <span id="propina-display-{{ pedido.id_pedido }}">$0</span></div>
-                
+                <div class="resumen-item">
+                    <span>Subtotal (Con INC 8%):</span>
+                    <span>${{ pedido.total|floatformat:"0g" }}</span>
+                </div>
+                <div class="resumen-item">
+                    <span>Propina Voluntaria (10%):</span>
+                    <span class="js-propina-display">$0</span>
+                </div>
+
                 <div class="total-text">
-                    Total a Pagar: $<span id="total-{{ pedido.id_pedido }}">{{ pedido.total|floatformat:"0g" }}</span>
+                    Total a Pagar: $<span class="js-total-display">{{ pedido.total|floatformat:"0g" }}</span>
                 </div>
 
                 <div class="row" style="margin-bottom: 0;">
@@ -52,7 +66,7 @@
                         <div class="switch">
                             <label style="color: #fff; font-size: 1.1rem;">
                                 Sin Propina
-                                <input type="checkbox" id="check-propina-{{ pedido.id_pedido }}" onchange="recalcularTotal({{ pedido.id_pedido }})">
+                                <input type="checkbox" class="js-check-propina">
                                 <span class="lever"></span>
                                 +10% Servicio
                             </label>
@@ -61,7 +75,7 @@
 
                     <div class="col s6">
                         <label>Método de Pago</label>
-                        <select id="metodo-pago-{{ pedido.id_pedido }}">
+                        <select class="js-metodo-pago">
                             <option value="efectivo" selected>💵 Efectivo</option>
                             <option value="tarjeta">💳 Tarjeta / Datáfono</option>
                             <option value="nequi">📱 Nequi / Daviplata</option>
@@ -70,7 +84,7 @@
 
                     <div class="col s6">
                         <label>Tipo de Comprobante</label>
-                        <select id="tipo-factura-{{ pedido.id_pedido }}">
+                        <select class="js-tipo-factura">
                             <option value="pos" selected>🧾 Tiquete POS</option>
                             <option value="fe">🏢 Factura DIAN <span class="badge-premium">PRO</span></option>
                         </select>
@@ -79,13 +93,13 @@
 
                 <div class="input-field" style="margin-top: 5px;">
                     <i class="material-icons prefix grey-text" style="margin-top: 10px;">payments</i>
-                    <input type="text" inputmode="numeric" class="input-pago" id="input-recibido-{{ pedido.id_pedido }}" placeholder="Monto recibido (Efectivo)" 
-                           onkeyup="formatoMiles(this); calcularCambio({{ pedido.id_pedido }})">
+                    <input type="text" inputmode="numeric" class="input-pago js-input-recibido"
+                           placeholder="Monto recibido (Efectivo)">
                 </div>
-                <div class="cambio-text" id="cambio-{{ pedido.id_pedido }}"></div>
+                <div class="cambio-text js-cambio-display"></div>
 
-                <button class="btn waves-effect waves-light" style="width: 100%; background-color: #00bfa5; border-radius: 8px; font-weight: bold; height: 50px; font-size: 1.1rem; margin-top: 10px;" 
-                        onclick="procesarPago({{ pedido.id_pedido }})">
+                <button class="btn waves-effect waves-light js-btn-pagar"
+                        style="width: 100%; background-color: #00bfa5; border-radius: 8px; font-weight: bold; height: 50px; font-size: 1.1rem; margin-top: 10px;">
                     <i class="material-icons left">check_circle</i> CERRAR CUENTA Y FACTURAR
                 </button>
             </div>
@@ -100,97 +114,102 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var elems = document.querySelectorAll('select');
-            M.FormSelect.init(elems);
-        });
-
+        // CSRF disponible desde el token del formulario ({% csrf_token %} en el body)
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        // Función nueva para poner puntos de mil automáticamente mientras escribes
-        function formatoMiles(input) {
-            // Quitamos todo lo que no sea número
-            let valorNum = input.value.replace(/\D/g, "");
-            if (valorNum === "") {
-                input.value = "";
-                return;
-            }
-            // Formateamos con puntos
-            input.value = parseInt(valorNum).toLocaleString('es-CO');
-        }
+        document.addEventListener('DOMContentLoaded', function () {
+            M.FormSelect.init(document.querySelectorAll('select'));
 
-        // Obtener el total real desde los atributos seguros (sin importar los puntos visibles)
-        function obtenerTotalReal(idPedido) {
-            const card = document.getElementById(`caja-pedido-${idPedido}`);
-            // Django nos manda el subtotal con coma en vez de punto, lo normalizamos a estándar JS
-            const rawSubtotal = card.getAttribute('data-subtotal').replace(',', '.');
-            const subtotal = parseFloat(rawSubtotal);
-            const checkPropina = document.getElementById(`check-propina-${idPedido}`).checked;
-            
-            return checkPropina ? subtotal * 1.10 : subtotal;
-        }
+            // Registrar listeners en cada tarjeta de factura
+            document.querySelectorAll('.factura-card').forEach(tarjeta => {
+                const checkPropina  = tarjeta.querySelector('.js-check-propina');
+                const metodoPago    = tarjeta.querySelector('.js-metodo-pago');
+                const inputRecibido = tarjeta.querySelector('.js-input-recibido');
+                const btnPagar      = tarjeta.querySelector('.js-btn-pagar');
 
-        function recalcularTotal(idPedido) {
-            const card = document.getElementById(`caja-pedido-${idPedido}`);
-            const rawSubtotal = card.getAttribute('data-subtotal').replace(',', '.');
-            const subtotal = parseFloat(rawSubtotal);
-            const checkPropina = document.getElementById(`check-propina-${idPedido}`).checked;
-            
-            const propina = checkPropina ? subtotal * 0.10 : 0;
-            const totalFinal = subtotal + propina;
-            
-            document.getElementById(`propina-display-${idPedido}`).innerText = "$" + propina.toLocaleString('es-CO');
-            document.getElementById(`total-${idPedido}`).innerText = totalFinal.toLocaleString('es-CO');
-            
-            calcularCambio(idPedido);
-        }
-
-        function calcularCambio(idPedido) {
-            const metodoPago = document.getElementById(`metodo-pago-${idPedido}`).value;
-            const inputRecibido = document.getElementById(`input-recibido-${idPedido}`);
-            const divCambio = document.getElementById(`cambio-${idPedido}`);
-            
-            if(metodoPago !== 'efectivo') {
-                inputRecibido.value = '';
-                inputRecibido.disabled = true;
-                divCambio.innerText = "Transacción digital. Sin vuelto.";
-                divCambio.style.color = "#a0a0a0";
-                return;
-            } else {
-                inputRecibido.disabled = false;
-            }
-
-            const totalReal = obtenerTotalReal(idPedido);
-            // Quitamos los puntos visuales que le puso formatoMiles para hacer la resta matemática
-            const pagoIngresado = parseFloat(inputRecibido.value.replace(/\./g, ''));
-            
-            if (!pagoIngresado || pagoIngresado < totalReal) {
-                divCambio.innerText = "Monto insuficiente";
-                divCambio.style.color = "#ff5252";
-            } else {
-                let cambio = pagoIngresado - totalReal;
-                divCambio.innerText = "Vuelto a entregar: $" + cambio.toLocaleString('es-CO');
-                divCambio.style.color = "#00e676";
-            }
-        }
-
-        document.querySelectorAll('select[id^="metodo-pago-"]').forEach(select => {
-            select.addEventListener('change', function() {
-                const idPedido = this.id.split('-')[2];
-                calcularCambio(idPedido);
+                checkPropina.addEventListener('change', () => recalcularTotal(tarjeta));
+                metodoPago.addEventListener('change',   () => calcularCambio(tarjeta));
+                inputRecibido.addEventListener('keyup',  () => { formatoMiles(inputRecibido); calcularCambio(tarjeta); });
+                btnPagar.addEventListener('click',       () => procesarPago(tarjeta));
             });
         });
 
-        function procesarPago(idPedido) {
-            const metodoPago = document.getElementById(`metodo-pago-${idPedido}`).value;
-            const tipoFactura = document.getElementById(`tipo-factura-${idPedido}`).value;
-            const totalReal = obtenerTotalReal(idPedido);
-            
-            if(metodoPago === 'efectivo') {
-                const inputTexto = document.getElementById(`input-recibido-${idPedido}`).value;
+        // ---------------------------------------------------------------
+        // HELPERS
+        // ---------------------------------------------------------------
+
+        function obtenerSubtotal(tarjeta) {
+            // Django puede enviar la coma como separador decimal en algunos locales; la normalizamos
+            return parseFloat(tarjeta.dataset.subtotal.replace(',', '.'));
+        }
+
+        function obtenerTotalReal(tarjeta) {
+            const subtotal = obtenerSubtotal(tarjeta);
+            const conPropina = tarjeta.querySelector('.js-check-propina').checked;
+            return conPropina ? subtotal * 1.10 : subtotal;
+        }
+
+        function formatoMiles(input) {
+            const valorNum = input.value.replace(/\D/g, '');
+            input.value = valorNum === '' ? '' : parseInt(valorNum).toLocaleString('es-CO');
+        }
+
+        // ---------------------------------------------------------------
+        // LÓGICA DE CÁLCULO
+        // ---------------------------------------------------------------
+
+        function recalcularTotal(tarjeta) {
+            const subtotal   = obtenerSubtotal(tarjeta);
+            const conPropina = tarjeta.querySelector('.js-check-propina').checked;
+            const propina    = conPropina ? subtotal * 0.10 : 0;
+            const total      = subtotal + propina;
+
+            tarjeta.querySelector('.js-propina-display').innerText = '$' + propina.toLocaleString('es-CO');
+            tarjeta.querySelector('.js-total-display').innerText   = total.toLocaleString('es-CO');
+            calcularCambio(tarjeta);
+        }
+
+        function calcularCambio(tarjeta) {
+            const metodoPago    = tarjeta.querySelector('.js-metodo-pago').value;
+            const inputRecibido = tarjeta.querySelector('.js-input-recibido');
+            const divCambio     = tarjeta.querySelector('.js-cambio-display');
+
+            if (metodoPago !== 'efectivo') {
+                inputRecibido.value    = '';
+                inputRecibido.disabled = true;
+                divCambio.innerText    = 'Transacción digital. Sin vuelto.';
+                divCambio.style.color  = '#a0a0a0';
+                return;
+            }
+
+            inputRecibido.disabled = false;
+            const totalReal       = obtenerTotalReal(tarjeta);
+            const pagoIngresado   = parseFloat(inputRecibido.value.replace(/\./g, ''));
+
+            if (!pagoIngresado || pagoIngresado < totalReal) {
+                divCambio.innerText   = 'Monto insuficiente';
+                divCambio.style.color = '#ff5252';
+            } else {
+                divCambio.innerText   = 'Vuelto a entregar: $' + (pagoIngresado - totalReal).toLocaleString('es-CO');
+                divCambio.style.color = '#00e676';
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // PROCESAR PAGO
+        // ---------------------------------------------------------------
+
+        function procesarPago(tarjeta) {
+            const idPedido    = tarjeta.dataset.pedidoId;
+            const metodoPago  = tarjeta.querySelector('.js-metodo-pago').value;
+            const tipoFactura = tarjeta.querySelector('.js-tipo-factura').value;
+            const totalReal   = obtenerTotalReal(tarjeta);
+
+            if (metodoPago === 'efectivo') {
+                const inputTexto    = tarjeta.querySelector('.js-input-recibido').value;
                 const pagoIngresado = parseFloat(inputTexto.replace(/\./g, ''));
                 if (!pagoIngresado || pagoIngresado < totalReal) {
-                    M.toast({html: 'Ingrese un monto en efectivo válido', classes: 'rounded red'});
+                    M.toast({ html: 'Ingrese un monto en efectivo válido', classes: 'rounded red' });
                     return;
                 }
             }
@@ -199,25 +218,24 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
+                    'X-CSRFToken': csrfToken,
                 }
             })
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
-                if(data.status === 'success') {
-                    let msg = tipoFactura === 'fe' ? 'Factura Electrónica a la DIAN' : 'Tiquete POS generado';
-                    M.toast({html: `¡Cobro exitoso! ${msg}`, classes: 'rounded green'});
-                    const card = document.getElementById(`caja-pedido-${idPedido}`);
-                    card.style.transition = "all 0.5s ease";
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.9)';
-                    setTimeout(() => { card.remove(); }, 500);
+                if (data.status === 'success') {
+                    const msg = tipoFactura === 'fe' ? 'Factura Electrónica a la DIAN' : 'Tiquete POS generado';
+                    M.toast({ html: `¡Cobro exitoso! ${msg}`, classes: 'rounded green' });
+                    tarjeta.style.transition = 'all 0.5s ease';
+                    tarjeta.style.opacity    = '0';
+                    tarjeta.style.transform  = 'scale(0.9)';
+                    setTimeout(() => tarjeta.remove(), 500);
                 } else {
-                    M.toast({html: 'Error DB: ' + data.mensaje, classes: 'rounded red'});
+                    M.toast({ html: 'Error: ' + data.mensaje, classes: 'rounded red' });
                 }
             })
-            .catch(error => {
-                M.toast({html: 'Error de conexión con el servidor', classes: 'rounded red'});
+            .catch(() => {
+                M.toast({ html: 'Error de conexión con el servidor', classes: 'rounded red' });
             });
         }
     </script>
