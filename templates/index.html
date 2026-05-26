@@ -4,248 +4,437 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChefControl - Dashboard</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <title>ChefControl — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="{% static 'CSS/custom-styles.css' %}" rel="stylesheet">
+    <style>
+        /* Estilos específicos del dashboard */
+        .container { margin-top: 0; margin-bottom: 48px; padding: 24px; }
+
+        /* ── Stat cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px)  { .stats-grid { grid-template-columns: 1fr; } }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 20px 22px;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .stat-card .stat-val {
+            font-size: 2rem; font-weight: 800;
+            color: var(--text-primary); line-height: 1;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.8rem; color: var(--text-secondary);
+            font-weight: 500; margin-top: 4px;
+        }
+
+        .stat-card .stat-change {
+            font-size: 0.75rem; font-weight: 600;
+            margin-top: 10px; display: flex; align-items: center; gap: 4px;
+        }
+
+        /* Pulso en pedidos (indicador en tiempo real) */
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.5; transform: scale(0.75); }
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-dot 1.4s ease-in-out infinite;
+            margin-right: 4px;
+        }
+
+        /* ── Layout 2 cols ── */
+        .two-col { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-bottom: 24px; }
+        @media (max-width: 1024px) { .two-col { grid-template-columns: 1fr; } }
+
+        /* ── Leyenda mesas ── */
+        .mesa-legend {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .mesa-legend-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.75rem; color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+        }
+
+        .legend-dot.libre     { background: #4ade80; }
+        .legend-dot.ocupada   { background: #f87171; }
+        .legend-dot.reservada { background: #60a5fa; }
+    </style>
 </head>
 <body>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <h5>🍽️ ChefControl</h5>
-            <p>Gestión de Restaurante</p>
+<!-- ═══════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════ -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sidebar">
+            <i class="material-icons">restaurant</i>
         </div>
-        <div class="sidebar-section">Principal</div>
-        <a href="index.html" class="active"><i class="material-icons">dashboard</i> Dashboard</a>
-        <div class="sidebar-section">Operaciones</div>
-        <a href="PAGES/pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
-        <a href="{% url 'inventario' %}"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
-        <a href="PAGES/menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
-        <div class="sidebar-section">Administración</div>
-        <a href="PAGES/clientes.html"><i class="material-icons">people</i> Clientes</a>
-        <a href="PAGES/personal.html"><i class="material-icons">badge</i> Personal</a>
-        <a href="PAGES/facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
-        <a href="PAGES/reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
-        <a href="PAGES/configuracion.html"><i class="material-icons">settings</i> Configuración</a>
-        <a href="{% url 'logout' %}" class="red-text text-darken-2" style="margin-top: 20px;">
-            <i class="material-icons">exit_to_app</i> Cerrar Sesión
-        </a>
-        <div class="sidebar-footer">
-            <span>Administrador</span>
-            <p>admin@chefcontrol.com</p>
+        <div class="brand-text">
+            <div class="brand-name">ChefControl</div>
+            <div class="brand-sub">Gestión de restaurante</div>
         </div>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <div class="main-content">
-        <div class="top-nav">
+    <div class="sidebar-section sidebar-label">Principal</div>
+    <a href="{% url 'dashboard' %}" class="active">
+        <i class="material-icons">dashboard</i>
+        <span class="sidebar-label">Dashboard</span>
+    </a>
+
+    <div class="sidebar-section sidebar-label">Operaciones</div>
+    <a href="#">
+        <i class="material-icons">shopping_cart</i>
+        <span class="sidebar-label">Pedidos</span>
+        <span class="sidebar-badge">4</span>
+    </a>
+    <a href="{% url 'inventario' %}">
+        <i class="material-icons">inventory_2</i>
+        <span class="sidebar-label">Inventario</span>
+        <span class="sidebar-badge">!</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">restaurant_menu</i>
+        <span class="sidebar-label">Menús</span>
+    </a>
+    <a href="{% url 'crear_pedido' %}">
+        <i class="material-icons">add_circle_outline</i>
+        <span class="sidebar-label">Nuevo Pedido</span>
+    </a>
+    <a href="{% url 'cocina' %}">
+        <i class="material-icons">soup_kitchen</i>
+        <span class="sidebar-label">Cocina (KDS)</span>
+    </a>
+
+    <div class="sidebar-section sidebar-label">Administración</div>
+    <a href="#">
+        <i class="material-icons">people</i>
+        <span class="sidebar-label">Clientes</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">badge</i>
+        <span class="sidebar-label">Personal</span>
+    </a>
+    <a href="{% url 'facturacion' %}">
+        <i class="material-icons">receipt_long</i>
+        <span class="sidebar-label">Facturación</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">bar_chart</i>
+        <span class="sidebar-label">Reportes</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">settings</i>
+        <span class="sidebar-label">Configuración</span>
+    </a>
+
+    <a href="{% url 'logout' %}" class="logout-link" style="margin-top: 8px;">
+        <i class="material-icons">exit_to_app</i>
+        <span class="sidebar-label">Cerrar Sesión</span>
+    </a>
+
+    <div class="sidebar-footer">
+        <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+        <span class="user-email">{{ request.user.email|default:"" }}</span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CONTENIDO PRINCIPAL
+═══════════════════════════════════════ -->
+<div class="main-content" id="main-content">
+
+    <!-- Topbar -->
+    <div class="top-nav">
+        <div class="top-nav-left">
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Colapsar menú">
+                <i class="material-icons">menu</i>
+            </button>
             <h5>Dashboard</h5>
-            <div class="top-nav-right">
-                <span class="date-badge" id="fecha-actual"></span>
-                <span>Hola, {{ request.user.first_name|default:request.user.username }}
-                <a href="#"><i class="material-icons" style="color:#757575;vertical-align:middle">notifications</i></a>
-                <a href="#"><i class="material-icons" style="color:#757575;vertical-align:middle">account_circle</i></a>
-            </div>
         </div>
 
-        <div class="container">
-
-            <!-- ESTADÍSTICAS -->
-            <div class="row" style="margin-top:24px">
-                <div class="col s12 m6 l3">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="stat-icon" style="background:#e0f2f1">
-                                <i class="material-icons teal-text text-darken-2" style="font-size:24px">shopping_cart</i>
-                            </div>
-                            <p class="stat-val teal-text text-darken-2">{{ total_pedidos }}</p>
-                            <p class="stat-label">Pedidos Hoy</p>
-                            <p class="stat-change green-text">↑ 12% vs ayer</p>
-                        </div>
-                    </div>
-                </div>
-               <div class="col s12 m6 l3">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="stat-icon" style="background:#fff8e1">
-                                <i class="material-icons" style="color:#f9a825;font-size:24px">attach_money</i>
-                            </div>
-                            <p class="stat-val" style="color:#f9a825; font-size: clamp(1.2rem, 1.8vw, 1.6rem); font-weight: bold; word-break: break-word; line-height: 1.2;">${{ ventas_dia|floatformat:"0g" }}</p>
-                            <p class="stat-label">Ventas del Día</p>
-                            <p class="stat-change green-text">↑ 8% vs ayer</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col s12 m6 l3">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="stat-icon" style="background:#ffebee">
-                                <i class="material-icons red-text text-darken-2" style="font-size:24px">warning</i>
-                            </div>
-                            <p class="stat-val red-text text-darken-2">{{ alertas_inventario }}</p>
-                            <p class="stat-label">Alertas Inventario</p>
-                            <p class="stat-change red-text">3 productos críticos</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col s12 m6 l3">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="stat-icon" style="background:#e3f2fd">
-                                <i class="material-icons" style="color:#1565c0;font-size:24px">people</i>
-                            </div>
-                            <p class="stat-val" style="color:#1565c0">{{ cantidad_empleados }}</p>
-                            <p class="stat-label">Empleados Activos</p>
-                            <p class="stat-change grey-text">3 de descanso</p>
-                        </div>
-                    </div>
-                </div>
+        <div class="top-nav-right">
+            <div class="datetime-badge">
+                <span id="fecha-actual"></span>
+                <span class="time-part" id="hora-actual"></span>
             </div>
 
-            <!-- PEDIDOS + MESAS -->
-            <div class="row">
-                <div class="col s12 l8">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="section-header">
-                                <h6><i class="material-icons tiny teal-text">shopping_cart</i> Pedidos Recientes</h6>
-                                <a href="PAGES/pedidos.html">Ver todos →</a>
-                            </div>
-                            <table class="striped responsive-table highlight">
-                                <thead>
-                                    <tr>
-                                        <th>#Pedido</th>
-                                        <th>Mesa</th>
-                                        <th>Mesero</th>
-                                        <th>Total</th>
-                                        <th>Estado</th>
-                                        <th>Acción</th>
-                                    </tr>
-                                </thead>                            
-                                    <tbody>
-                                    {% for pedido in pedidos_recientes %}
-                                        <tr>
-                                            <td>{{ pedido.id_pedido }}</td>
-                                            <td>Mesa {{ pedido.id_mesa.numero_mesa }}</td>
-                                            <td>{{ pedido.id_empleado.nombres }}</td>
-                                            <td><strong>${{ pedido.total }}</strong></td>
-                                            <td><span class="chip teal white-text">{{ pedido.estado }}</span></td>
-                                            <td><a href="#" class="btn-small teal white-text">Ver</a></td>
-                                        </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="6" style="text-align: center; padding: 30px; color: #9e9e9e;">
-                                                <i class="material-icons" style="font-size: 3rem; opacity: 0.5;">inbox</i><br>
-                                                No hay pedidos recientes en la base de datos.
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="col s12 l4">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="section-header">
-                                <h6><i class="material-icons tiny teal-text">table_bar</i> Estado de Mesas</h6>
-                            </div>
-                            <div class="mesa-grid">
-                                <div class="mesa-item mesa-disponible">1<span>Libre</span></div>
-                                <div class="mesa-item mesa-ocupada">2<span>Ocupada</span></div>
-                                <div class="mesa-item mesa-disponible">3<span>Libre</span></div>
-                                <div class="mesa-item mesa-ocupada">4<span>Ocupada</span></div>
-                                <div class="mesa-item mesa-reservada">5<span>Reservada</span></div>
-                                <div class="mesa-item mesa-disponible">6<span>Libre</span></div>
-                                <div class="mesa-item mesa-ocupada">7<span>Ocupada</span></div>
-                                <div class="mesa-item mesa-disponible">8<span>Libre</span></div>
-                            </div>
-                            <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap">
-                                <span style="font-size:0.78rem;display:flex;align-items:center;gap:4px">
-                                    <span style="width:10px;height:10px;border-radius:50%;background:#43a047;display:inline-block"></span>Libre (4)
-                                </span>
-                                <span style="font-size:0.78rem;display:flex;align-items:center;gap:4px">
-                                    <span style="width:10px;height:10px;border-radius:50%;background:#c62828;display:inline-block"></span>Ocupada (3)
-                                </span>
-                                <span style="font-size:0.78rem;display:flex;align-items:center;gap:4px">
-                                    <span style="width:10px;height:10px;border-radius:50%;background:#1565c0;display:inline-block"></span>Reservada (1)
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <a href="{% url 'crear_pedido' %}" class="btn-quick-action">
+                <i class="material-icons">add</i>
+                Nuevo Pedido
+            </a>
 
-            <!-- ALERTAS INVENTARIO -->
-            <div class="row">
-                <div class="col s12">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="section-header">
-                                <h6><i class="material-icons tiny red-text">warning</i> Alertas de Inventario</h6>
-                                <a href="PAGES/inventario.html">Ver inventario →</a>
-                            </div>
-                            <table class="striped responsive-table highlight">
-                                <thead>
-                                    <tr>
-                                        <th>Código</th>
-                                        <th>Producto</th>
-                                        <th>Categoría</th>
-                                        <th>Stock Actual</th>
-                                        <th>Stock Mínimo</th>
-                                        <th>Estado</th>
-                                        <th>Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>INV-001</td>
-                                        <td><strong>Tomates</strong></td>
-                                        <td>Verduras</td>
-                                        <td class="red-text"><strong>5 Kg</strong></td>
-                                        <td>20 Kg</td>
-                                        <td><span class="chip red white-text">Crítico</span></td>
-                                        <td><a href="PAGES/inventario.html" class="btn-small orange white-text">Reponer</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>INV-002</td>
-                                        <td><strong>Lechuga Romana</strong></td>
-                                        <td>Verduras</td>
-                                        <td class="orange-text"><strong>15 Uds</strong></td>
-                                        <td>30 Uds</td>
-                                        <td><span class="chip orange white-text">Bajo</span></td>
-                                        <td><a href="PAGES/inventario.html" class="btn-small orange white-text">Reponer</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>INV-003</td>
-                                        <td><strong>Queso Mozzarella</strong></td>
-                                        <td>Lácteos</td>
-                                        <td class="green-text"><strong>45 Kg</strong></td>
-                                        <td>15 Kg</td>
-                                        <td><span class="chip green white-text">Normal</span></td>
-                                        <td><a href="PAGES/inventario.html" class="btn-small teal white-text">Ver</a></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <button class="icon-btn" aria-label="Notificaciones">
+                <i class="material-icons">notifications</i>
+                <span class="notif-dot"></span>
+            </button>
 
+            <div class="user-avatar" title="{{ request.user.get_full_name|default:request.user.username }}" id="user-avatar">
+                {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
+            </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="{% static 'JS/app.js' %}"></script>
-    <script>
-    const ahora = new Date();
-    const opciones = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
-    const fechaTexto = ahora.toLocaleDateString('es-CO', opciones);
-    document.getElementById('fecha-actual').textContent = 
-        fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+    <!-- Cuerpo -->
+    <div class="container">
+
+        <!-- ── Estadísticas ── -->
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ total_pedidos }}</div>
+                        <div class="stat-label">Pedidos Hoy</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="material-icons" style="color:var(--accent)">shopping_cart</i>
+                    </div>
+                </div>
+                <div class="stat-change up">
+                    <span class="live-dot"></span> En tiempo real
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">${{ ventas_dia|floatformat:"0g" }}</div>
+                        <div class="stat-label">Ventas del Día</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="material-icons" style="color:var(--color-success)">attach_money</i>
+                    </div>
+                </div>
+                <div class="stat-change up">↑ 8% vs ayer</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ alertas_inventario }}</div>
+                        <div class="stat-label">Alertas Inventario</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="material-icons" style="color:var(--color-danger)">warning</i>
+                    </div>
+                </div>
+                <div class="stat-change down">3 productos críticos</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ cantidad_empleados }}</div>
+                        <div class="stat-label">Empleados Activos</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="material-icons" style="color:var(--color-info)">people</i>
+                    </div>
+                </div>
+                <div class="stat-change neutral">3 de descanso</div>
+            </div>
+
+        </div>
+
+        <!-- ── Pedidos recientes + Mesas ── -->
+        <div class="two-col">
+
+            <!-- Pedidos recientes -->
+            <div class="card">
+                <div class="card-content">
+                    <div class="section-header">
+                        <h6><i class="material-icons">shopping_cart</i> Pedidos Recientes</h6>
+                        <a href="#">Ver todos →</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#Pedido</th>
+                                <th>Mesa</th>
+                                <th>Mesero</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos_recientes %}
+                            <tr>
+                                <td>#{{ pedido.id_pedido }}</td>
+                                <td>Mesa {{ pedido.id_mesa.numero_mesa }}</td>
+                                <td>{{ pedido.id_empleado.nombres }}</td>
+                                <td style="font-weight:700; color:var(--accent)">${{ pedido.total }}</td>
+                                <td><span class="chip teal white-text">{{ pedido.estado }}</span></td>
+                                <td>
+                                    <a href="#" class="btn-small teal white-text waves-effect" style="font-size:0.75rem">Ver</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="table-empty">
+                                        <i class="material-icons">inbox</i>
+                                        <span>No hay pedidos recientes</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mesas -->
+            <div class="card">
+                <div class="card-content">
+                    <div class="section-header">
+                        <h6><i class="material-icons">table_bar</i> Estado de Mesas</h6>
+                    </div>
+                    <div class="mesa-grid">
+                        <div class="mesa-item mesa-disponible">1<span>Libre</span></div>
+                        <div class="mesa-item mesa-ocupada">2<span>Ocupada</span></div>
+                        <div class="mesa-item mesa-disponible">3<span>Libre</span></div>
+                        <div class="mesa-item mesa-ocupada">4<span>Ocupada</span></div>
+                        <div class="mesa-item mesa-reservada">5<span>Reservada</span></div>
+                        <div class="mesa-item mesa-disponible">6<span>Libre</span></div>
+                        <div class="mesa-item mesa-ocupada">7<span>Ocupada</span></div>
+                        <div class="mesa-item mesa-disponible">8<span>Libre</span></div>
+                    </div>
+                    <div class="mesa-legend">
+                        <div class="mesa-legend-item">
+                            <span class="legend-dot libre"></span> Libre (4)
+                        </div>
+                        <div class="mesa-legend-item">
+                            <span class="legend-dot ocupada"></span> Ocupada (3)
+                        </div>
+                        <div class="mesa-legend-item">
+                            <span class="legend-dot reservada"></span> Reservada (1)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Alertas de inventario ── -->
+        <div class="card">
+            <div class="card-content">
+                <div class="section-header">
+                    <h6><i class="material-icons">warning</i> Alertas de Inventario</h6>
+                    <a href="{% url 'inventario' %}">Ver inventario →</a>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Stock Mínimo</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>INV-001</td>
+                            <td>Tomates</td>
+                            <td>Verduras</td>
+                            <td style="color:var(--color-danger); font-weight:700">5 Kg</td>
+                            <td>20 Kg</td>
+                            <td><span class="chip red white-text">Crítico</span></td>
+                            <td><a href="{% url 'inventario' %}" class="btn-small orange white-text waves-effect">Reponer</a></td>
+                        </tr>
+                        <tr>
+                            <td>INV-002</td>
+                            <td>Lechuga Romana</td>
+                            <td>Verduras</td>
+                            <td style="color:var(--color-warning); font-weight:700">15 Uds</td>
+                            <td>30 Uds</td>
+                            <td><span class="chip orange white-text">Bajo</span></td>
+                            <td><a href="{% url 'inventario' %}" class="btn-small orange white-text waves-effect">Reponer</a></td>
+                        </tr>
+                        <tr>
+                            <td>INV-003</td>
+                            <td>Queso Mozzarella</td>
+                            <td>Lácteos</td>
+                            <td style="color:var(--color-success); font-weight:700">45 Kg</td>
+                            <td>15 Kg</td>
+                            <td><span class="chip green white-text">Normal</span></td>
+                            <td><a href="{% url 'inventario' %}" class="btn-small teal white-text waves-effect">Ver</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="{% static 'JS/app.js' %}"></script>
+<script>
+    // Fecha y hora en tiempo real
+    function actualizarFechaHora() {
+        const ahora    = new Date();
+        const opciones = { weekday: 'long', day: 'numeric', month: 'long' };
+        const fecha    = ahora.toLocaleDateString('es-CO', opciones);
+        const hora     = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        document.getElementById('fecha-actual').textContent =
+            fecha.charAt(0).toUpperCase() + fecha.slice(1) + ' —';
+        document.getElementById('hora-actual').textContent = hora;
+    }
+
+    actualizarFechaHora();
+    setInterval(actualizarFechaHora, 1000);
+
+    // Toggle sidebar
+    const sidebar     = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    const toggleBtn   = document.getElementById('sidebar-toggle');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+    });
 </script>
 </body>
 </html>
