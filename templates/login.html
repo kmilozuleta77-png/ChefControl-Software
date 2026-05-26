@@ -1,9 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
-...
-<!DOCTYPE html>
-<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +44,16 @@
         <div class="login-right">
             <h4>Bienvenido de nuevo</h4>
             <p class="subtitle">Ingresa tus credenciales para continuar</p>
-            
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="card-panel red darken-1 white-text" style="border-radius:8px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+                    <i class="material-icons">error_outline</i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            {% endif %}
+
             <form method="POST" action="{% url 'login' %}">
                 {% csrf_token %}
                 
