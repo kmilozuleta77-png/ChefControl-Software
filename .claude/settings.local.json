@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir -la)",
+      "Bash(findstr -E \"requirements|env|config|\\\\.txt|\\\\.json\")"
+    ]
+  }
+}
