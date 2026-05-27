@@ -1,18 +1,33 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChefControl — Dashboard</title>
+
+    <!-- Fuentes e íconos -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="{% static 'CSS/custom-styles.css' %}" rel="stylesheet">
-    <style>
-        /* Estilos específicos del dashboard */
-        .container { margin-top: 0; margin-bottom: 48px; padding: 24px; }
 
-        /* ── Stat cards ── */
+    <!-- Sistema de diseño centralizado (tokens, sidebar, topbar, componentes) -->
+    <link href="{% static 'CSS/design-system.css' %}" rel="stylesheet">
+
+    <style>
+        /* ──────────────────────────────────────────────────────────────
+           ESTILOS ESPECÍFICOS DEL DASHBOARD
+           Todo lo compartido vive en design-system.css.
+           Aquí solo están los layouts y componentes únicos de esta pantalla.
+        ────────────────────────────────────────────────────────────── */
+
+        /* Contenedor principal del cuerpo */
+        .container {
+            margin-top: 0;
+            margin-bottom: 48px;
+            padding: 24px;
+        }
+
+        /* ── Grid de estadísticas — 4 columnas en escritorio ── */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -21,20 +36,29 @@
         }
 
         @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px)  { .stats-grid { grid-template-columns: 1fr; } }
+        @media (max-width:  600px) { .stats-grid { grid-template-columns: 1fr; } }
 
+        /* Tarjeta de estadística individual */
         .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
+            background:    var(--bg-card);
+            border:        1px solid var(--border);
             border-radius: var(--radius-card);
-            padding: 20px 22px;
+            padding:       20px 22px;
+            /* Entrada animada al cargar la página */
+            animation: card-enter 0.35s ease both;
             transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
         }
 
+        /* Delay escalonado en las 4 cards para efecto cascada */
+        .stats-grid .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stats-grid .stat-card:nth-child(2) { animation-delay: 0.10s; }
+        .stats-grid .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stats-grid .stat-card:nth-child(4) { animation-delay: 0.20s; }
+
         .stat-card:hover {
             border-color: var(--border-light);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+            transform:    translateY(-2px);
+            box-shadow:   var(--shadow-md);
         }
 
         .stat-card-top {
@@ -42,41 +66,17 @@
             margin-bottom: 14px;
         }
 
-        .stat-card .stat-val {
-            font-size: 2rem; font-weight: 800;
-            color: var(--text-primary); line-height: 1;
+        /* ── Layout de 2 columnas — pedidos + mesas ── */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
-        .stat-card .stat-label {
-            font-size: 0.8rem; color: var(--text-secondary);
-            font-weight: 500; margin-top: 4px;
-        }
-
-        .stat-card .stat-change {
-            font-size: 0.75rem; font-weight: 600;
-            margin-top: 10px; display: flex; align-items: center; gap: 4px;
-        }
-
-        /* Pulso en pedidos (indicador en tiempo real) */
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.5; transform: scale(0.75); }
-        }
-
-        .live-dot {
-            display: inline-block;
-            width: 7px; height: 7px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: pulse-dot 1.4s ease-in-out infinite;
-            margin-right: 4px;
-        }
-
-        /* ── Layout 2 cols ── */
-        .two-col { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-bottom: 24px; }
         @media (max-width: 1024px) { .two-col { grid-template-columns: 1fr; } }
 
-        /* ── Leyenda mesas ── */
+        /* ── Leyenda de estado de mesas ── */
         .mesa-legend {
             display: flex; gap: 16px; flex-wrap: wrap;
             margin-top: 14px;
@@ -87,21 +87,34 @@
             font-size: 0.75rem; color: var(--text-secondary);
         }
 
-        .legend-dot {
-            width: 9px; height: 9px; border-radius: 50%;
-        }
-
+        .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
         .legend-dot.libre     { background: #4ade80; }
         .legend-dot.ocupada   { background: #f87171; }
         .legend-dot.reservada { background: #60a5fa; }
+
+        /* ── Indicador de tiempo real (punto pulsante) ── */
+        .live-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-dot 1.4s ease-in-out infinite;
+            margin-right: 4px;
+        }
     </style>
 </head>
+
+<!--
+    El tema se aplica via data-theme en <html>.
+    El script al final lee localStorage para restaurar la preferencia del usuario.
+-->
 <body>
 
-<!-- ═══════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════════════
      SIDEBAR
-═══════════════════════════════════════ -->
+════════════════════════════════════════════════════════════════ -->
 <div class="sidebar" id="sidebar">
+
     <div class="sidebar-brand">
         <div class="brand-icon-sidebar">
             <i class="material-icons">restaurant</i>
@@ -175,14 +188,16 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════
+
+<!-- ═══════════════════════════════════════════════════════════════
      CONTENIDO PRINCIPAL
-═══════════════════════════════════════ -->
+════════════════════════════════════════════════════════════════ -->
 <div class="main-content" id="main-content">
 
-    <!-- Topbar -->
+    <!-- ── Topbar ── -->
     <div class="top-nav">
         <div class="top-nav-left">
+            <!-- Botón colapsar/expandir sidebar -->
             <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Colapsar menú">
                 <i class="material-icons">menu</i>
             </button>
@@ -190,28 +205,45 @@
         </div>
 
         <div class="top-nav-right">
+            <!-- Fecha y hora en tiempo real -->
             <div class="datetime-badge">
                 <span id="fecha-actual"></span>
                 <span class="time-part" id="hora-actual"></span>
             </div>
 
+            <!-- Acceso rápido: nuevo pedido -->
             <a href="{% url 'crear_pedido' %}" class="btn-quick-action">
                 <i class="material-icons">add</i>
                 Nuevo Pedido
             </a>
 
+            <!-- Toggle tema oscuro / claro -->
+            <button class="icon-btn theme-toggle" id="theme-toggle-btn"
+                    onclick="toggleTema()" aria-label="Cambiar tema">
+                <i class="material-icons" id="theme-icon">light_mode</i>
+            </button>
+
+            <!-- Control de accesibilidad: tamaño de fuente -->
+            <div class="font-size-ctrl" title="Tamaño de texto">
+                <button class="icon-btn" onclick="reducirFuente()" aria-label="Reducir fuente">A-</button>
+                <button class="icon-btn" onclick="aumentarFuente()" aria-label="Aumentar fuente">A+</button>
+            </div>
+
+            <!-- Notificaciones -->
             <button class="icon-btn" aria-label="Notificaciones">
                 <i class="material-icons">notifications</i>
                 <span class="notif-dot"></span>
             </button>
 
-            <div class="user-avatar" title="{{ request.user.get_full_name|default:request.user.username }}" id="user-avatar">
+            <!-- Avatar del usuario -->
+            <div class="user-avatar"
+                 title="{{ request.user.get_full_name|default:request.user.username }}">
                 {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
             </div>
         </div>
     </div>
 
-    <!-- Cuerpo -->
+    <!-- ── Cuerpo del dashboard ── -->
     <div class="container">
 
         <!-- ── Estadísticas ── -->
@@ -224,7 +256,7 @@
                         <div class="stat-label">Pedidos Hoy</div>
                     </div>
                     <div class="stat-icon">
-                        <i class="material-icons" style="color:var(--accent)">shopping_cart</i>
+                        <i class="material-icons" style="color: var(--accent)">shopping_cart</i>
                     </div>
                 </div>
                 <div class="stat-change up">
@@ -239,7 +271,7 @@
                         <div class="stat-label">Ventas del Día</div>
                     </div>
                     <div class="stat-icon">
-                        <i class="material-icons" style="color:var(--color-success)">attach_money</i>
+                        <i class="material-icons" style="color: var(--color-success)">attach_money</i>
                     </div>
                 </div>
                 <div class="stat-change up">↑ 8% vs ayer</div>
@@ -252,7 +284,7 @@
                         <div class="stat-label">Alertas Inventario</div>
                     </div>
                     <div class="stat-icon">
-                        <i class="material-icons" style="color:var(--color-danger)">warning</i>
+                        <i class="material-icons" style="color: var(--color-danger)">warning</i>
                     </div>
                 </div>
                 <div class="stat-change down">3 productos críticos</div>
@@ -265,24 +297,28 @@
                         <div class="stat-label">Empleados Activos</div>
                     </div>
                     <div class="stat-icon">
-                        <i class="material-icons" style="color:var(--color-info)">people</i>
+                        <i class="material-icons" style="color: var(--color-info)">people</i>
                     </div>
                 </div>
                 <div class="stat-change neutral">3 de descanso</div>
             </div>
 
-        </div>
+        </div><!-- /stats-grid -->
 
-        <!-- ── Pedidos recientes + Mesas ── -->
+        <!-- ── Pedidos recientes + Estado de mesas ── -->
         <div class="two-col">
 
             <!-- Pedidos recientes -->
             <div class="card">
                 <div class="card-content">
                     <div class="section-header">
-                        <h6><i class="material-icons">shopping_cart</i> Pedidos Recientes</h6>
+                        <h6>
+                            <i class="material-icons">shopping_cart</i>
+                            Pedidos Recientes
+                        </h6>
                         <a href="#">Ver todos →</a>
                     </div>
+
                     <table>
                         <thead>
                             <tr>
@@ -300,10 +336,23 @@
                                 <td>#{{ pedido.id_pedido }}</td>
                                 <td>Mesa {{ pedido.id_mesa.numero_mesa }}</td>
                                 <td>{{ pedido.id_empleado.nombres }}</td>
-                                <td style="font-weight:700; color:var(--accent)">${{ pedido.total }}</td>
-                                <td><span class="chip teal white-text">{{ pedido.estado }}</span></td>
+                                <td style="font-weight: 700; color: var(--accent)">${{ pedido.total }}</td>
                                 <td>
-                                    <a href="#" class="btn-small teal white-text waves-effect" style="font-size:0.75rem">Ver</a>
+                                    <!-- Badge de estado — sin Materialize -->
+                                    {% if pedido.estado == "Listo" %}
+                                        <span class="status-badge badge-green">{{ pedido.estado }}</span>
+                                    {% elif pedido.estado == "Pendiente" %}
+                                        <span class="status-badge badge-orange">{{ pedido.estado }}</span>
+                                    {% elif pedido.estado == "En preparación" %}
+                                        <span class="status-badge badge-blue">{{ pedido.estado }}</span>
+                                    {% elif pedido.estado == "Cancelado" %}
+                                        <span class="status-badge badge-red">{{ pedido.estado }}</span>
+                                    {% else %}
+                                        <span class="status-badge badge-teal">{{ pedido.estado }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="#" class="btn-accion">Ver</a>
                                 </td>
                             </tr>
                             {% empty %}
@@ -321,7 +370,7 @@
                 </div>
             </div>
 
-            <!-- Mesas -->
+            <!-- Estado de mesas -->
             <div class="card">
                 <div class="card-content">
                     <div class="section-header">
@@ -351,7 +400,7 @@
                 </div>
             </div>
 
-        </div>
+        </div><!-- /two-col -->
 
         <!-- ── Alertas de inventario ── -->
         <div class="card">
@@ -360,6 +409,7 @@
                     <h6><i class="material-icons">warning</i> Alertas de Inventario</h6>
                     <a href="{% url 'inventario' %}">Ver inventario →</a>
                 </div>
+
                 <table>
                     <thead>
                         <tr>
@@ -377,46 +427,112 @@
                             <td>INV-001</td>
                             <td>Tomates</td>
                             <td>Verduras</td>
-                            <td style="color:var(--color-danger); font-weight:700">5 Kg</td>
+                            <td style="color: var(--color-danger); font-weight: 700">5 Kg</td>
                             <td>20 Kg</td>
-                            <td><span class="chip red white-text">Crítico</span></td>
-                            <td><a href="{% url 'inventario' %}" class="btn-small orange white-text waves-effect">Reponer</a></td>
+                            <td><span class="status-badge badge-red">Crítico</span></td>
+                            <td><a href="{% url 'inventario' %}" class="btn-accion">Reponer</a></td>
                         </tr>
                         <tr>
                             <td>INV-002</td>
                             <td>Lechuga Romana</td>
                             <td>Verduras</td>
-                            <td style="color:var(--color-warning); font-weight:700">15 Uds</td>
+                            <td style="color: var(--color-warning); font-weight: 700">15 Uds</td>
                             <td>30 Uds</td>
-                            <td><span class="chip orange white-text">Bajo</span></td>
-                            <td><a href="{% url 'inventario' %}" class="btn-small orange white-text waves-effect">Reponer</a></td>
+                            <td><span class="status-badge badge-orange">Bajo</span></td>
+                            <td><a href="{% url 'inventario' %}" class="btn-accion">Reponer</a></td>
                         </tr>
                         <tr>
                             <td>INV-003</td>
                             <td>Queso Mozzarella</td>
                             <td>Lácteos</td>
-                            <td style="color:var(--color-success); font-weight:700">45 Kg</td>
+                            <td style="color: var(--color-success); font-weight: 700">45 Kg</td>
                             <td>15 Kg</td>
-                            <td><span class="chip green white-text">Normal</span></td>
-                            <td><a href="{% url 'inventario' %}" class="btn-small teal white-text waves-effect">Ver</a></td>
+                            <td><span class="status-badge badge-green">Normal</span></td>
+                            <td><a href="{% url 'inventario' %}" class="btn-accion btn-accion-ghost">Ver</a></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div><!-- /card alertas -->
 
-    </div>
-</div>
+    </div><!-- /container -->
+</div><!-- /main-content -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-<script src="{% static 'JS/app.js' %}"></script>
+
 <script>
-    // Fecha y hora en tiempo real
+    /* ──────────────────────────────────────────────────────────────
+       TEMA OSCURO / CLARO
+       Persiste la preferencia del usuario en localStorage.
+    ────────────────────────────────────────────────────────────── */
+    (function () {
+        // Restaurar tema guardado al cargar (antes del render para evitar flash)
+        const temaGuardado = localStorage.getItem('chefcontrol-tema') || 'dark';
+        document.documentElement.setAttribute('data-theme', temaGuardado);
+        const icono = document.getElementById('theme-icon');
+        if (icono) icono.textContent = temaGuardado === 'dark' ? 'light_mode' : 'dark_mode';
+    })();
+
+    /**
+     * Alterna entre tema oscuro y claro.
+     * Actualiza el atributo data-theme en <html> y guarda en localStorage.
+     */
+    function toggleTema() {
+        const actual = document.documentElement.getAttribute('data-theme');
+        const nuevo  = actual === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', nuevo);
+        localStorage.setItem('chefcontrol-tema', nuevo);
+        document.getElementById('theme-icon').textContent =
+            nuevo === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+
+    /* ──────────────────────────────────────────────────────────────
+       ACCESIBILIDAD — TAMAÑO DE FUENTE
+       4 niveles: pequeño → normal → grande → extra grande.
+       Modifica la variable CSS --font-size-base en <html>.
+    ────────────────────────────────────────────────────────────── */
+    const TAMANOS = ['0.875rem', '1rem', '1.1rem', '1.2rem'];
+    let nivelFuente = parseInt(localStorage.getItem('chefcontrol-fuente') || '1', 10);
+
+    // Aplicar nivel guardado al cargar
+    document.documentElement.style.setProperty('--font-size-base', TAMANOS[nivelFuente]);
+
+    /** Aumenta el tamaño de fuente un nivel (máximo: extra grande) */
+    function aumentarFuente() {
+        if (nivelFuente < TAMANOS.length - 1) {
+            nivelFuente++;
+            aplicarFuente();
+        }
+    }
+
+    /** Reduce el tamaño de fuente un nivel (mínimo: pequeño) */
+    function reducirFuente() {
+        if (nivelFuente > 0) {
+            nivelFuente--;
+            aplicarFuente();
+        }
+    }
+
+    /** Aplica el nivel actual y lo persiste en localStorage */
+    function aplicarFuente() {
+        document.documentElement.style.setProperty('--font-size-base', TAMANOS[nivelFuente]);
+        localStorage.setItem('chefcontrol-fuente', nivelFuente);
+    }
+
+    /* ──────────────────────────────────────────────────────────────
+       RELOJ EN TIEMPO REAL
+       Actualiza la fecha y hora en el topbar cada segundo.
+    ────────────────────────────────────────────────────────────── */
+    /**
+     * Actualiza los elementos #fecha-actual y #hora-actual con la
+     * fecha y hora local formateada en español (Colombia).
+     */
     function actualizarFechaHora() {
         const ahora    = new Date();
-        const opciones = { weekday: 'long', day: 'numeric', month: 'long' };
-        const fecha    = ahora.toLocaleDateString('es-CO', opciones);
-        const hora     = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const opFecha  = { weekday: 'long', day: 'numeric', month: 'long' };
+        const fecha    = ahora.toLocaleDateString('es-CO', opFecha);
+        const hora     = ahora.toLocaleTimeString('es-CO', {
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
 
         document.getElementById('fecha-actual').textContent =
             fecha.charAt(0).toUpperCase() + fecha.slice(1) + ' —';
@@ -426,7 +542,14 @@
     actualizarFechaHora();
     setInterval(actualizarFechaHora, 1000);
 
-    // Toggle sidebar
+    /* ──────────────────────────────────────────────────────────────
+       TOGGLE SIDEBAR
+       Colapsa / expande el sidebar y ajusta el margen del contenido.
+    ────────────────────────────────────────────────────────────── */
+    /**
+     * Alterna la clase .collapsed en el sidebar y .expanded en el
+     * contenido principal para manejar el colapso del menú lateral.
+     */
     const sidebar     = document.getElementById('sidebar');
     const mainContent = document.getElementById('main-content');
     const toggleBtn   = document.getElementById('sidebar-toggle');
