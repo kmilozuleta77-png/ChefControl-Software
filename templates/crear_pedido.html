@@ -1,271 +1,836 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS | ChefControl</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <title>ChefControl — Toma de Pedidos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    
     <style>
+        /* ── Variables del sistema ── */
+        :root {
+            --bg-base:        #0a0a0a;
+            --bg-card:        #111111;
+            --bg-elevated:    #1a1a1a;
+            --border:         #1f1f1f;
+            --border-light:   #2a2a2a;
+            --accent:         #f97316;
+            --accent-hover:   #ea580c;
+            --accent-dim:     rgba(249,115,22,0.12);
+            --text-primary:   #f5f5f5;
+            --text-secondary: #737373;
+            --text-muted:     #525252;
+            --color-danger:   #ef4444;
+            --radius-card:    12px;
+            --radius-btn:     8px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: #121212; /* Fondo negro mate */
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-base);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
         }
-        /* Ocultar barra de scroll para look de app nativa */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #1e1e1e; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
-        .pos-container { height: 100vh; margin: 0; display: flex; flex-wrap: wrap; }
-        
-        /* PANEL MENÚ (Izquierda) */
-        .menu-panel { 
-            height: 100vh; overflow-y: auto; padding: 20px; 
-            background-color: #121212;
+        /* ══════════════════════════════
+           LAYOUT POS
+        ══════════════════════════════ */
+        .pos-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            height: 100vh;
         }
+
+        /* ══════════════════════════════
+           PANEL IZQUIERDO — MENÚ
+        ══════════════════════════════ */
+        .menu-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            border-right: 1px solid var(--border);
+        }
+
+        /* Header del POS */
+        .pos-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 60px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .btn-back {
+            display: flex; align-items: center; gap: 6px;
+            color: var(--text-secondary);
+            font-size: 0.82rem; font-weight: 500;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: var(--radius-btn);
+            transition: color 0.2s, background 0.2s;
+        }
+        .btn-back:hover { color: var(--text-primary); background: var(--bg-elevated); }
+        .btn-back .material-icons { font-size: 18px; }
+
+        .pos-title {
+            font-size: 1rem; font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+        }
+
+        .pos-user {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.8rem; color: var(--text-secondary);
+        }
+
+        .pos-user-dot {
+            width: 28px; height: 28px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.68rem; font-weight: 700; color: var(--accent);
+        }
+
+        /* Barra de búsqueda */
+        .search-bar {
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .search-input-wrapper {
+            position: relative; display: flex; align-items: center;
+        }
+
+        .search-input-wrapper .material-icons {
+            position: absolute; left: 12px;
+            color: var(--text-muted); font-size: 18px; pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            padding: 9px 12px 9px 40px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-input:focus { border-color: var(--accent); }
+
+        /* Zona de productos con scroll */
+        .menu-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 24px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-light) transparent;
+        }
+
+        /* Categorías */
+        .categoria-section { margin-bottom: 8px; }
+
         .categoria-titulo {
-            color: #a0a0a0; font-size: 1.2rem; font-weight: 600; text-transform: uppercase;
-            border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px;
+            font-size: 0.7rem; font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            padding: 16px 0 10px;
+            display: flex; align-items: center; gap: 8px;
         }
-        .producto-card { 
-            background-color: #1e1e1e; border-radius: 16px; border: 1px solid #2c2c2c;
-            cursor: pointer; transition: all 0.2s ease; margin-bottom: 15px;
-        }
-        .producto-card:active { transform: scale(0.95); border-color: #fce4ec; }
-        .producto-nombre { font-size: 1.1rem; font-weight: 600; display: block; margin-bottom: 5px;}
-        .producto-precio { color: #fff59d; font-weight: bold; font-size: 1.2rem; }
 
-        /* PANEL TICKET (Derecha) */
-        .ticket-panel { 
-            height: 100vh; background-color: #1a1a1a; padding: 20px; 
-            display: flex; flex-direction: column; border-left: 1px solid #2c2c2c;
+        .categoria-titulo::after {
+            content: '';
+            flex: 1; height: 1px;
+            background: var(--border);
         }
-        .ticket-header { margin-top: 0; font-weight: bold; font-size: 1.5rem; color: #fff;}
-        
-        #ticket-items { 
-            flex-grow: 1; overflow-y: auto; margin: 15px 0; padding-right: 5px;
+
+        /* Grid de productos */
+        .productos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
         }
-        
+
+        /* Tarjeta de producto */
+        .producto-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 14px 14px 12px;
+            cursor: pointer;
+            transition: border-color 0.18s, transform 0.15s, box-shadow 0.18s;
+            user-select: none;
+        }
+
+        .producto-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .producto-card:active { transform: scale(0.96); }
+
+        /* Flash naranja al agregar */
+        @keyframes flash-add {
+            0%   { border-color: var(--accent); box-shadow: 0 0 0 0 rgba(249,115,22,0.5); }
+            60%  { box-shadow: 0 0 0 6px rgba(249,115,22,0); }
+            100% { border-color: var(--border); box-shadow: none; }
+        }
+        .producto-card.added { animation: flash-add 0.45s ease forwards; }
+
+        .producto-nombre {
+            display: block;
+            font-size: 0.875rem; font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            line-height: 1.3;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .producto-precio {
+            display: block;
+            font-size: 0.95rem; font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* Sin resultados en búsqueda */
+        .no-results {
+            display: none;
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-muted);
+        }
+        .no-results .material-icons { font-size: 2.5rem; display: block; margin-bottom: 8px; opacity: 0.4; }
+
+        /* ══════════════════════════════
+           PANEL DERECHO — TICKET
+        ══════════════════════════════ */
+        .ticket-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg-card);
+            overflow: hidden;
+        }
+
+        /* Fila de selects */
+        .selects-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .select-group { display: flex; flex-direction: column; gap: 5px; }
+
+        .select-label {
+            font-size: 0.65rem; font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.8px;
+        }
+
+        .select-dark {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            padding: 7px 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23737373'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 24px;
+        }
+        .select-dark:focus { border-color: var(--accent); }
+        .select-dark option { background: #1a1a1a; color: var(--text-primary); }
+
+        /* Título comanda */
+        .ticket-title {
+            padding: 14px 16px 10px;
+            font-size: 0.875rem; font-weight: 700;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .ticket-count {
+            font-size: 0.72rem; font-weight: 600;
+            color: var(--accent);
+            background: var(--accent-dim);
+            border: 1px solid rgba(249,115,22,0.2);
+            padding: 2px 9px; border-radius: 12px;
+        }
+
+        /* Scroll del carrito */
+        .ticket-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 12px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-light) transparent;
+        }
+
+        /* Estado vacío del carrito */
+        .cart-empty {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .cart-empty .material-icons { font-size: 2.5rem; opacity: 0.3; margin-bottom: 8px; }
+        .cart-empty span { font-size: 0.82rem; }
+
         /* Item del carrito */
         .cart-item {
-            background-color: #252525; border-radius: 12px; padding: 15px;
-            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
         }
-        .cart-item-info { flex-grow: 1; }
-        .cart-item-controls { display: flex; align-items: center; gap: 15px; }
-        .btn-qty { 
-            background: #333; border: none; color: white; width: 35px; height: 35px; 
-            border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; justify-content: center; align-items: center;
+
+        .cart-item-info { flex: 1; min-width: 0; }
+
+        .cart-item-nombre {
+            font-size: 0.85rem; font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .btn-delete { color: #ef5350; cursor: pointer; }
 
-        /* Inputs de Materialize adaptados al Dark Mode */
-        .input-field select { background-color: #252525; color: white; border: 1px solid #444; border-radius: 8px;}
-        .dropdown-content { background-color: #252525; }
-        .dropdown-content li>a, .dropdown-content li>span { color: #fff; }
+        .cart-item-subtotal {
+            font-size: 0.8rem; font-weight: 700;
+            color: var(--accent); margin-top: 3px;
+        }
 
-        /* Botón de Cobro */
-        .btn-cobrar {
-            background-color: #00bfa5 !important; color: #121212 !important; 
-            border-radius: 12px; height: 60px; font-weight: bold; font-size: 1.3rem;
-            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+        .cart-item-controls {
+            display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+        }
+
+        .btn-qty {
+            background: var(--border-light);
+            border: none; color: var(--text-primary);
+            width: 28px; height: 28px;
+            border-radius: 6px; font-size: 1rem;
+            cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            transition: background 0.15s;
+        }
+        .btn-qty:hover { background: var(--text-muted); }
+        .btn-qty .material-icons { font-size: 14px; }
+        .btn-qty.btn-delete { background: rgba(239,68,68,0.1); color: #f87171; }
+        .btn-qty.btn-delete:hover { background: rgba(239,68,68,0.25); }
+
+        .qty-display {
+            font-size: 0.9rem; font-weight: 700;
+            min-width: 20px; text-align: center;
+        }
+
+        /* Campo de observaciones */
+        .obs-wrapper {
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .obs-input-wrapper {
+            position: relative; display: flex; align-items: center;
+        }
+
+        .obs-input-wrapper .material-icons {
+            position: absolute; left: 10px;
+            color: var(--text-muted); font-size: 16px; pointer-events: none;
+        }
+
+        .obs-input {
+            width: 100%;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            padding: 8px 10px 8px 34px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .obs-input::placeholder { color: var(--text-muted); }
+        .obs-input:focus { border-color: var(--accent); }
+
+        /* Botón enviar */
+        .btn-enviar-wrapper {
+            padding: 12px 14px 16px;
+            flex-shrink: 0;
+        }
+
+        .btn-enviar {
+            width: 100%;
+            background: var(--accent);
+            color: #fff;
+            border: none; border-radius: var(--radius-card);
+            height: 56px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700; font-size: 0.95rem;
+            cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 20px;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 24px rgba(249,115,22,0.3);
+        }
+
+        .btn-enviar:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 32px rgba(249,115,22,0.4);
+        }
+
+        .btn-enviar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-enviar .enviar-izq {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-enviar .material-icons { font-size: 20px; }
+
+        .btn-enviar .total-display {
+            font-size: 1.05rem; font-weight: 800;
+        }
+
+        /* Spinner en el botón */
+        .btn-spinner {
+            display: none;
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-enviar.loading .enviar-izq { display: none; }
+        .btn-enviar.loading .total-display { display: none; }
+        .btn-enviar.loading .btn-spinner { display: block; margin: auto; }
+
+        /* ══════════════════════════════
+           TOAST CUSTOM DARK
+        ══════════════════════════════ */
+        .toast-container {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex; flex-direction: column-reverse; gap: 8px;
+            pointer-events: none;
+        }
+
+        .custom-toast {
+            padding: 11px 20px;
+            border-radius: var(--radius-btn);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem; font-weight: 500;
+            border: 1px solid;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.25s, transform 0.25s;
+            white-space: nowrap;
+        }
+
+        .custom-toast.visible { opacity: 1; transform: translateY(0); }
+
+        .custom-toast.success {
+            background: rgba(34,197,94,0.1);
+            border-color: rgba(34,197,94,0.3);
+            color: #4ade80;
+        }
+
+        .custom-toast.error {
+            background: rgba(239,68,68,0.1);
+            border-color: rgba(239,68,68,0.3);
+            color: #f87171;
+        }
+
+        .custom-toast.warning {
+            background: rgba(249,115,22,0.1);
+            border-color: rgba(249,115,22,0.3);
+            color: #fb923c;
+        }
+
+        /* ══════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════ */
+        @media (max-width: 768px) {
+            .pos-layout { grid-template-columns: 1fr; }
+            .ticket-panel { height: 45vh; }
+            .menu-panel { height: 55vh; }
+            .selects-row { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <div class="row pos-container">
-        
-        <div class="col s12 l8 menu-panel">
-            <div style="display:flex; justify-content: space-between; align-items: center;">
-                <h4 style="margin:0; font-weight:bold;">Toma de Pedidos</h4>
-                <a href="{% url 'dashboard' %}" class="grey-text"><i class="material-icons">arrow_back</i> Dashboard</a>
-            </div>
-            
-            {% for categoria in categorias %}
-                <div class="categoria-titulo">{{ categoria.nombre }}</div>
-                <div class="row">
-                    {% for producto in productos %}
-                        {% if producto.id_categoria == categoria %}
-                        <div class="col s6 m4 l3">
-                            <div class="producto-card z-depth-2" onclick="agregarAlCarrito({{ producto.id_producto }}, '{{ producto.nombre|escapejs }}', {{ producto.precio|stringformat:'f' }})">
-                                <div style="padding: 15px;">
-                                    <span class="producto-nombre truncate">{{ producto.nombre }}</span>
-                                    <span class="producto-precio">${{ producto.precio|floatformat:"0g" }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
+<!-- Contenedor de toasts -->
+<div class="toast-container" id="toast-container"></div>
+
+<div class="pos-layout">
+
+    <!-- ═══════════════════════════════
+         PANEL IZQUIERDO — MENÚ
+    ═══════════════════════════════ -->
+    <div class="menu-panel">
+
+        <div class="pos-header">
+            <a href="{% url 'dashboard' %}" class="btn-back">
+                <i class="material-icons">arrow_back</i>
+                Dashboard
+            </a>
+            <div class="pos-title">Toma de Pedidos</div>
+            <div class="pos-user">
+                <div class="pos-user-dot">
+                    {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
                 </div>
-            {% empty %}
-                <p class="grey-text">Cargando menú...</p>
-            {% endfor %}
+                <span>{{ request.user.first_name|default:request.user.username }}</span>
+            </div>
         </div>
 
-        <div class="col s12 l4 ticket-panel">
-            
-            <div class="row" style="margin-bottom: 0;">
-                <div class="input-field col s4">
-                    <select id="select_empleado">
-                        <option value="" disabled selected>Mesero...</option>
-                        {% for empleado in empleados %}
-                            <option value="{{ empleado.id_empleado }}">{{ empleado }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="input-field col s4">
-                    <select id="select_mesa">
-                        <option value="" disabled selected>Mesa...</option>
-                        {% for mesa in mesas %}
-                            <option value="{{ mesa.id_mesa }}">Mesa {{ mesa.numero_mesa }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="input-field col s4">
-                    <select id="select_tipo">
-                        <option value="En mesa" selected>En mesa</option>
-                        <option value="Para llevar">Para llevar</option>
-                    </select>
+        <div class="search-bar">
+            <div class="search-input-wrapper">
+                <i class="material-icons">search</i>
+                <input
+                    type="text"
+                    id="search-productos"
+                    class="search-input"
+                    placeholder="Buscar producto..."
+                    autocomplete="off"
+                >
+            </div>
+        </div>
+
+        <div class="menu-scroll" id="menu-scroll">
+            {% for categoria in categorias %}
+            <div class="categoria-section" data-categoria-id="{{ categoria.id_categoria }}">
+                <div class="categoria-titulo">{{ categoria.nombre }}</div>
+                <div class="productos-grid">
+                    {% for producto in productos %}
+                    {% if producto.id_categoria == categoria %}
+                    <div class="producto-card"
+                         data-id="{{ producto.id_producto }}"
+                         data-nombre="{{ producto.nombre }}"
+                         data-precio="{{ producto.precio|stringformat:'f' }}">
+                        <span class="producto-nombre">{{ producto.nombre }}</span>
+                        <span class="producto-precio">${{ producto.precio|floatformat:"0g" }}</span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
-
-            <div class="ticket-header">Comanda</div>
-            
-            <div id="ticket-items">
-                <div class="center-align grey-text" style="margin-top: 40px;">
-                    <i class="material-icons" style="font-size: 3rem; opacity: 0.5;">restaurant</i>
-                    <p>El pedido está vacío</p>
-                </div>
+            {% empty %}
+            <div style="text-align:center; padding:40px; color:var(--text-muted);">
+                <i class="material-icons" style="font-size:2.5rem; opacity:0.3; display:block; margin-bottom:8px">restaurant_menu</i>
+                <span style="font-size:0.85rem">No hay productos en el menú</span>
             </div>
+            {% endfor %}
 
-            <div class="input-field" style="margin-top: 10px; margin-bottom: 20px;">
-                <i class="material-icons prefix" style="color: #a0a0a0;">edit_note</i>
-                <input type="text" id="input_observaciones" placeholder="Notas (Ej: Hamburguesa sin tomate...)" style="color: white; border-bottom: 1px solid #444;">
+            <div class="no-results" id="no-results">
+                <i class="material-icons">search_off</i>
+                <span>Sin resultados</span>
             </div>
-
-            <button class="waves-effect waves-light btn btn-cobrar" id="btn-enviar-orden">
-                <span>ENVIAR ORDEN</span>
-                <span id="total-display">$0</span>
-            </button>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            M.FormSelect.init(document.querySelectorAll('select'));
-            // Botón principal sin onclick inline
-            document.getElementById('btn-enviar-orden').addEventListener('click', enviarPedido);
+    <!-- ═══════════════════════════════
+         PANEL DERECHO — TICKET
+    ═══════════════════════════════ -->
+    <div class="ticket-panel">
+
+        <div class="selects-row">
+            <div class="select-group">
+                <label class="select-label">Mesero</label>
+                <select id="select_empleado" class="select-dark">
+                    <option value="" disabled selected>Seleccionar…</option>
+                    {% for empleado in empleados %}
+                    <option value="{{ empleado.id_empleado }}">{{ empleado }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="select-group">
+                <label class="select-label">Mesa</label>
+                <select id="select_mesa" class="select-dark">
+                    <option value="" disabled selected>Seleccionar…</option>
+                    {% for mesa in mesas %}
+                    <option value="{{ mesa.id_mesa }}">Mesa {{ mesa.numero_mesa }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="select-group">
+                <label class="select-label">Tipo</label>
+                <select id="select_tipo" class="select-dark">
+                    <option value="En mesa">En mesa</option>
+                    <option value="Para llevar">Para llevar</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="ticket-title">
+            <span>Comanda</span>
+            <span class="ticket-count" id="ticket-count" style="display:none">0 ítems</span>
+        </div>
+
+        <div class="ticket-scroll" id="ticket-items">
+            <div class="cart-empty" id="cart-empty">
+                <i class="material-icons">restaurant</i>
+                <span>El pedido está vacío</span>
+            </div>
+        </div>
+
+        <div class="obs-wrapper">
+            <div class="obs-input-wrapper">
+                <i class="material-icons">edit_note</i>
+                <input
+                    type="text"
+                    id="input_observaciones"
+                    class="obs-input"
+                    placeholder="Observaciones generales (ej: sin picante)…"
+                    maxlength="200"
+                >
+            </div>
+        </div>
+
+        <div class="btn-enviar-wrapper">
+            <button class="btn-enviar" id="btn-enviar-orden" disabled>
+                <div class="enviar-izq">
+                    <i class="material-icons">send</i>
+                    <span id="enviar-text">Enviar Orden</span>
+                </div>
+                <span class="total-display" id="total-display">$0</span>
+                <div class="btn-spinner"></div>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ── Estado del carrito ──
+    let carrito = [];
+
+    // ── Toast personalizado ──
+    function showToast(msg, tipo = 'warning') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `custom-toast ${tipo}`;
+        toast.textContent = msg;
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => toast.classList.add('visible'));
+        });
+        setTimeout(() => {
+            toast.classList.remove('visible');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // ── Renderizar carrito (sin onclick inline) ──
+    function renderizarCarrito() {
+        const container    = document.getElementById('ticket-items');
+        const totalDisplay = document.getElementById('total-display');
+        const cartEmpty    = document.getElementById('cart-empty');
+        const ticketCount  = document.getElementById('ticket-count');
+        const btnEnviar    = document.getElementById('btn-enviar-orden');
+        const enviarText   = document.getElementById('enviar-text');
+
+        if (carrito.length === 0) {
+            // Vaciamos y mostramos el estado vacío
+            container.innerHTML = '';
+            container.appendChild(cartEmpty);
+            cartEmpty.style.display = 'flex';
+            totalDisplay.textContent = '$0';
+            ticketCount.style.display = 'none';
+            btnEnviar.disabled = true;
+            enviarText.textContent = 'Enviar Orden';
+            return;
+        }
+
+        cartEmpty.style.display = 'none';
+
+        let html  = '';
+        let total = 0;
+        let totalItems = 0;
+
+        carrito.forEach(item => {
+            const subtotal = item.precio * item.cantidad;
+            total      += subtotal;
+            totalItems += item.cantidad;
+
+            html += `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <div class="cart-item-nombre">${item.nombre}</div>
+                    <div class="cart-item-subtotal">$${subtotal.toLocaleString('es-CO')}</div>
+                </div>
+                <div class="cart-item-controls">
+                    <button class="btn-qty" data-action="decrement" data-id="${item.id}" aria-label="Reducir">
+                        <i class="material-icons">remove</i>
+                    </button>
+                    <span class="qty-display">${item.cantidad}</span>
+                    <button class="btn-qty" data-action="increment" data-id="${item.id}" aria-label="Aumentar">
+                        <i class="material-icons">add</i>
+                    </button>
+                    <button class="btn-qty btn-delete" data-action="delete" data-id="${item.id}" aria-label="Eliminar">
+                        <i class="material-icons">delete</i>
+                    </button>
+                </div>
+            </div>`;
         });
 
-        // El "Cerebro" del Carrito (Array de objetos)
-        let carrito = [];
+        container.innerHTML = html;
 
-        function agregarAlCarrito(id, nombre, precio) {
-            // Buscamos si el producto ya está en el carrito
-            let itemExistente = carrito.find(item => item.id === id);
-            
-            if (itemExistente) {
-                itemExistente.cantidad++; // Si ya existe, sumamos 1
+        totalDisplay.textContent = '$' + total.toLocaleString('es-CO');
+        ticketCount.textContent  = `${totalItems} ítem${totalItems > 1 ? 's' : ''}`;
+        ticketCount.style.display = '';
+        btnEnviar.disabled = false;
+        enviarText.textContent = `Enviar (${totalItems} ítem${totalItems > 1 ? 's' : ''})`;
+    }
+
+    // ── Agregar al carrito ──
+    function agregarAlCarrito(id, nombre, precio) {
+        const existente = carrito.find(item => item.id === id);
+        if (existente) {
+            existente.cantidad++;
+        } else {
+            carrito.push({ id, nombre, precio: parseFloat(precio), cantidad: 1 });
+        }
+        renderizarCarrito();
+    }
+
+    // ── Cambiar cantidad (+ / -) ──
+    function cambiarCantidad(id, delta) {
+        const item = carrito.find(i => i.id === id);
+        if (!item) return;
+        item.cantidad += delta;
+        if (item.cantidad <= 0) carrito = carrito.filter(i => i.id !== id);
+        renderizarCarrito();
+    }
+
+    // ── Delegación de eventos: productos ──
+    document.getElementById('menu-scroll').addEventListener('click', e => {
+        const card = e.target.closest('.producto-card');
+        if (!card) return;
+        agregarAlCarrito(
+            parseInt(card.dataset.id),
+            card.dataset.nombre,
+            parseFloat(card.dataset.precio)
+        );
+        card.classList.remove('added');
+        void card.offsetWidth; // reinicia la animación si se hace clic rápido
+        card.classList.add('added');
+        card.addEventListener('animationend', () => card.classList.remove('added'), { once: true });
+    });
+
+    // ── Delegación de eventos: botones del carrito ──
+    document.getElementById('ticket-items').addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const id     = parseInt(btn.dataset.id);
+        const action = btn.dataset.action;
+        if (action === 'increment') cambiarCantidad(id, 1);
+        if (action === 'decrement') cambiarCantidad(id, -1);
+        if (action === 'delete')    { carrito = carrito.filter(i => i.id !== id); renderizarCarrito(); }
+    });
+
+    // ── Búsqueda live ──
+    document.getElementById('search-productos').addEventListener('input', function () {
+        const query = this.value.toLowerCase().trim();
+        let hayResultados = false;
+
+        document.querySelectorAll('.categoria-section').forEach(section => {
+            let visiblesEnCategoria = 0;
+            section.querySelectorAll('.producto-card').forEach(card => {
+                const nombre = card.dataset.nombre.toLowerCase();
+                const visible = nombre.includes(query);
+                card.style.display = visible ? '' : 'none';
+                if (visible) visiblesEnCategoria++;
+            });
+            section.style.display = visiblesEnCategoria > 0 ? '' : 'none';
+            if (visiblesEnCategoria > 0) hayResultados = true;
+        });
+
+        document.getElementById('no-results').style.display = hayResultados || !query ? 'none' : 'block';
+    });
+
+    // ── Enviar pedido ──
+    document.getElementById('btn-enviar-orden').addEventListener('click', enviarPedido);
+
+    function enviarPedido() {
+        const idEmpleado   = document.getElementById('select_empleado').value;
+        const idMesa       = document.getElementById('select_mesa').value;
+        const tipoPedido   = document.getElementById('select_tipo').value;
+        const observaciones = document.getElementById('input_observaciones').value;
+
+        if (!idEmpleado) { showToast('Selecciona un mesero', 'warning'); return; }
+        if (!idMesa)     { showToast('Selecciona una mesa', 'warning'); return; }
+        if (carrito.length === 0) { showToast('Agrega al menos un producto', 'warning'); return; }
+
+        const total   = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+        const payload = { id_empleado: idEmpleado, id_mesa: idMesa, tipo_pedido: tipoPedido, observaciones, total, productos: carrito };
+
+        const btn = document.getElementById('btn-enviar-orden');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        fetch('/nuevo-pedido/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast('¡Orden enviada a cocina!', 'success');
+                setTimeout(() => { window.location.href = '/dashboard/'; }, 1500);
             } else {
-                carrito.push({ id: id, nombre: nombre, precio: parseFloat(precio), cantidad: 1 });
+                showToast('Error: ' + data.mensaje, 'error');
+                btn.classList.remove('loading');
+                btn.disabled = false;
             }
-            renderizarCarrito();
-        }
-
-        function cambiarCantidad(id, delta) {
-            let item = carrito.find(item => item.id === id);
-            if(item) {
-                item.cantidad += delta;
-                if(item.cantidad <= 0) {
-                    carrito = carrito.filter(i => i.id !== id); // Lo borramos si llega a 0
-                }
-            }
-            renderizarCarrito();
-        }
-
-        function renderizarCarrito() {
-            const container = document.getElementById('ticket-items');
-            const totalDisplay = document.getElementById('total-display');
-            
-            if(carrito.length === 0) {
-                container.innerHTML = `<div class="center-align grey-text" style="margin-top: 40px;"><i class="material-icons" style="font-size: 3rem; opacity: 0.5;">restaurant</i><p>El pedido está vacío</p></div>`;
-                totalDisplay.innerText = '$0';
-                return;
-            }
-
-            let html = '';
-            let total = 0;
-
-            carrito.forEach(item => {
-                let subtotal = item.precio * item.cantidad;
-                total += subtotal;
-                
-                html += `
-                <div class="cart-item">
-                    <div class="cart-item-info">
-                        <div style="font-weight: 600; font-size: 1.1rem;">${item.nombre}</div>
-                        <div style="color: #00bfa5;">$${subtotal.toLocaleString('es-CO')}</div>
-                    </div>
-                    <div class="cart-item-controls">
-                        <button class="btn-qty" onclick="cambiarCantidad(${item.id}, -1)"><i class="material-icons">remove</i></button>
-                        <span style="font-size: 1.2rem; font-weight: bold; width: 20px; text-align: center;">${item.cantidad}</span>
-                        <button class="btn-qty" onclick="cambiarCantidad(${item.id}, 1)"><i class="material-icons">add</i></button>
-                        <i class="material-icons btn-delete" onclick="cambiarCantidad(${item.id}, -${item.cantidad})">delete</i>
-                    </div>
-                </div>`;
-            });
-
-            container.innerHTML = html;
-            totalDisplay.innerText = '$' + total.toLocaleString('es-CO');
-        }
-
-        // FUNCION PARA ENVIAR A PYTHON USANDO FETCH API
-        function enviarPedido() {
-            let idEmpleado = document.getElementById('select_empleado').value;
-            let idMesa = document.getElementById('select_mesa').value;
-            let tipoPedido = document.getElementById('select_tipo').value;
-            let observaciones = document.getElementById('input_observaciones').value;
-
-            if(!idEmpleado || !idMesa || carrito.length === 0) {
-                M.toast({html: 'Selecciona Mesero, Mesa y añade productos.', classes: 'rounded red'});
-                return;
-            }
-
-            let total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-
-            // Empacamos el JSON con los nuevos campos
-            let payload = {
-                id_empleado: idEmpleado,
-                id_mesa: idMesa,
-                tipo_pedido: tipoPedido,
-                observaciones: observaciones,
-                total: total,
-                productos: carrito
-            };
-
-            // Lo enviamos por la tubería POST
-            fetch('/nuevo-pedido/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}' // Seguridad de Django
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    M.toast({html: '¡Orden enviada a cocina!', classes: 'rounded green'});
-                    setTimeout(() => { window.location.href = '/dashboard/'; }, 1500);
-                } else {
-                    M.toast({html: 'Error: ' + data.mensaje, classes: 'rounded red'});
-                }
-            });
-        }
-    </script>
+        })
+        .catch(() => {
+            showToast('Error de conexión. Intenta de nuevo.', 'error');
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        });
+    }
+</script>
 </body>
 </html>

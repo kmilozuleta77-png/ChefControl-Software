@@ -1,304 +1,887 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChefControl - Inventario</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <title>ChefControl — Inventario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="../CSS/custom-styles.css" rel="stylesheet">
+    <style>
+        /* ─── TOKENS ─────────────────────────────────────────────── */
+        :root {
+            --bg-base:      #0a0a0a;
+            --bg-card:      #111111;
+            --bg-elevated:  #1a1a1a;
+            --border:       #1f1f1f;
+            --border-light: #2a2a2a;
+            --accent:       #f97316;
+            --accent-hover: #ea580c;
+            --green:        #4ade80;
+            --amber:        #f59e0b;
+            --red:          #ef4444;
+            --text-primary: #f5f5f5;
+            --text-sec:     #737373;
+            --text-muted:   #525252;
+            --radius-card:  12px;
+            --radius-btn:   8px;
+            --sidebar-w:    240px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ─── SIDEBAR ────────────────────────────────────────────── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .sidebar-brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-brand h5 { font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+        .sidebar-brand p  { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
+        .sidebar-section  { padding: 20px 20px 6px; font-size: 0.65rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+        .sidebar a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 20px; color: var(--text-sec); text-decoration: none;
+            font-size: 0.85rem; border-left: 3px solid transparent;
+            transition: color 0.18s, background 0.18s, border-color 0.18s;
+        }
+        .sidebar a:hover { background: var(--bg-elevated); color: var(--text-primary); }
+        .sidebar a.active { color: var(--accent); background: rgba(249,115,22,0.08); border-left-color: var(--accent); }
+        .sidebar a .material-icons { font-size: 18px; }
+        .sidebar-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 20px; min-width: 18px; text-align: center; }
+        .sidebar-badge.warn { background: var(--amber); color: #0a0a0a; }
+        .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+        .sidebar-footer span { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+        .sidebar-footer p { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+        /* ─── LAYOUT PRINCIPAL ───────────────────────────────────── */
+        .main-content { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ─── TOPBAR ─────────────────────────────────────────────── */
+        .topbar {
+            position: sticky; top: 0; z-index: 90;
+            background: rgba(10,10,10,0.9); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px; height: 62px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .topbar-left h4 { font-size: 1rem; font-weight: 600; }
+        .topbar-left p  { font-size: 0.72rem; color: var(--text-muted); }
+        .topbar-right   { display: flex; gap: 10px; align-items: center; }
+
+        /* ─── BOTONES ────────────────────────────────────────────── */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; background: var(--accent); color: #fff;
+            border: none; border-radius: var(--radius-btn);
+            font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500;
+            cursor: pointer; transition: background 0.18s, transform 0.1s;
+        }
+        .btn-primary:hover  { background: var(--accent-hover); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-primary .material-icons { font-size: 16px; }
+        .btn-ghost {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 14px; background: transparent; color: var(--text-sec);
+            border: 1px solid var(--border-light); border-radius: var(--radius-btn);
+            font-family: 'Inter', sans-serif; font-size: 0.82rem;
+            cursor: pointer; transition: color 0.18s, border-color 0.18s, background 0.18s;
+        }
+        .btn-ghost:hover { color: var(--text-primary); border-color: var(--text-muted); background: var(--bg-elevated); }
+        .btn-ghost .material-icons { font-size: 16px; }
+        .btn-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; background: var(--bg-elevated);
+            border: 1px solid var(--border-light); border-radius: 6px;
+            color: var(--text-sec); cursor: pointer;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .btn-icon .material-icons { font-size: 15px; }
+        .btn-icon.edit:hover    { color: var(--accent); border-color: var(--accent); }
+        .btn-icon.buy:hover     { color: var(--amber);  border-color: var(--amber); }
+        .btn-icon.history:hover { color: var(--green);  border-color: var(--green); }
+
+        /* ─── CUERPO ─────────────────────────────────────────────── */
+        .page-body { padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* ─── STATS CARDS ────────────────────────────────────────── */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-card); padding: 20px;
+            display: flex; align-items: flex-start; gap: 14px;
+        }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stat-icon .material-icons { font-size: 20px; }
+        .stat-icon.total   { background: rgba(249,115,22,0.12); color: var(--accent); }
+        .stat-icon.critico { background: rgba(239,68,68,0.12);  color: var(--red); }
+        .stat-icon.bajo    { background: rgba(245,158,11,0.12); color: var(--amber); }
+        .stat-icon.normal  { background: rgba(74,222,128,0.12); color: var(--green); }
+        .stat-num   { font-size: 1.75rem; font-weight: 700; line-height: 1; color: var(--text-primary); }
+        .stat-label { font-size: 0.75rem; color: var(--text-sec);   margin-top: 4px; }
+        .stat-pct   { font-size: 0.7rem;  color: var(--text-muted); margin-top: 2px; }
+
+        /* ─── ALERTA ─────────────────────────────────────────────── */
+        .alert-banner {
+            background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
+            border-radius: var(--radius-card); padding: 14px 18px;
+            display: flex; align-items: center; gap: 12px;
+            transition: opacity 0.25s, transform 0.25s;
+        }
+        .alert-banner.hidden { display: none; }
+        @keyframes pulse-icon { 0%,100% { opacity:1; } 50% { opacity:0.45; } }
+        .alert-icon { color: var(--red); animation: pulse-icon 2s ease-in-out infinite; }
+        .alert-icon .material-icons { font-size: 20px; }
+        .alert-text { flex: 1; }
+        .alert-text strong { font-size: 0.85rem; color: var(--red); display: block; margin-bottom: 2px; }
+        .alert-text span   { font-size: 0.78rem; color: var(--text-sec); }
+        .alert-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.15s; }
+        .alert-close:hover { color: var(--red); }
+        .alert-close .material-icons { font-size: 18px; }
+
+        /* ─── FILTROS ────────────────────────────────────────────── */
+        .filters-bar {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-card); padding: 16px 20px;
+            display: flex; gap: 12px; align-items: center;
+        }
+        .search-field { flex: 1; position: relative; max-width: 320px; }
+        .search-field .material-icons { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--text-muted); pointer-events: none; }
+        .search-field input {
+            width: 100%; background: var(--bg-elevated);
+            border: none; border-bottom: 1px solid var(--border-light); border-radius: 6px 6px 0 0;
+            color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.82rem;
+            padding: 9px 12px 9px 36px; outline: none; transition: border-color 0.18s;
+        }
+        .search-field input:focus { border-bottom-color: var(--accent); }
+        .search-field input::placeholder { color: var(--text-muted); }
+        .custom-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f97316' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center; background-size: 12px;
+            background-color: var(--bg-elevated); border: none; border-bottom: 1px solid var(--border-light);
+            border-radius: 6px 6px 0 0; color: var(--text-primary);
+            font-family: 'Inter', sans-serif; font-size: 0.82rem;
+            padding: 9px 32px 9px 10px; outline: none; cursor: pointer; transition: border-color 0.18s;
+        }
+        .custom-select:focus { border-bottom-color: var(--accent); }
+        .custom-select option { background: var(--bg-elevated); color: var(--text-primary); }
+        .filter-count { margin-left: auto; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+
+        /* ─── TABLA ──────────────────────────────────────────────── */
+        .table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
+        .table-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); }
+        .table-header h6 { font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .table-header h6 .material-icons { font-size: 18px; color: var(--accent); }
+        .table-header span { font-size: 0.75rem; color: var(--text-muted); }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            padding: 12px 16px; text-align: left; font-size: 0.72rem; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border); white-space: nowrap;
+        }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--bg-elevated); }
+        /* Sugerencia D: borde izquierdo por estado */
+        tbody tr.row-critical { border-left: 3px solid var(--red); }
+        tbody tr.row-low      { border-left: 3px solid var(--amber); }
+        tbody tr.hidden-row   { display: none; }
+        td { padding: 12px 16px; font-size: 0.82rem; color: var(--text-primary); vertical-align: middle; }
+        td.code { color: var(--text-muted); font-size: 0.75rem; font-family: monospace; }
+        td.cat  { color: var(--text-sec); }
+        td.date { color: var(--text-muted); font-size: 0.75rem; }
+        td.actions { display: flex; gap: 6px; align-items: center; }
+        /* Sugerencia A: celda stock con mini barra */
+        .stock-cell { display: flex; flex-direction: column; gap: 5px; }
+        .stock-num          { font-weight: 700; }
+        .stock-num.critical { color: var(--red); }
+        .stock-num.low      { color: var(--amber); }
+        .stock-num.normal   { color: var(--green); }
+        .stock-bar-wrap { width: 80px; height: 4px; background: var(--border-light); border-radius: 2px; overflow: hidden; }
+        .stock-bar          { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+        .stock-bar.critical { background: var(--red); }
+        .stock-bar.low      { background: var(--amber); }
+        .stock-bar.normal   { background: var(--green); }
+        /* Chips */
+        .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+        .chip::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .chip.critical { background: rgba(239,68,68,0.12);  color: var(--red); }
+        .chip.critical::before { background: var(--red); }
+        .chip.low      { background: rgba(245,158,11,0.12); color: var(--amber); }
+        .chip.low::before { background: var(--amber); }
+        .chip.normal   { background: rgba(74,222,128,0.12); color: var(--green); }
+        .chip.normal::before { background: var(--green); }
+
+        /* ─── MODALES ────────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+            z-index: 200; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: opacity 0.22s, visibility 0.22s;
+        }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-panel {
+            background: var(--bg-card); border: 1px solid var(--border-light);
+            border-radius: var(--radius-card); width: 90%; max-width: 520px; padding: 28px;
+            transform: scale(0.95); transition: transform 0.22s;
+        }
+        .modal-overlay.visible .modal-panel { transform: scale(1); }
+        .modal-panel h3 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .modal-panel h3 .material-icons { font-size: 20px; color: var(--accent); }
+        .modal-meta { font-size: 0.82rem; color: var(--text-sec); margin-bottom: 16px; }
+        .modal-meta strong { color: var(--text-primary); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-field { display: flex; flex-direction: column; gap: 5px; }
+        .form-field.span2 { grid-column: span 2; }
+        .form-field label { font-size: 0.72rem; color: var(--text-sec); font-weight: 500; }
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            background: var(--bg-elevated); border: none;
+            border-bottom: 1px solid var(--border-light); border-radius: 6px 6px 0 0;
+            color: var(--text-primary); font-family: 'Inter', sans-serif;
+            font-size: 0.82rem; padding: 9px 10px; outline: none;
+            transition: border-color 0.18s; width: 100%;
+        }
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus { border-bottom-color: var(--accent); }
+        .form-field select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f97316' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center; background-size: 12px;
+            cursor: pointer; padding-right: 32px;
+        }
+        .form-field select option { background: var(--bg-elevated); }
+        .form-field textarea { resize: vertical; min-height: 72px; }
+        /* Sugerencia E: preview resultado ajuste */
+        .stock-preview {
+            background: var(--bg-elevated); border: 1px solid var(--border-light);
+            border-radius: 8px; padding: 12px 16px;
+            display: none; gap: 16px; align-items: center; margin-top: 4px;
+        }
+        .stock-preview.visible { display: flex; }
+        .preview-item { flex: 1; }
+        .preview-label { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 3px; }
+        .preview-val   { font-size: 1rem; font-weight: 700; }
+        .preview-arrow .material-icons { font-size: 20px; color: var(--text-muted); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+
+        /* ─── TOASTS ─────────────────────────────────────────────── */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 400; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast {
+            display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+            background: var(--bg-elevated); border: 1px solid var(--border-light);
+            border-radius: 10px; font-size: 0.82rem; color: var(--text-primary);
+            pointer-events: auto; opacity: 0; transform: translateX(20px);
+            transition: opacity 0.25s, transform 0.25s; max-width: 340px;
+        }
+        .toast.visible { opacity: 1; transform: translateX(0); }
+        .toast .material-icons { font-size: 16px; }
+        .toast.success { border-left: 3px solid var(--green); }
+        .toast.success .material-icons { color: var(--green); }
+        .toast.error   { border-left: 3px solid var(--red); }
+        .toast.error   .material-icons { color: var(--red); }
+        .toast.info    { border-left: 3px solid var(--accent); }
+        .toast.info    .material-icons { color: var(--accent); }
+    </style>
 </head>
 <body>
+{% csrf_token %}
 
-    <div class="sidebar">
-        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
-        <div class="sidebar-section">Principal</div>
-        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
-        <div class="sidebar-section">Operaciones</div>
-        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
-        <a href="inventario.html" class="active"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
-        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
-        <div class="sidebar-section">Administración</div>
-        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
-        <a href="personal.html"><i class="material-icons">badge</i> Personal</a>
-        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
-        <a href="reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
-        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
-        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+<!-- ═══════════════ SIDEBAR ══════════════════════════════════════ -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <h5>ChefControl</h5>
+        <p>Gestión de Restaurante</p>
     </div>
+    <div class="sidebar-section">Principal</div>
+    <a href="{% url 'dashboard' %}"><i class="material-icons">dashboard</i> Dashboard</a>
+    <div class="sidebar-section">Operaciones</div>
+    <a href="{% url 'crear_pedido' %}"><i class="material-icons">shopping_cart</i> Pedidos</a>
+    <a href="{% url 'cocina' %}"><i class="material-icons">soup_kitchen</i> Cocina</a>
+    <a href="{% url 'inventario' %}" class="active">
+        <i class="material-icons">inventory_2</i> Inventario
+        <span class="sidebar-badge warn">!</span>
+    </a>
+    <div class="sidebar-section">Administración</div>
+    <a href="{% url 'facturacion' %}"><i class="material-icons">receipt_long</i> Facturación</a>
+    <div class="sidebar-footer">
+        <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+        <p>{{ request.user.email }}</p>
+    </div>
+</nav>
 
-    <div class="main-content">
-        <div class="top-nav">
-            <h5>Control de Inventario</h5>
-            <div class="top-nav-right">
-                <a href="#modal-nuevo-item" class="btn teal white-text modal-trigger">
-                    <i class="material-icons left">add</i>Nuevo Item
-                </a>
+<!-- ═══════════════ CONTENIDO PRINCIPAL ══════════════════════════ -->
+<div class="main-content">
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <h4>Control de Inventario</h4>
+            <p>Gestión de productos y stock</p>
+        </div>
+        <div class="topbar-right">
+            <button class="btn-ghost" id="btn-exportar">
+                <i class="material-icons">file_download</i> Exportar
+            </button>
+            <button class="btn-primary" id="btn-nuevo-item">
+                <i class="material-icons">add</i> Nuevo Item
+            </button>
+        </div>
+    </header>
+
+    <div class="page-body">
+
+        <!-- Stats cards (Sugerencia C: contadores animados) -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon total"><i class="material-icons">inventory_2</i></div>
+                <div>
+                    <div class="stat-num js-counter" data-target="48">0</div>
+                    <div class="stat-label">Total Productos</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon critico"><i class="material-icons">warning</i></div>
+                <div>
+                    <div class="stat-num js-counter" data-target="8">0</div>
+                    <div class="stat-label">Stock Crítico</div>
+                    <div class="stat-pct js-pct" data-val="8" data-total="48"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bajo"><i class="material-icons">trending_down</i></div>
+                <div>
+                    <div class="stat-num js-counter" data-target="5">0</div>
+                    <div class="stat-label">Stock Bajo</div>
+                    <div class="stat-pct js-pct" data-val="5" data-total="48"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon normal"><i class="material-icons">check_circle</i></div>
+                <div>
+                    <div class="stat-num js-counter" data-target="35">0</div>
+                    <div class="stat-label">Stock Normal</div>
+                    <div class="stat-pct js-pct" data-val="35" data-total="48"></div>
+                </div>
             </div>
         </div>
 
-        <div class="container">
-            <!-- ESTADÍSTICAS -->
-            <div class="row" style="margin-top:24px">
-                <div class="col s12 m3">
-                    <div class="card-panel teal lighten-5 center">
-                        <h5 class="teal-text text-darken-2">48</h5>
-                        <p class="grey-text">Total Productos</p>
-                    </div>
-                </div>
-                <div class="col s12 m3">
-                    <div class="card-panel red lighten-5 center">
-                        <h5 class="red-text text-darken-2">8</h5>
-                        <p class="grey-text">Stock Crítico</p>
-                    </div>
-                </div>
-                <div class="col s12 m3">
-                    <div class="card-panel orange lighten-5 center">
-                        <h5 class="orange-text text-darken-2">5</h5>
-                        <p class="grey-text">Stock Bajo</p>
-                    </div>
-                </div>
-                <div class="col s12 m3">
-                    <div class="card-panel green lighten-5 center">
-                        <h5 class="green-text text-darken-2">35</h5>
-                        <p class="grey-text">Stock Normal</p>
-                    </div>
-                </div>
+        <!-- Alerta dismissible (Sugerencia D: ícono animado + cerrable) -->
+        <div class="alert-banner" id="alerta-critica">
+            <div class="alert-icon"><i class="material-icons">warning</i></div>
+            <div class="alert-text">
+                <strong>8 productos con stock crítico</strong>
+                <span>Tomates, Lechuga Romana y Pan Hamburguesa necesitan reabastecimiento urgente.</span>
             </div>
+            <button class="alert-close" id="btn-cerrar-alerta" title="Cerrar alerta">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
 
-            <!-- ALERTA -->
-            <div class="row">
-                <div class="col s12">
-                    <div class="card red lighten-4">
-                        <div class="card-content red-text text-darken-3">
-                            <span class="card-title"><i class="material-icons left">warning</i>⚠️ 8 productos con stock crítico</span>
-                            <p>Tomates, Lechuga Romana, Pan Hamburguesa necesitan reabastecimiento urgente.</p>
-                        </div>
-                    </div>
-                </div>
+        <!-- Filtros en tiempo real (Sugerencia B) -->
+        <div class="filters-bar">
+            <div class="search-field">
+                <i class="material-icons">search</i>
+                <input type="text" id="filtro-buscar" placeholder="Buscar producto..." autocomplete="off">
             </div>
+            <select class="custom-select" id="filtro-categoria">
+                <option value="">Todas las categorías</option>
+                <option value="Verduras">Verduras</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Lácteos">Lácteos</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Otros">Otros</option>
+            </select>
+            <select class="custom-select" id="filtro-estado">
+                <option value="">Todos los estados</option>
+                <option value="critical">Crítico</option>
+                <option value="low">Bajo</option>
+                <option value="normal">Normal</option>
+            </select>
+            <span class="filter-count" id="filtro-conteo">6 de 6 productos</span>
+        </div>
 
-            <!-- FILTROS -->
-            <div class="row">
-                <div class="col s12 m5">
-                    <div class="input-field">
-                        <i class="material-icons prefix">search</i>
-                        <input id="buscar" type="text" placeholder="Buscar producto...">
-                        <label for="buscar">Buscar</label>
-                    </div>
-                </div>
-                <div class="col s12 m4">
-                    <div class="input-field">
-                        <select>
-                            <option value="">Todas las categorías</option>
-                            <option>Verduras</option>
-                            <option>Carnes</option>
-                            <option>Lácteos</option>
-                            <option>Bebidas</option>
-                        </select>
-                        <label>Categoría</label>
-                    </div>
-                </div>
-                <div class="col s12 m3">
-                    <div class="input-field">
-                        <select>
-                            <option value="">Todos los estados</option>
-                            <option>Normal</option>
-                            <option>Bajo</option>
-                            <option>Crítico</option>
-                        </select>
-                        <label>Estado</label>
-                    </div>
-                </div>
+        <!-- Tabla con barras de progreso y highlight por estado -->
+        <div class="table-card">
+            <div class="table-header">
+                <h6><i class="material-icons">inventory_2</i> Productos en Stock</h6>
+                <span id="tabla-total">6 productos registrados</span>
             </div>
+            <div class="table-wrap">
+                <table id="tabla-inventario">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Unidad</th>
+                            <th>Mínimo</th>
+                            <th>Estado</th>
+                            <th>Actualización</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="row-critical"
+                            data-nombre="tomates" data-categoria="Verduras" data-estado="critical"
+                            data-id="INV-001" data-stock-actual="5" data-stock-min="20" data-unidad="Kg">
+                            <td class="code">INV-001</td>
+                            <td><strong>Tomates</strong></td>
+                            <td class="cat">Verduras</td>
+                            <td>
+                                <div class="stock-cell">
+                                    <span class="stock-num critical">5</span>
+                                    <div class="stock-bar-wrap"><div class="stock-bar critical" style="width:25%"></div></div>
+                                </div>
+                            </td>
+                            <td>Kg</td><td>20</td>
+                            <td><span class="chip critical">Crítico</span></td>
+                            <td class="date">16/03/2026</td>
+                            <td class="actions">
+                                <button class="btn-icon edit" data-action="ajustar" title="Ajustar stock"><i class="material-icons">edit</i></button>
+                                <button class="btn-icon buy"  data-action="compra"  title="Solicitar compra"><i class="material-icons">add_shopping_cart</i></button>
+                            </td>
+                        </tr>
+                        <tr class="row-low"
+                            data-nombre="lechuga romana" data-categoria="Verduras" data-estado="low"
+                            data-id="INV-002" data-stock-actual="15" data-stock-min="30" data-unidad="Uds">
+                            <td class="code">INV-002</td>
+                            <td><strong>Lechuga Romana</strong></td>
+                            <td class="cat">Verduras</td>
+                            <td>
+                                <div class="stock-cell">
+                                    <span class="stock-num low">15</span>
+                                    <div class="stock-bar-wrap"><div class="stock-bar low" style="width:50%"></div></div>
+                                </div>
+                            </td>
+                            <td>Uds</td><td>30</td>
+                            <td><span class="chip low">Bajo</span></td>
+                            <td class="date">16/03/2026</td>
+                            <td class="actions">
+                                <button class="btn-icon edit" data-action="ajustar" title="Ajustar stock"><i class="material-icons">edit</i></button>
+                                <button class="btn-icon buy"  data-action="compra"  title="Solicitar compra"><i class="material-icons">add_shopping_cart</i></button>
+                            </td>
+                        </tr>
+                        <tr data-nombre="queso mozzarella" data-categoria="Lácteos" data-estado="normal"
+                            data-id="INV-003" data-stock-actual="45" data-stock-min="15" data-unidad="Kg">
+                            <td class="code">INV-003</td>
+                            <td><strong>Queso Mozzarella</strong></td>
+                            <td class="cat">Lácteos</td>
+                            <td>
+                                <div class="stock-cell">
+                                    <span class="stock-num normal">45</span>
+                                    <div class="stock-bar-wrap"><div class="stock-bar normal" style="width:100%"></div></div>
+                                </div>
+                            </td>
+                            <td>Kg</td><td>15</td>
+                            <td><span class="chip normal">Normal</span></td>
+                            <td class="date">15/03/2026</td>
+                            <td class="actions">
+                                <button class="btn-icon edit"    data-action="ajustar"   title="Ajustar stock"><i class="material-icons">edit</i></button>
+                                <button class="btn-icon history" data-action="historial" title="Ver movimientos"><i class="material-icons">history</i></button>
+                            </td>
+                        </tr>
+                        <tr data-nombre="carne molida" data-categoria="Carnes" data-estado="normal"
+                            data-id="INV-004" data-stock-actual="30" data-stock-min="10" data-unidad="Kg">
+                            <td class="code">INV-004</td>
+                            <td><strong>Carne Molida</strong></td>
+                            <td class="cat">Carnes</td>
+                            <td>
+                                <div class="stock-cell">
+                                    <span class="stock-num normal">30</span>
+                                    <div class="stock-bar-wrap"><div class="stock-bar normal" style="width:100%"></div></div>
+                                </div>
+                            </td>
+                            <td>Kg</td><td>10</td>
+                            <td><span class="chip normal">Normal</span></td>
+                            <td class="date">15/03/2026</td>
+                            <td class="actions">
+                                <button class="btn-icon edit"    data-action="ajustar"   title="Ajustar stock"><i class="material-icons">edit</i></button>
+                                <button class="btn-icon history" data-action="historial" title="Ver movimientos"><i class="material-icons">history</i></button>
+                            </td>
+                        </tr>
+                        <tr class="row-low"
+                            data-nombre="pan hamburguesa" data-categoria="Otros" data-estado="low"
+                            data-id="INV-005" data-stock-actual="25" data-stock-min="50" data-unidad="Uds">
+                            <td class="code">INV-005</td>
+                            <td><strong>Pan Hamburguesa</strong></td>
+                            <td class="cat">Otros</td>
+                            <td>
+                                <div class="stock-cell">
+                                    <span class="stock-num low">25</span>
+                                    <div class="stock-bar-wrap"><div class="stock-bar low" style="width:50%"></div></div>
+                                </div>
+                            </td>
+                            <td>Uds</td><td>50</td>
+                            <td><span class="chip low">Bajo</span></td>
+                            <td class="date">16/03/2026</td>
+                            <td class="actions">
+                                <button class="btn-icon edit" data-action="ajustar" title="Ajustar stock"><i class="material-icons">edit</i></button>
+                                <button class="btn-icon buy"  data-action="compra"  title="Solicitar compra"><i class="material-icons">add_shopping_cart</i></button>
+                            </td>
+                        </tr>
+                        <tr data-nombre="refresco cola" data-categoria="Bebidas" data-estado="normal"
+                            data-id="INV-006" data-stock-actual="120" data-stock-min="50" data-unidad="Uds">
+                            <td class="code">INV-006</td>
+                            <td><strong>Refresco Cola</strong></td>
+                            <td class="cat">Bebidas</td>
+                            <td>
+                                <div class="stock-cell">
+                                    <span class="stock-num normal">120</span>
+                                    <div class="stock-bar-wrap"><div class="stock-bar normal" style="width:100%"></div></div>
+                                </div>
+                            </td>
+                            <td>Uds</td><td>50</td>
+                            <td><span class="chip normal">Normal</span></td>
+                            <td class="date">14/03/2026</td>
+                            <td class="actions">
+                                <button class="btn-icon edit"    data-action="ajustar"   title="Ajustar stock"><i class="material-icons">edit</i></button>
+                                <button class="btn-icon history" data-action="historial" title="Ver movimientos"><i class="material-icons">history</i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-            <!-- TABLA -->
-            <div class="row">
-                <div class="col s12">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="section-header">
-                                <h6><i class="material-icons tiny teal-text">inventory_2</i> Productos en Stock</h6>
-                                <span class="grey-text" style="font-size:0.82rem">48 productos registrados</span>
-                            </div>
-                            <table class="striped responsive-table highlight">
-                                <thead>
-                                    <tr>
-                                        <th>Código</th>
-                                        <th>Producto</th>
-                                        <th>Categoría</th>
-                                        <th>Stock Actual</th>
-                                        <th>Unidad</th>
-                                        <th>Stock Mínimo</th>
-                                        <th>Estado</th>
-                                        <th>Actualización</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>INV-001</td>
-                                        <td><strong>Tomates</strong></td>
-                                        <td>Verduras</td>
-                                        <td class="red-text text-darken-2"><strong>5</strong></td>
-                                        <td>Kg</td><td>20</td>
-                                        <td><span class="chip red white-text">Crítico</span></td>
-                                        <td>16/03/2026</td>
-                                        <td>
-                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
-                                            <a href="#" class="btn-small orange white-text tooltipped" data-tooltip="Solicitar compra" onclick="mostrarNotificacion('Solicitud generada para INV-001', 'success')"><i class="material-icons">add_shopping_cart</i></a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>INV-002</td>
-                                        <td><strong>Lechuga Romana</strong></td>
-                                        <td>Verduras</td>
-                                        <td class="orange-text"><strong>15</strong></td>
-                                        <td>Uds</td><td>30</td>
-                                        <td><span class="chip orange white-text">Bajo</span></td>
-                                        <td>16/03/2026</td>
-                                        <td>
-                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
-                                            <a href="#" class="btn-small orange white-text tooltipped" data-tooltip="Solicitar compra" onclick="mostrarNotificacion('Solicitud generada para INV-002', 'success')"><i class="material-icons">add_shopping_cart</i></a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>INV-003</td>
-                                        <td><strong>Queso Mozzarella</strong></td>
-                                        <td>Lácteos</td>
-                                        <td class="green-text"><strong>45</strong></td>
-                                        <td>Kg</td><td>15</td>
-                                        <td><span class="chip green white-text">Normal</span></td>
-                                        <td>15/03/2026</td>
-                                        <td>
-                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
-                                            <a href="#" class="btn-small blue white-text tooltipped" data-tooltip="Ver movimientos" onclick="mostrarNotificacion('Historial INV-003', 'info')"><i class="material-icons">history</i></a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>INV-004</td>
-                                        <td><strong>Carne Molida</strong></td>
-                                        <td>Carnes</td>
-                                        <td class="green-text"><strong>30</strong></td>
-                                        <td>Kg</td><td>10</td>
-                                        <td><span class="chip green white-text">Normal</span></td>
-                                        <td>15/03/2026</td>
-                                        <td>
-                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
-                                            <a href="#" class="btn-small blue white-text tooltipped" data-tooltip="Ver movimientos" onclick="mostrarNotificacion('Historial INV-004', 'info')"><i class="material-icons">history</i></a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>INV-005</td>
-                                        <td><strong>Pan Hamburguesa</strong></td>
-                                        <td>Otros</td>
-                                        <td class="orange-text"><strong>25</strong></td>
-                                        <td>Uds</td><td>50</td>
-                                        <td><span class="chip orange white-text">Bajo</span></td>
-                                        <td>16/03/2026</td>
-                                        <td>
-                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
-                                            <a href="#" class="btn-small orange white-text tooltipped" data-tooltip="Solicitar compra" onclick="mostrarNotificacion('Solicitud generada para INV-005', 'success')"><i class="material-icons">add_shopping_cart</i></a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>INV-006</td>
-                                        <td><strong>Refresco Cola</strong></td>
-                                        <td>Bebidas</td>
-                                        <td class="green-text"><strong>120</strong></td>
-                                        <td>Uds</td><td>50</td>
-                                        <td><span class="chip green white-text">Normal</span></td>
-                                        <td>14/03/2026</td>
-                                        <td>
-                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
-                                            <a href="#" class="btn-small blue white-text tooltipped" data-tooltip="Ver movimientos" onclick="mostrarNotificacion('Historial INV-006', 'info')"><i class="material-icons">history</i></a>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+    </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<!-- ═══════════════ MODAL NUEVO ITEM ═════════════════════════════ -->
+<div class="modal-overlay" id="modal-nuevo">
+    <div class="modal-panel">
+        <h3><i class="material-icons">inventory_2</i> Nuevo Item</h3>
+        <div class="form-grid">
+            <div class="form-field span2">
+                <label>Nombre del Producto *</label>
+                <input type="text" id="nuevo-nombre" placeholder="Ej: Papas Frescas">
             </div>
+            <div class="form-field">
+                <label>Categoría *</label>
+                <select id="nuevo-categoria">
+                    <option value="" disabled selected>Seleccione</option>
+                    <option>Verduras</option><option>Carnes</option>
+                    <option>Lácteos</option><option>Bebidas</option><option>Otros</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label>Unidad *</label>
+                <select id="nuevo-unidad">
+                    <option value="" disabled selected>Seleccione</option>
+                    <option>Kg</option><option>g</option>
+                    <option>L</option><option>mL</option><option>Unidades</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label>Stock Actual *</label>
+                <input type="number" id="nuevo-stock-actual" min="0" placeholder="0">
+            </div>
+            <div class="form-field">
+                <label>Stock Mínimo *</label>
+                <input type="number" id="nuevo-stock-min" min="0" placeholder="0">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-ghost" id="btn-cerrar-nuevo">Cancelar</button>
+            <button class="btn-primary" id="btn-guardar-nuevo">
+                <i class="material-icons">save</i> Guardar
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- MODAL NUEVO ITEM -->
-    <div id="modal-nuevo-item" class="modal modal-fixed-footer">
-        <div class="modal-content">
-            <h4><i class="material-icons left">inventory_2</i>Nuevo Item</h4>
-            <div class="row">
-                <div class="input-field col s12 m6">
-                    <i class="material-icons prefix">label</i>
-                    <input id="nombre_item" type="text" class="validate">
-                    <label for="nombre_item">Nombre del Producto *</label>
-                </div>
-                <div class="input-field col s12 m6">
-                    <select id="cat_item">
-                        <option value="" disabled selected>Seleccione</option>
-                        <option>Verduras</option><option>Carnes</option><option>Lácteos</option><option>Bebidas</option><option>Otros</option>
-                    </select>
-                    <label>Categoría *</label>
-                </div>
-                <div class="input-field col s12 m4">
-                    <input id="stock_actual" type="number" min="0" class="validate">
-                    <label for="stock_actual">Stock Actual *</label>
-                </div>
-                <div class="input-field col s12 m4">
-                    <input id="stock_min" type="number" min="0" class="validate">
-                    <label for="stock_min">Stock Mínimo *</label>
-                </div>
-                <div class="input-field col s12 m4">
-                    <select id="unidad">
-                        <option value="" disabled selected>Unidad</option>
-                        <option>Kg</option><option>g</option><option>L</option><option>mL</option><option>Unidades</option>
-                    </select>
-                    <label>Unidad *</label>
-                </div>
+<!-- ═══════════════ MODAL AJUSTAR STOCK ══════════════════════════ -->
+<div class="modal-overlay" id="modal-ajustar">
+    <div class="modal-panel">
+        <h3><i class="material-icons">tune</i> Ajustar Stock</h3>
+        <p class="modal-meta">
+            <strong id="ajustar-nombre">—</strong>
+            &nbsp;·&nbsp; Stock actual: <strong id="ajustar-stock-actual">—</strong>
+        </p>
+        <div class="form-grid">
+            <div class="form-field">
+                <label>Tipo de movimiento *</label>
+                <select id="ajustar-tipo">
+                    <option value="" disabled selected>Seleccione</option>
+                    <option value="entrada">Entrada (Agregar)</option>
+                    <option value="salida">Salida (Restar)</option>
+                    <option value="ajuste">Ajuste Manual</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label>Cantidad *</label>
+                <input type="number" id="ajustar-cantidad" min="0" placeholder="0">
+            </div>
+            <div class="form-field span2">
+                <label>Motivo del ajuste *</label>
+                <textarea id="ajustar-motivo" placeholder="Ej: Compra de proveedor, merma por caducidad..."></textarea>
             </div>
         </div>
-        <div class="modal-footer">
-            <a href="#!" class="modal-close btn-flat">Cancelar</a>
-            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Item agregado al inventario', 'success')">
-                <i class="material-icons left">save</i>Guardar
-            </a>
-        </div>
-    </div>
-
-    <!-- MODAL AJUSTAR STOCK -->
-    <div id="modal-ajustar-stock" class="modal">
-        <div class="modal-content">
-            <h4>Ajustar Stock</h4>
-            <p><strong>Producto:</strong> Tomates &nbsp; <strong>Stock actual:</strong> 5 Kg</p>
-            <div class="row">
-                <div class="input-field col s12 m6">
-                    <select id="tipo_mov">
-                        <option value="" disabled selected>Tipo de movimiento</option>
-                        <option>Entrada (Agregar)</option>
-                        <option>Salida (Restar)</option>
-                        <option>Ajuste Manual</option>
-                    </select>
-                    <label>Tipo *</label>
-                </div>
-                <div class="input-field col s12 m6">
-                    <input id="cant_mov" type="number" min="0" class="validate">
-                    <label for="cant_mov">Cantidad *</label>
-                </div>
-                <div class="input-field col s12">
-                    <textarea id="motivo" class="materialize-textarea"></textarea>
-                    <label for="motivo">Motivo del ajuste *</label>
-                </div>
+        <!-- Sugerencia E: preview resultado en tiempo real -->
+        <div class="stock-preview" id="stock-preview">
+            <div class="preview-item">
+                <div class="preview-label">Stock actual</div>
+                <div class="preview-val" id="preview-actual">—</div>
+            </div>
+            <div class="preview-arrow"><i class="material-icons">arrow_forward</i></div>
+            <div class="preview-item">
+                <div class="preview-label">Nuevo stock</div>
+                <div class="preview-val" id="preview-nuevo">—</div>
+            </div>
+            <div class="preview-item">
+                <div class="preview-label">Estado resultante</div>
+                <div class="preview-val" id="preview-estado">—</div>
             </div>
         </div>
-        <div class="modal-footer">
-            <a href="#!" class="modal-close btn-flat">Cancelar</a>
-            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Stock ajustado correctamente', 'success')">
-                <i class="material-icons left">done</i>Confirmar
-            </a>
+        <div class="modal-actions">
+            <button class="btn-ghost" id="btn-cerrar-ajustar">Cancelar</button>
+            <button class="btn-primary" id="btn-confirmar-ajustar">
+                <i class="material-icons">done</i> Confirmar
+            </button>
         </div>
     </div>
+</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="../JS/app.js"></script>
+<!-- ═══════════════ TOAST CONTAINER ══════════════════════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+/* ─── ESTADO DEL MODAL DE AJUSTE ─── */
+let filaActiva = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    animarContadores();
+    initFiltros();
+    initAlertas();
+    initModales();
+    initTabla();
+    initPreviewAjuste();
+});
+
+/* ══════════ SUGERENCIA C: Contadores animados ═════════════════ */
+function animarContadores() {
+    const DURACION = 800;
+    document.querySelectorAll('.js-counter').forEach(el => {
+        const destino = parseInt(el.dataset.target, 10);
+        const inicio  = performance.now();
+        (function paso(ahora) {
+            const t    = Math.min((ahora - inicio) / DURACION, 1);
+            const ease = 1 - (1 - t) * (1 - t); /* easeOutQuad */
+            el.textContent = Math.floor(ease * destino);
+            if (t < 1) requestAnimationFrame(paso);
+        })(inicio);
+    });
+    document.querySelectorAll('.js-pct').forEach(el => {
+        const pct = ((parseInt(el.dataset.val) / parseInt(el.dataset.total)) * 100).toFixed(1);
+        el.textContent = `${pct}% del total`;
+    });
+}
+
+/* ══════════ SUGERENCIA B: Filtrado en tiempo real ════════════ */
+function initFiltros() {
+    const inputBuscar  = document.getElementById('filtro-buscar');
+    const selectCat    = document.getElementById('filtro-categoria');
+    const selectEstado = document.getElementById('filtro-estado');
+    const lblConteo    = document.getElementById('filtro-conteo');
+    const filas        = Array.from(document.querySelectorAll('#tabla-inventario tbody tr'));
+
+    function aplicarFiltros() {
+        const busca  = inputBuscar.value.toLowerCase().trim();
+        const cat    = selectCat.value;
+        const estado = selectEstado.value;
+        let visibles = 0;
+
+        filas.forEach(fila => {
+            const ok = (!busca  || (fila.dataset.nombre    || '').includes(busca))
+                    && (!cat    || fila.dataset.categoria  === cat)
+                    && (!estado || fila.dataset.estado     === estado);
+            fila.classList.toggle('hidden-row', !ok);
+            if (ok) visibles++;
+        });
+
+        lblConteo.textContent = `${visibles} de ${filas.length} productos`;
+    }
+
+    inputBuscar.addEventListener('input', aplicarFiltros);
+    selectCat.addEventListener('change', aplicarFiltros);
+    selectEstado.addEventListener('change', aplicarFiltros);
+}
+
+/* ══════════ ALERTA DISMISSIBLE ═══════════════════════════════ */
+function initAlertas() {
+    document.getElementById('btn-cerrar-alerta')
+        .addEventListener('click', () => {
+            document.getElementById('alerta-critica').classList.add('hidden');
+        });
+}
+
+/* ══════════ MODALES ══════════════════════════════════════════ */
+function initModales() {
+    const overlayNuevo   = document.getElementById('modal-nuevo');
+    const overlayAjustar = document.getElementById('modal-ajustar');
+
+    document.getElementById('btn-nuevo-item')
+        .addEventListener('click', () => abrirModal(overlayNuevo));
+    document.getElementById('btn-cerrar-nuevo')
+        .addEventListener('click', () => cerrarModal(overlayNuevo));
+    overlayNuevo.addEventListener('click', e => { if (e.target === overlayNuevo) cerrarModal(overlayNuevo); });
+    document.getElementById('btn-guardar-nuevo')
+        .addEventListener('click', guardarNuevoItem);
+
+    document.getElementById('btn-cerrar-ajustar')
+        .addEventListener('click', () => { filaActiva = null; cerrarModal(overlayAjustar); });
+    overlayAjustar.addEventListener('click', e => { if (e.target === overlayAjustar) { filaActiva = null; cerrarModal(overlayAjustar); } });
+    document.getElementById('btn-confirmar-ajustar')
+        .addEventListener('click', confirmarAjuste);
+}
+
+function abrirModal(overlay) { overlay.classList.add('visible'); }
+function cerrarModal(overlay) { overlay.classList.remove('visible'); }
+
+/* ══════════ TABLA: event delegation ═════════════════════════ */
+function initTabla() {
+    document.querySelector('#tabla-inventario tbody')
+        .addEventListener('click', e => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const fila   = btn.closest('tr');
+            const accion = btn.dataset.action;
+            const nombre = fila.querySelector('strong').textContent;
+
+            if (accion === 'ajustar') {
+                abrirAjusteStock(fila);
+            } else if (accion === 'compra') {
+                mostrarToast(`Solicitud de compra generada para "${nombre}"`, 'success');
+            } else if (accion === 'historial') {
+                mostrarToast(`Historial de movimientos: "${nombre}"`, 'info');
+            }
+        });
+}
+
+/* ══════════ MODAL AJUSTAR: poblar datos ═════════════════════ */
+function abrirAjusteStock(fila) {
+    filaActiva = fila;
+    document.getElementById('ajustar-nombre').textContent       = fila.querySelector('strong').textContent;
+    document.getElementById('ajustar-stock-actual').textContent = `${fila.dataset.stockActual} ${fila.dataset.unidad}`;
+    document.getElementById('ajustar-tipo').value     = '';
+    document.getElementById('ajustar-cantidad').value = '';
+    document.getElementById('ajustar-motivo').value   = '';
+    document.getElementById('stock-preview').classList.remove('visible');
+    abrirModal(document.getElementById('modal-ajustar'));
+}
+
+/* ══════════ SUGERENCIA E: Preview resultado ajuste ══════════ */
+function initPreviewAjuste() {
+    const tipo     = document.getElementById('ajustar-tipo');
+    const cantidad = document.getElementById('ajustar-cantidad');
+
+    function actualizarPreview() {
+        if (!filaActiva) return;
+        const actual  = parseInt(filaActiva.dataset.stockActual, 10);
+        const minimo  = parseInt(filaActiva.dataset.stockMin,    10);
+        const unidad  = filaActiva.dataset.unidad;
+        const cant    = parseInt(cantidad.value, 10) || 0;
+        const tipoVal = tipo.value;
+
+        if (!tipoVal || cant <= 0) {
+            document.getElementById('stock-preview').classList.remove('visible');
+            return;
+        }
+
+        let nuevo;
+        if      (tipoVal === 'entrada') nuevo = actual + cant;
+        else if (tipoVal === 'salida')  nuevo = Math.max(0, actual - cant);
+        else                            nuevo = cant; /* ajuste manual */
+
+        const ratio = nuevo / minimo;
+        const [estadoTexto, estadoColor] =
+            ratio < 0.5 ? ['Crítico', 'var(--red)']   :
+            ratio < 1.0 ? ['Bajo',    'var(--amber)']  :
+                          ['Normal',  'var(--green)'];
+
+        document.getElementById('preview-actual').textContent = `${actual} ${unidad}`;
+        document.getElementById('preview-nuevo').textContent  = `${nuevo} ${unidad}`;
+        const elEstado = document.getElementById('preview-estado');
+        elEstado.textContent = estadoTexto;
+        elEstado.style.color = estadoColor;
+        document.getElementById('stock-preview').classList.add('visible');
+    }
+
+    tipo.addEventListener('change', actualizarPreview);
+    cantidad.addEventListener('input', actualizarPreview);
+}
+
+/* ══════════ GUARDAR NUEVO ITEM ══════════════════════════════ */
+function guardarNuevoItem() {
+    const nombre = document.getElementById('nuevo-nombre').value.trim();
+    const cat    = document.getElementById('nuevo-categoria').value;
+    const unidad = document.getElementById('nuevo-unidad').value;
+    const stockA = document.getElementById('nuevo-stock-actual').value;
+    const stockM = document.getElementById('nuevo-stock-min').value;
+
+    if (!nombre || !cat || !unidad || stockA === '' || stockM === '') {
+        mostrarToast('Completa todos los campos obligatorios', 'error');
+        return;
+    }
+
+    cerrarModal(document.getElementById('modal-nuevo'));
+    mostrarToast(`"${nombre}" agregado al inventario`, 'success');
+    ['nuevo-nombre', 'nuevo-stock-actual', 'nuevo-stock-min'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('nuevo-categoria').value = '';
+    document.getElementById('nuevo-unidad').value    = '';
+}
+
+/* ══════════ CONFIRMAR AJUSTE ════════════════════════════════ */
+function confirmarAjuste() {
+    const tipo     = document.getElementById('ajustar-tipo').value;
+    const cantidad = document.getElementById('ajustar-cantidad').value;
+    const motivo   = document.getElementById('ajustar-motivo').value.trim();
+
+    if (!tipo || !cantidad || !motivo) {
+        mostrarToast('Completa todos los campos del ajuste', 'error');
+        return;
+    }
+
+    const nombre = filaActiva ? filaActiva.querySelector('strong').textContent : 'producto';
+    cerrarModal(document.getElementById('modal-ajustar'));
+    mostrarToast(`Stock de "${nombre}" ajustado correctamente`, 'success');
+    filaActiva = null;
+}
+
+/* ══════════ SISTEMA DE TOASTS ═══════════════════════════════ */
+const ICONOS_TOAST = { success: 'check_circle', error: 'error', info: 'info' };
+
+function mostrarToast(mensaje, tipo = 'info') {
+    const contenedor = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
+    toast.innerHTML = `<i class="material-icons">${ICONOS_TOAST[tipo]}</i><span>${mensaje}</span>`;
+    contenedor.appendChild(toast);
+    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('visible')));
+    setTimeout(() => {
+        toast.classList.remove('visible');
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    }, 3200);
+}
+</script>
 </body>
 </html>

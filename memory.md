@@ -1,11 +1,27 @@
-## Estado actual — 26/05/2026
-- Rama: feature/reestructuracion-completa (4 commits)
-- Fase 1 ✅: .env, settings.py seguro, requirements.txt, LOGGING
-- Fase 2 ✅: models.py con índices y PROTECT en FKs
-- Fase 3 ✅: views.py con roles, validación backend, errores sanitizados
-- Fase 4 ✅: cocina.html con fetch polling, onclick inline eliminados
+# ChefControl Software — Estado del Proyecto
 
-## Pendiente
-- Diseño UI/UX (siguiente fase)
-- Rate limiting en login
-- Content Security Policy
+## Stack
+Django + MySQL + Materialize CSS → migrando a CSS custom dark premium
+
+## Rama activa
+feature/ui-dark-premium
+
+## Completado ✅
+- Seguridad: .env, SECRET_KEY, DEBUG condicional, LOGGING
+- Arquitectura: roles, validación backend, errores sanitizados
+- UI Dark Premium: login, cocina, facturación, inventario (parcial)
+
+## Pendiente 🔧
+- Dashboard: no cargó el nuevo diseño, revisar
+- Toggle modo oscuro/claro global
+- Botón accesibilidad (tamaño fuente)
+- Propina libre en facturación (no solo porcentaje)
+- Pantalla pedidos: menús y mesero no cargan desde DB
+- Tipografía: cambiar Inter por serif premium
+- Logo: adaptar al estilo minimalista
+- Pantallas nuevas: menús, clientes, personal, reportes, configuración
+
+## Próxima sesión
+1. Corregir dashboard
+2. Implementar toggle oscuro/claro
+3. Revisar pantalla pedidos con DB real
