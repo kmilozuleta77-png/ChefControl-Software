@@ -74,7 +74,7 @@ Actualiza este archivo al completar o agregar tareas.
 
 ### Bugs conocidos
 - [ ] `crear_pedido_view`: menÃºs y meseros no cargan desde BD (revisar `GET` context)
-- [ ] `dashboard_view`: nuevo diseÃ±o Dark Premium no renderiza correctamente
+- [x] `dashboard_view`: dashboard renderiza + datos reales BD (01/06/2026)
 
 ### Mejoras de lÃ³gica
 - [ ] Propina de monto libre en facturaciÃ³n (actualmente solo porcentaje)
