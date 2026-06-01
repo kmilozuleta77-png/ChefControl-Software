@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
@@ -274,7 +274,15 @@
                         <i class="material-icons" style="color: var(--color-success)">attach_money</i>
                     </div>
                 </div>
-                <div class="stat-change up">↑ 8% vs ayer</div>
+                {% if porcentaje_ventas is not None %}
+                    {% if porcentaje_ventas >= 0 %}
+                        <div class="stat-change up">↑ {{ porcentaje_ventas }}% vs ayer</div>
+                    {% else %}
+                        <div class="stat-change down">↓ {{ porcentaje_ventas }}% vs ayer</div>
+                    {% endif %}
+                {% else %}
+                    <div class="stat-change neutral">Sin datos de ayer</div>
+                {% endif %}
             </div>
 
             <div class="stat-card">
@@ -287,20 +295,28 @@
                         <i class="material-icons" style="color: var(--color-danger)">warning</i>
                     </div>
                 </div>
-                <div class="stat-change down">3 productos críticos</div>
+                {% if alertas_inventario == 0 %}
+                    <div class="stat-change up">✓ Sin productos críticos</div>
+                {% else %}
+                    <div class="stat-change down">{{ alertas_inventario }} producto{{ alertas_inventario|pluralize }} crítico{{ alertas_inventario|pluralize }}</div>
+                {% endif %}
             </div>
 
             <div class="stat-card">
                 <div class="stat-card-top">
                     <div>
-                        <div class="stat-val">{{ cantidad_empleados }}</div>
-                        <div class="stat-label">Empleados Activos</div>
+                        <div class="stat-val">{{ pedidos_en_cocina }}</div>
+                        <div class="stat-label">En Cocina</div>
                     </div>
                     <div class="stat-icon">
-                        <i class="material-icons" style="color: var(--color-info)">people</i>
+                        <i class="material-icons" style="color: var(--color-warning)">soup_kitchen</i>
                     </div>
                 </div>
-                <div class="stat-change neutral">3 de descanso</div>
+                {% if pedidos_en_cocina == 0 %}
+                    <div class="stat-change up">✓ Cocina libre</div>
+                {% else %}
+                    <div class="stat-change neutral" style="color:#f97316">{{ pedidos_en_cocina }} en preparación</div>
+                {% endif %}
             </div>
 
         </div><!-- /stats-grid -->
@@ -376,26 +392,38 @@
                     <div class="section-header">
                         <h6><i class="material-icons">table_bar</i> Estado de Mesas</h6>
                     </div>
-                    <div class="mesa-grid">
-                        <div class="mesa-item mesa-disponible">1<span>Libre</span></div>
-                        <div class="mesa-item mesa-ocupada">2<span>Ocupada</span></div>
-                        <div class="mesa-item mesa-disponible">3<span>Libre</span></div>
-                        <div class="mesa-item mesa-ocupada">4<span>Ocupada</span></div>
-                        <div class="mesa-item mesa-reservada">5<span>Reservada</span></div>
-                        <div class="mesa-item mesa-disponible">6<span>Libre</span></div>
-                        <div class="mesa-item mesa-ocupada">7<span>Ocupada</span></div>
-                        <div class="mesa-item mesa-disponible">8<span>Libre</span></div>
+
+                    <!-- Barra de progreso proporcional -->
+                    <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin-bottom:14px">
+                        {% if mesas_libres %}<div style="flex:{{ mesas_libres }};background:#4ade80"></div>{% endif %}
+                        {% if mesas_ocupadas %}<div style="flex:{{ mesas_ocupadas }};background:#f87171"></div>{% endif %}
+                        {% if mesas_reservadas %}<div style="flex:{{ mesas_reservadas }};background:#60a5fa"></div>{% endif %}
                     </div>
-                    <div class="mesa-legend">
-                        <div class="mesa-legend-item">
-                            <span class="legend-dot libre"></span> Libre (4)
-                        </div>
-                        <div class="mesa-legend-item">
-                            <span class="legend-dot ocupada"></span> Ocupada (3)
-                        </div>
-                        <div class="mesa-legend-item">
-                            <span class="legend-dot reservada"></span> Reservada (1)
-                        </div>
+
+                    <!-- Mini grid de mesas -->
+                    <div class="mesa-grid" style="{% if mesas_lista|length > 12 %}max-height:160px;overflow-y:auto{% endif %}">
+                        {% for mesa in mesas_lista %}
+                            {% if mesa.estado == 'Disponible' %}
+                                <div class="mesa-item mesa-disponible">{{ mesa.numero_mesa }}</div>
+                            {% elif mesa.estado == 'Ocupada' %}
+                                <div class="mesa-item mesa-ocupada">{{ mesa.numero_mesa }}</div>
+                            {% elif mesa.estado == 'Reservada' %}
+                                <div class="mesa-item mesa-reservada">{{ mesa.numero_mesa }}</div>
+                            {% elif mesa.estado == 'En Mantenimiento' %}
+                                <div class="mesa-item" style="background:#f59e0b;color:#000">{{ mesa.numero_mesa }}</div>
+                            {% else %}
+                                <div class="mesa-item" style="opacity:.4">{{ mesa.numero_mesa }}</div>
+                            {% endif %}
+                        {% empty %}
+                            <p style="color:var(--color-text-muted);font-size:.85rem">Sin mesas registradas.</p>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Leyenda -->
+                    <div class="mesa-legend" style="margin-top:12px">
+                        <div class="mesa-legend-item"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ade80;margin-right:4px"></span>Disponible ({{ mesas_libres }})</div>
+                        <div class="mesa-legend-item"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f87171;margin-right:4px"></span>Ocupada ({{ mesas_ocupadas }})</div>
+                        <div class="mesa-legend-item"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#60a5fa;margin-right:4px"></span>Reservada ({{ mesas_reservadas }})</div>
                     </div>
                 </div>
             </div>

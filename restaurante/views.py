@@ -1,5 +1,6 @@
-import json
+﻿import json
 import logging
+from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.http import JsonResponse
@@ -82,13 +83,28 @@ def logout_view(request):
 
 @login_required(login_url='login')
 def dashboard_view(request):
-    total_empleados = Empleado.objects.count()
-    total_pedidos = Pedido.objects.count()
+    hoy = date.today()
 
-    suma_ventas = Pedido.objects.aggregate(Sum('total'))['total__sum']
+    empleados_activos = Empleado.objects.filter(estado='Activo').count()
+    empleados_descanso = Empleado.objects.filter(estado='Descanso').count()
+    total_pedidos = Pedido.objects.filter(fecha_pedido__date=hoy).count()
+
+    suma_ventas = Factura.objects.filter(fecha_factura__date=hoy).aggregate(Sum('total'))['total__sum']
     ventas_dia = suma_ventas if suma_ventas is not None else 0
 
+    suma_ayer = Factura.objects.filter(fecha_factura__date=hoy - timedelta(days=1)).aggregate(Sum('total'))['total__sum']
+    ventas_ayer = suma_ayer if suma_ayer is not None else 0
+    if ventas_ayer > 0:
+        porcentaje_ventas = round(((ventas_dia - ventas_ayer) / ventas_ayer) * 100, 1)
+    else:
+        porcentaje_ventas = None
+
     alertas_inventario = Producto.objects.filter(stock__lte=F('stock_minimo')).count()
+    mesas_libres = Mesa.objects.filter(estado='Disponible').count()
+    mesas_ocupadas = Mesa.objects.filter(estado='Ocupada').count()
+    mesas_reservadas = Mesa.objects.filter(estado='Reservada').count()
+    mesas_lista = Mesa.objects.all().order_by('numero_mesa')
+    pedidos_en_cocina = Pedido.objects.filter(estado='En preparacion').count()
 
     # select_related completo: mesa, empleado y cliente evitan N+1 queries en el template
     pedidos_recientes = (
@@ -98,10 +114,17 @@ def dashboard_view(request):
     )
 
     context = {
-        'cantidad_empleados': total_empleados,
+        'empleados_activos': empleados_activos,
+        'empleados_descanso': empleados_descanso,
         'total_pedidos': total_pedidos,
         'ventas_dia': ventas_dia,
         'alertas_inventario': alertas_inventario,
+        'porcentaje_ventas': porcentaje_ventas,
+        'mesas_libres': mesas_libres,
+        'mesas_ocupadas': mesas_ocupadas,
+        'mesas_reservadas': mesas_reservadas,
+        'mesas_lista': mesas_lista,
+        'pedidos_en_cocina': pedidos_en_cocina,
         'pedidos_recientes': pedidos_recientes,
     }
     return render(request, 'index.html', context)
