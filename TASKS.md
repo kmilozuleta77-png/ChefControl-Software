@@ -35,7 +35,7 @@ Actualiza este archivo al completar o agregar tareas.
 
 ### Pantallas pendientes de rediseÃ±o
 - [x] `index.html` â€” Dashboard Dark Premium âœ… â€” migrado a design-system.css, tema toggle, fuente A-/A+
-- [ ] `crear_pedido.html` â€” Revisar bug: menÃºs y meseros no cargan desde BD
+- [x] `crear_pedido.html` â€” Revisar bug: menÃºs y meseros no cargan desde BD
 - [ ] `pedidos.html` — Diseño antiguo, requiere migración + crear URL `name='pedidos'` en urls.py (enlace “Ver todos” del dashboard apunta aquí)
 - [ ] `menus.html` â€” DiseÃ±o antiguo + sin conexiÃ³n a BD
 - [ ] `clientes.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
@@ -152,3 +152,20 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] `CHANGELOG.md` â€” historial de cambios por versiÃ³n
 - [ ] Diagrama ER en `ARCHITECTURE.md` (generado con dbdiagram.io o similar)
 
+## Deuda de UI / Pulir después (no bloqueante)
+- [ ] Copy del KPI dashboard: "críticos" vs "bajo"
+- [ ] Reconciliar conteo de alertas dashboard (2) vs inventario (13)
+- [ ] Verificar paleta completa de badges de estado
+- [ ] Migrar cocina.html a design-system.css
+- [ ] Normalizar "En preparacion" en BD (migración de datos)
+- [ ] Logo jaguar en sidebar
+## Bugs / Arquitectura conocidos
+- [ ] Estado "En preparacion" nunca se asigna: el flujo va Pendiente → Listo → Pagado.
+      El KPI "En Cocina" del dashboard (filter estado='En preparacion') siempre da 0.
+      Decidir: ¿agregar transición a "En preparacion" en cocina, o cambiar el KPI a contar "Pendiente"?
+
+      - [ ] BUG crear_pedido.html: el carrito se congela tras el 1er producto.
+      Causa: #cart-empty está dentro de #ticket-items; innerHTML lo destruye y
+      en el siguiente render getElementById('cart-empty')=null → null.style crashea.
+      Fix: renderizar el estado vacío como string dentro de innerHTML, sin mantener
+      referencia a un elemento que se destruye.
