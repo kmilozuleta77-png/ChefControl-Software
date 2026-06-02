@@ -36,7 +36,7 @@ Actualiza este archivo al completar o agregar tareas.
 ### Pantallas pendientes de rediseÃ±o
 - [x] `index.html` â€” Dashboard Dark Premium âœ… â€” migrado a design-system.css, tema toggle, fuente A-/A+
 - [ ] `crear_pedido.html` â€” Revisar bug: menÃºs y meseros no cargan desde BD
-- [ ] `pedidos.html` â€” DiseÃ±o antiguo, requiere migraciÃ³n
+- [ ] `pedidos.html` — Diseño antiguo, requiere migración + crear URL `name='pedidos'` en urls.py (enlace “Ver todos” del dashboard apunta aquí)
 - [ ] `menus.html` â€” DiseÃ±o antiguo + sin conexiÃ³n a BD
 - [ ] `clientes.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
 - [ ] `personal.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
@@ -75,6 +75,8 @@ Actualiza este archivo al completar o agregar tareas.
 ### Bugs conocidos
 - [ ] `crear_pedido_view`: menÃºs y meseros no cargan desde BD (revisar `GET` context)
 - [x] `dashboard_view`: dashboard renderiza + datos reales BD (01/06/2026)
+- [x] `fix/dashboard-pedidos-recientes`: título, formato COP, badges reales, alertas BD, modal Ver pedido (02/06/2026)
+- [ ] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` en la BD (script UPDATE + ajustar views.py línea 107) — elimina doble condición en template
 
 ### Mejoras de lÃ³gica
 - [ ] Propina de monto libre en facturaciÃ³n (actualmente solo porcentaje)
