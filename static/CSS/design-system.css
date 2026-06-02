@@ -556,7 +556,9 @@ table tbody tr td:last-child  { white-space: nowrap; }
 .badge-blue   { background: rgba(59,  130, 246, 0.10); color: #60a5fa; border: 1px solid rgba(59,  130, 246, 0.30); }
 .badge-teal   { background: rgba(20,  184, 166, 0.10); color: #2dd4bf; border: 1px solid rgba(20,  184, 166, 0.30); }
 .badge-gray   { background: rgba(115, 115, 115, 0.10); color: #a3a3a3; border: 1px solid rgba(115, 115, 115, 0.30); }
-.badge-amber  { background: rgba(245, 158,  11, 0.10); color: #fbbf24; border: 1px solid rgba(245, 158,  11, 0.30); }
+.badge-amber      { background: rgba(245, 158,  11, 0.10); color: #fbbf24; border: 1px solid rgba(245, 158,  11, 0.30); }
+.badge-yellow     { background: rgba(234, 179,   8, 0.10); color: #facc15; border: 1px solid rgba(234, 179,   8, 0.30); }
+.badge-dark-green { background: rgba(22,  163,  74, 0.15); color: #16a34a; border: 1px solid rgba(22,  163,  74, 0.40); }
 
 
 /* ================================================================

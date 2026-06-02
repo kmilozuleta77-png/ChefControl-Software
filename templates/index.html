@@ -1,4 +1,5 @@
 ﻿{% load static %}
+{% load filtros_custom %}
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
@@ -101,6 +102,24 @@
             animation: pulse-dot 1.4s ease-in-out infinite;
             margin-right: 4px;
         }
+
+        /* ── MODAL VER PEDIDO ── */
+        #modal-ver-pedido { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); }
+        .modal-panel { position: relative; z-index: 1; background: #1a1a1a; border: 1px solid #f97316; border-radius: 12px; width: min(480px, 95vw); box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow: hidden; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--border-light); background: rgba(249,115,22,0.06); }
+        .modal-header h3 { margin: 0; font-size: 1.1rem; color: #f97316; }
+        .modal-close-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; padding: 4px; border-radius: 6px; transition: color 0.2s; }
+        .modal-close-btn:hover { color: #f97316; }
+        .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+        .modal-row { display: flex; gap: 24px; }
+        .modal-row-highlight { padding: 10px 4px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+        .modal-field { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+        .modal-label { font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .modal-value { font-size: 0.95rem; color: var(--text-primary); }
+        .modal-total { font-size: 1.15rem; font-weight: 700; color: #f97316; }
+        .modal-obs { margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic; }
+        .modal-divider { border: none; border-top: 1px solid var(--border-light); margin: 0; }
     </style>
 </head>
 
@@ -330,9 +349,9 @@
                     <div class="section-header">
                         <h6>
                             <i class="material-icons">shopping_cart</i>
-                            Pedidos Recientes
+                            Últimos 10 Pedidos
                         </h6>
-                        <a href="#">Ver todos →</a>
+                        <a href="#">{# TODO: url 'pedidos' #}Ver todos →</a>
                     </div>
 
                     <table>
@@ -350,25 +369,34 @@
                             {% for pedido in pedidos_recientes %}
                             <tr>
                                 <td>#{{ pedido.id_pedido }}</td>
-                                <td>Mesa {{ pedido.id_mesa.numero_mesa }}</td>
-                                <td>{{ pedido.id_empleado.nombres }}</td>
-                                <td style="font-weight: 700; color: var(--accent)">${{ pedido.total }}</td>
+                                <td>{% if pedido.id_mesa %}Mesa {{ pedido.id_mesa.numero_mesa }}{% else %}Para llevar{% endif %}</td>
+                                <td>{{ pedido.id_empleado.nombres }} {{ pedido.id_empleado.apellidos }}</td>
+                                <td style="font-weight: 700; color: var(--accent)">{{ pedido.total|formato_cop }}</td>
                                 <td>
-                                    <!-- Badge de estado — sin Materialize -->
-                                    {% if pedido.estado == "Listo" %}
-                                        <span class="status-badge badge-green">{{ pedido.estado }}</span>
-                                    {% elif pedido.estado == "Pendiente" %}
+                                    {% if pedido.estado == "Pendiente" %}
+                                        <span class="status-badge badge-yellow">{{ pedido.estado }}</span>
+                                    {% elif pedido.estado == "En Preparación" or pedido.estado == "En preparacion" %}
                                         <span class="status-badge badge-orange">{{ pedido.estado }}</span>
-                                    {% elif pedido.estado == "En preparación" %}
+                                    {% elif pedido.estado == "Listo" %}
                                         <span class="status-badge badge-blue">{{ pedido.estado }}</span>
+                                    {% elif pedido.estado == "Entregado" %}
+                                        <span class="status-badge badge-green">{{ pedido.estado }}</span>
+                                    {% elif pedido.estado == "Pagado" %}
+                                        <span class="status-badge badge-dark-green">{{ pedido.estado }}</span>
                                     {% elif pedido.estado == "Cancelado" %}
                                         <span class="status-badge badge-red">{{ pedido.estado }}</span>
-                                    {% else %}
-                                        <span class="status-badge badge-teal">{{ pedido.estado }}</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="#" class="btn-accion">Ver</a>
+                                    <button class="btn-accion btn-ver-pedido"
+                                        data-id="{{ pedido.id_pedido }}"
+                                        data-mesa="{% if pedido.id_mesa %}Mesa {{ pedido.id_mesa.numero_mesa }}{% else %}Para llevar{% endif %}"
+                                        data-mesero="{{ pedido.id_empleado.nombres }} {{ pedido.id_empleado.apellidos }}"
+                                        data-total="{{ pedido.total|formato_cop }}"
+                                        data-tipo="{{ pedido.tipo_pedido|default:'No especificado' }}"
+                                        data-obs="{{ pedido.observaciones|default:'Sin observaciones' }}"
+                                        data-estado="{{ pedido.estado }}"
+                                    >Ver</button>
                                 </td>
                             </tr>
                             {% empty %}
@@ -451,33 +479,32 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for alerta in alertas %}
                         <tr>
-                            <td>INV-001</td>
-                            <td>Tomates</td>
-                            <td>Verduras</td>
-                            <td style="color: var(--color-danger); font-weight: 700">5 Kg</td>
-                            <td>20 Kg</td>
-                            <td><span class="status-badge badge-red">Crítico</span></td>
+                            <td>INV-{{ alerta.id_producto|stringformat:"03d" }}</td>
+                            <td>{{ alerta.nombre }}</td>
+                            <td>{{ alerta.id_categoria.nombre }}</td>
+                            <td style="color: {% if alerta.stock == 0 %}var(--color-danger){% else %}var(--color-warning){% endif %}; font-weight: 700">{{ alerta.stock }}</td>
+                            <td>{{ alerta.stock_minimo }}</td>
+                            <td>
+                                {% if alerta.stock == 0 %}
+                                    <span class="status-badge badge-red">Crítico</span>
+                                {% else %}
+                                    <span class="status-badge badge-orange">Bajo</span>
+                                {% endif %}
+                            </td>
                             <td><a href="{% url 'inventario' %}" class="btn-accion">Reponer</a></td>
                         </tr>
+                        {% empty %}
                         <tr>
-                            <td>INV-002</td>
-                            <td>Lechuga Romana</td>
-                            <td>Verduras</td>
-                            <td style="color: var(--color-warning); font-weight: 700">15 Uds</td>
-                            <td>30 Uds</td>
-                            <td><span class="status-badge badge-orange">Bajo</span></td>
-                            <td><a href="{% url 'inventario' %}" class="btn-accion">Reponer</a></td>
+                            <td colspan="7">
+                                <div class="table-empty">
+                                    <i class="material-icons">check_circle</i>
+                                    <span>Sin alertas de inventario</span>
+                                </div>
+                            </td>
                         </tr>
-                        <tr>
-                            <td>INV-003</td>
-                            <td>Queso Mozzarella</td>
-                            <td>Lácteos</td>
-                            <td style="color: var(--color-success); font-weight: 700">45 Kg</td>
-                            <td>15 Kg</td>
-                            <td><span class="status-badge badge-green">Normal</span></td>
-                            <td><a href="{% url 'inventario' %}" class="btn-accion btn-accion-ghost">Ver</a></td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -586,6 +613,91 @@
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('expanded');
     });
+
+    /* ── MODAL VER PEDIDO ── */
+    (function () {
+        const modal   = document.getElementById('modal-ver-pedido');
+        const BADGE   = {
+            'Pendiente':      'badge-yellow',
+            'En Preparación': 'badge-orange',
+            'En preparacion': 'badge-orange',
+            'Listo':          'badge-blue',
+            'Entregado':      'badge-green',
+            'Pagado':         'badge-dark-green',
+            'Cancelado':      'badge-red'
+        };
+
+        function abrir(btn) {
+            document.getElementById('mp-id').textContent     = '#' + btn.dataset.id;
+            document.getElementById('mp-mesa').textContent   = btn.dataset.mesa;
+            document.getElementById('mp-mesero').textContent = btn.dataset.mesero;
+            document.getElementById('mp-tipo').textContent   = btn.dataset.tipo;
+            document.getElementById('mp-total').textContent  = btn.dataset.total;
+            document.getElementById('mp-obs').textContent    = btn.dataset.obs;
+            const cls = BADGE[btn.dataset.estado] || 'badge-gray';
+            document.getElementById('mp-estado').innerHTML   =
+                `<span class="status-badge ${cls}">${btn.dataset.estado || '—'}</span>`;
+            modal.style.display          = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrar() {
+            modal.style.display          = 'none';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('click', e => { const b = e.target.closest('.btn-ver-pedido'); if (b) abrir(b); });
+        document.getElementById('modal-cerrar-pedido').addEventListener('click', cerrar);
+        document.getElementById('modal-backdrop-pedido').addEventListener('click', cerrar);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.style.display === 'flex') cerrar(); });
+    })();
 </script>
+
+<!-- ── MODAL VER PEDIDO ── -->
+<div id="modal-ver-pedido" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modal-pedido-titulo">
+    <div class="modal-backdrop" id="modal-backdrop-pedido"></div>
+    <div class="modal-panel">
+        <div class="modal-header">
+            <h3 id="modal-pedido-titulo">Pedido <span id="mp-id"></span></h3>
+            <button class="modal-close-btn" id="modal-cerrar-pedido" aria-label="Cerrar">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-row">
+                <div class="modal-field">
+                    <span class="modal-label">Mesa</span>
+                    <span class="modal-value" id="mp-mesa"></span>
+                </div>
+                <div class="modal-field">
+                    <span class="modal-label">Mesero</span>
+                    <span class="modal-value" id="mp-mesero"></span>
+                </div>
+            </div>
+            <div class="modal-row">
+                <div class="modal-field">
+                    <span class="modal-label">Tipo de pedido</span>
+                    <span class="modal-value" id="mp-tipo"></span>
+                </div>
+            </div>
+            <hr class="modal-divider">
+            <div class="modal-row modal-row-highlight">
+                <div class="modal-field">
+                    <span class="modal-label">Total</span>
+                    <span class="modal-value modal-total" id="mp-total"></span>
+                </div>
+                <div class="modal-field">
+                    <span class="modal-label">Estado</span>
+                    <span id="mp-estado"></span>
+                </div>
+            </div>
+            <hr class="modal-divider">
+            <div class="modal-field">
+                <span class="modal-label">Observaciones</span>
+                <p class="modal-obs" id="mp-obs"></p>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

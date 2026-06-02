@@ -100,6 +100,7 @@ def dashboard_view(request):
         porcentaje_ventas = None
 
     alertas_inventario = Producto.objects.filter(stock__lte=F('stock_minimo')).count()
+    alertas = Producto.objects.filter(stock__lte=F('stock_minimo')).select_related('id_categoria').order_by('stock')
     mesas_libres = Mesa.objects.filter(estado='Disponible').count()
     mesas_ocupadas = Mesa.objects.filter(estado='Ocupada').count()
     mesas_reservadas = Mesa.objects.filter(estado='Reservada').count()
@@ -110,7 +111,7 @@ def dashboard_view(request):
     pedidos_recientes = (
         Pedido.objects
         .select_related('id_mesa', 'id_empleado', 'id_cliente')
-        .order_by('-fecha_pedido')[:5]
+        .order_by('-fecha_pedido')[:10]
     )
 
     context = {
@@ -119,6 +120,7 @@ def dashboard_view(request):
         'total_pedidos': total_pedidos,
         'ventas_dia': ventas_dia,
         'alertas_inventario': alertas_inventario,
+        'alertas': alertas,
         'porcentaje_ventas': porcentaje_ventas,
         'mesas_libres': mesas_libres,
         'mesas_ocupadas': mesas_ocupadas,
