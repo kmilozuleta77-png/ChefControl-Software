@@ -1,6 +1,7 @@
 ﻿import json
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from django.utils import timezone
 from decimal import Decimal, InvalidOperation
 
 from django.http import JsonResponse
@@ -81,18 +82,33 @@ def logout_view(request):
 # VISTA 3: DASHBOARD PRINCIPAL
 # -----------------------------------------------------------------------
 
+def rango_dia(fecha):
+    """Devuelve (inicio_aware, fin_aware) del día calendario dado en America/Bogota."""
+    tz = timezone.get_current_timezone()
+    inicio = timezone.make_aware(datetime.combine(fecha, datetime.min.time()), tz)
+    return inicio, inicio + timedelta(days=1)
+
+
 @login_required(login_url='login')
 def dashboard_view(request):
-    hoy = date.today()
+    hoy = timezone.localdate()
+    inicio_hoy, fin_hoy = rango_dia(hoy)
+    inicio_ayer, fin_ayer = rango_dia(hoy - timedelta(days=1))
 
     empleados_activos = Empleado.objects.filter(estado='Activo').count()
     empleados_descanso = Empleado.objects.filter(estado='Descanso').count()
-    total_pedidos = Pedido.objects.filter(fecha_pedido__date=hoy).count()
+    total_pedidos = Pedido.objects.filter(
+        fecha_pedido__gte=inicio_hoy, fecha_pedido__lt=fin_hoy
+    ).count()
 
-    suma_ventas = Factura.objects.filter(fecha_factura__date=hoy).aggregate(Sum('total'))['total__sum']
+    suma_ventas = Factura.objects.filter(
+        fecha_factura__gte=inicio_hoy, fecha_factura__lt=fin_hoy
+    ).aggregate(Sum('total'))['total__sum']
     ventas_dia = suma_ventas if suma_ventas is not None else 0
 
-    suma_ayer = Factura.objects.filter(fecha_factura__date=hoy - timedelta(days=1)).aggregate(Sum('total'))['total__sum']
+    suma_ayer = Factura.objects.filter(
+        fecha_factura__gte=inicio_ayer, fecha_factura__lt=fin_ayer
+    ).aggregate(Sum('total'))['total__sum']
     ventas_ayer = suma_ayer if suma_ayer is not None else 0
     if ventas_ayer > 0:
         porcentaje_ventas = round(((ventas_dia - ventas_ayer) / ventas_ayer) * 100, 1)
@@ -199,6 +215,7 @@ def crear_pedido_view(request):
                     observaciones=observaciones_front,
                     total=total_validado,
                     estado='Pendiente',
+                    fecha_pedido=timezone.now(),
                 )
 
                 for item in lista_productos:
