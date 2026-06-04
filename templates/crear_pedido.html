@@ -662,24 +662,25 @@
     function renderizarCarrito() {
         const container    = document.getElementById('ticket-items');
         const totalDisplay = document.getElementById('total-display');
-        const cartEmpty    = document.getElementById('cart-empty');
         const ticketCount  = document.getElementById('ticket-count');
         const btnEnviar    = document.getElementById('btn-enviar-orden');
         const enviarText   = document.getElementById('enviar-text');
 
         if (carrito.length === 0) {
-            // Vaciamos y mostramos el estado vacío
-            container.innerHTML = '';
-            container.appendChild(cartEmpty);
-            cartEmpty.style.display = 'flex';
+            // Renderizamos el estado vacío como string para evitar referencia nula:
+            // container.innerHTML destruye #cart-empty del DOM en renders anteriores,
+            // por lo que getElementById devolvería null en la siguiente llamada.
+            container.innerHTML = `
+            <div class="cart-empty">
+                <i class="material-icons">restaurant</i>
+                <span>El pedido está vacío</span>
+            </div>`;
             totalDisplay.textContent = '$0';
             ticketCount.style.display = 'none';
             btnEnviar.disabled = true;
             enviarText.textContent = 'Enviar Orden';
             return;
         }
-
-        cartEmpty.style.display = 'none';
 
         let html  = '';
         let total = 0;
