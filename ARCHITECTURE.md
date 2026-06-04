@@ -220,6 +220,26 @@ logger.error("Error al procesar pedido: %s", str(e))
 # Salida → logs/chefcontrol.log y consola (nivel DEBUG en desarrollo)
 ```
 
+### Fechas y zona horaria
+
+- La BD almacena `DateTimeField` en **UTC** (`USE_TZ = True`).
+- El negocio opera en **`America/Bogota`** (UTC−5), definido en `TIME_ZONE`.
+- Los filtros "por día" usan **rangos `__gte` / `__lt`** con datetimes aware — no `__date`.
+  Motivo: `__date` genera `CONVERT_TZ()` en MySQL, que falla si las tablas de zonas
+  horarias no están cargadas. Los rangos se calculan en Python, sin dependencia del motor.
+- Función auxiliar `rango_dia(fecha)` en `views.py`:
+
+```python
+def rango_dia(fecha):
+    tz = timezone.get_current_timezone()
+    inicio = timezone.make_aware(datetime.combine(fecha, datetime.min.time()), tz)
+    return inicio, inicio + timedelta(days=1)
+
+# Uso en dashboard_view:
+inicio_hoy, fin_hoy = rango_dia(timezone.localdate())
+Pedido.objects.filter(fecha_pedido__gte=inicio_hoy, fecha_pedido__lt=fin_hoy)
+```
+
 ---
 
 ## Sistema de diseño Dark Premium (frontend)

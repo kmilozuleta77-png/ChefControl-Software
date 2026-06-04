@@ -76,6 +76,8 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] `crear_pedido_view`: menÃºs y meseros no cargan desde BD (revisar `GET` context)
 - [x] `dashboard_view`: dashboard renderiza + datos reales BD (01/06/2026)
 - [x] `fix/dashboard-pedidos-recientes`: título, formato COP, badges reales, alertas BD, modal Ver pedido (02/06/2026)
+- [x] `fix/fechas-dashboard`: "Pedidos Hoy" = 0 — causa: `fecha_pedido` quedaba NULL + `__date` requiere `CONVERT_TZ` en MySQL (sin tablas cargadas). Fix: `fecha_pedido=timezone.now()` al crear pedido + `rango_dia()` con `__gte/__lt` en `dashboard_view` (04/06/2026)
+- [ ] **Deuda técnica menor**: cambiar `fecha_pedido` a `auto_now_add=True` en modelo `Pedido` para garantizar que nunca quede NULL sin depender de la vista
 - [ ] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` en la BD (script UPDATE + ajustar views.py línea 107) — elimina doble condición en template
 
 ### Mejoras de lÃ³gica
