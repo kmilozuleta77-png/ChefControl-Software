@@ -72,7 +72,52 @@ def dashboard_view(request):
 # -------------------------------------------------------------------
 @login_required(login_url='login')
 def inventario_view(request):
-    return render(request, 'inventario.html')
+    from django.db.models import F
+
+    # GUARDAR NUEVO PRODUCTO
+    if request.method == 'POST':
+        nombre      = request.POST.get('nombre_item')
+        id_categoria = request.POST.get('cat_item')
+        stock       = request.POST.get('stock_actual')
+        stock_min   = request.POST.get('stock_min')
+        precio      = request.POST.get('precio')
+
+        if nombre and id_categoria and stock and stock_min and precio:
+            unidad = request.POST.get('unidad', '')
+            Producto.objects.create(
+                nombre       = nombre,
+                id_categoria = Categoria.objects.get(id_categoria=id_categoria),
+                stock        = stock,
+                stock_minimo = stock_min,
+                precio       = precio,
+                descripcion  = unidad,
+                estado       = 'Disponible'
+            )
+            messages.success(request, f'Producto "{nombre}" agregado correctamente.')
+        else:
+            messages.error(request, 'Por favor completa todos los campos.')
+
+        return redirect('inventario')
+
+    # TRAER DATOS
+    productos       = Producto.objects.select_related('id_categoria').all()
+    total           = productos.count()
+    criticos        = productos.filter(stock__lte=F('stock_minimo') / 2).count()
+    bajos           = productos.filter(stock__gt=F('stock_minimo') / 2, stock__lte=F('stock_minimo')).count()
+    normales        = productos.filter(stock__gt=F('stock_minimo')).count()
+    criticos_lista  = productos.filter(stock__lte=F('stock_minimo'))
+    categorias      = Categoria.objects.all()
+
+    context = {
+        'productos':      productos,
+        'total':          total,
+        'criticos':       criticos,
+        'bajos':          bajos,
+        'normales':       normales,
+        'criticos_lista': criticos_lista,
+        'categorias':     categorias,
+    }
+    return render(request, 'inventario.html', context)
 # -------------------------------------------------------------------
 # -------------------------------------------------------------------
 # VISTA 5: PUNTO DE VENTA POS (Avanzado - API JSON)
@@ -193,3 +238,27 @@ def pagar_pedido_api(request, id_pedido):
             return JsonResponse({'status': 'success'})
         except Pedido.DoesNotExist:
             return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado'})
+# -------------------------------------------------------------------
+# VISTA 8: AJUSTAR STOCK
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def ajustar_stock_view(request, id_producto):
+    if request.method == 'POST':
+        try:
+            producto    = Producto.objects.get(id_producto=id_producto)
+            tipo_mov    = request.POST.get('tipo_mov')
+            cantidad    = int(request.POST.get('cant_mov', 0))
+
+            if tipo_mov == 'entrada':
+                producto.stock += cantidad
+            elif tipo_mov == 'salida':
+                producto.stock = max(0, producto.stock - cantidad)
+            elif tipo_mov == 'ajuste':
+                producto.stock = cantidad
+
+            producto.save()
+            messages.success(request, f'Stock de "{producto.nombre}" actualizado correctamente.')
+        except Producto.DoesNotExist:
+            messages.error(request, 'Producto no encontrado.')
+
+    return redirect('inventario')            

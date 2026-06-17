@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefControl - Inventario</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="../CSS/custom-styles.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
+        <div class="sidebar-section">Principal</div>
+        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
+        <div class="sidebar-section">Operaciones</div>
+        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
+        <a href="inventario.html" class="active"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
+        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
+        <div class="sidebar-section">Administración</div>
+        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
+        <a href="personal.html"><i class="material-icons">badge</i> Personal</a>
+        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
+        <a href="reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
+        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
+        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-nav">
+            <h5>Control de Inventario</h5>
+            <div class="top-nav-right">
+                <a href="#modal-nuevo-item" class="btn teal white-text modal-trigger">
+                    <i class="material-icons left">add</i>Nuevo Item
+                </a>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- ESTADÍSTICAS -->
+            <div class="row" style="margin-top:24px">
+                <div class="col s12 m3">
+                    <div class="card-panel teal lighten-5 center">
+                        <h5 class="teal-text text-darken-2">48</h5>
+                        <p class="grey-text">Total Productos</p>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="card-panel red lighten-5 center">
+                        <h5 class="red-text text-darken-2">8</h5>
+                        <p class="grey-text">Stock Crítico</p>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="card-panel orange lighten-5 center">
+                        <h5 class="orange-text text-darken-2">5</h5>
+                        <p class="grey-text">Stock Bajo</p>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="card-panel green lighten-5 center">
+                        <h5 class="green-text text-darken-2">35</h5>
+                        <p class="grey-text">Stock Normal</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ALERTA -->
+            <div class="row">
+                <div class="col s12">
+                    <div class="card red lighten-4">
+                        <div class="card-content red-text text-darken-3">
+                            <span class="card-title"><i class="material-icons left">warning</i>⚠️ 8 productos con stock crítico</span>
+                            <p>Tomates, Lechuga Romana, Pan Hamburguesa necesitan reabastecimiento urgente.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="row">
+                <div class="col s12 m5">
+                    <div class="input-field">
+                        <i class="material-icons prefix">search</i>
+                        <input id="buscar" type="text" placeholder="Buscar producto...">
+                        <label for="buscar">Buscar</label>
+                    </div>
+                </div>
+                <div class="col s12 m4">
+                    <div class="input-field">
+                        <select>
+                            <option value="">Todas las categorías</option>
+                            <option>Verduras</option>
+                            <option>Carnes</option>
+                            <option>Lácteos</option>
+                            <option>Bebidas</option>
+                        </select>
+                        <label>Categoría</label>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="input-field">
+                        <select>
+                            <option value="">Todos los estados</option>
+                            <option>Normal</option>
+                            <option>Bajo</option>
+                            <option>Crítico</option>
+                        </select>
+                        <label>Estado</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA -->
+            <div class="row">
+                <div class="col s12">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header">
+                                <h6><i class="material-icons tiny teal-text">inventory_2</i> Productos en Stock</h6>
+                                <span class="grey-text" style="font-size:0.82rem">48 productos registrados</span>
+                            </div>
+                            <table class="striped responsive-table highlight">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Producto</th>
+                                        <th>Categoría</th>
+                                        <th>Stock Actual</th>
+                                        <th>Unidad</th>
+                                        <th>Stock Mínimo</th>
+                                        <th>Estado</th>
+                                        <th>Actualización</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>INV-001</td>
+                                        <td><strong>Tomates</strong></td>
+                                        <td>Verduras</td>
+                                        <td class="red-text text-darken-2"><strong>5</strong></td>
+                                        <td>Kg</td><td>20</td>
+                                        <td><span class="chip red white-text">Crítico</span></td>
+                                        <td>16/03/2026</td>
+                                        <td>
+                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
+                                            <a href="#" class="btn-small orange white-text tooltipped" data-tooltip="Solicitar compra" onclick="mostrarNotificacion('Solicitud generada para INV-001', 'success')"><i class="material-icons">add_shopping_cart</i></a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>INV-002</td>
+                                        <td><strong>Lechuga Romana</strong></td>
+                                        <td>Verduras</td>
+                                        <td class="orange-text"><strong>15</strong></td>
+                                        <td>Uds</td><td>30</td>
+                                        <td><span class="chip orange white-text">Bajo</span></td>
+                                        <td>16/03/2026</td>
+                                        <td>
+                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
+                                            <a href="#" class="btn-small orange white-text tooltipped" data-tooltip="Solicitar compra" onclick="mostrarNotificacion('Solicitud generada para INV-002', 'success')"><i class="material-icons">add_shopping_cart</i></a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>INV-003</td>
+                                        <td><strong>Queso Mozzarella</strong></td>
+                                        <td>Lácteos</td>
+                                        <td class="green-text"><strong>45</strong></td>
+                                        <td>Kg</td><td>15</td>
+                                        <td><span class="chip green white-text">Normal</span></td>
+                                        <td>15/03/2026</td>
+                                        <td>
+                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
+                                            <a href="#" class="btn-small blue white-text tooltipped" data-tooltip="Ver movimientos" onclick="mostrarNotificacion('Historial INV-003', 'info')"><i class="material-icons">history</i></a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>INV-004</td>
+                                        <td><strong>Carne Molida</strong></td>
+                                        <td>Carnes</td>
+                                        <td class="green-text"><strong>30</strong></td>
+                                        <td>Kg</td><td>10</td>
+                                        <td><span class="chip green white-text">Normal</span></td>
+                                        <td>15/03/2026</td>
+                                        <td>
+                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
+                                            <a href="#" class="btn-small blue white-text tooltipped" data-tooltip="Ver movimientos" onclick="mostrarNotificacion('Historial INV-004', 'info')"><i class="material-icons">history</i></a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>INV-005</td>
+                                        <td><strong>Pan Hamburguesa</strong></td>
+                                        <td>Otros</td>
+                                        <td class="orange-text"><strong>25</strong></td>
+                                        <td>Uds</td><td>50</td>
+                                        <td><span class="chip orange white-text">Bajo</span></td>
+                                        <td>16/03/2026</td>
+                                        <td>
+                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
+                                            <a href="#" class="btn-small orange white-text tooltipped" data-tooltip="Solicitar compra" onclick="mostrarNotificacion('Solicitud generada para INV-005', 'success')"><i class="material-icons">add_shopping_cart</i></a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>INV-006</td>
+                                        <td><strong>Refresco Cola</strong></td>
+                                        <td>Bebidas</td>
+                                        <td class="green-text"><strong>120</strong></td>
+                                        <td>Uds</td><td>50</td>
+                                        <td><span class="chip green white-text">Normal</span></td>
+                                        <td>14/03/2026</td>
+                                        <td>
+                                            <a href="#modal-ajustar-stock" class="btn-small teal white-text modal-trigger tooltipped" data-tooltip="Ajustar stock"><i class="material-icons">edit</i></a>
+                                            <a href="#" class="btn-small blue white-text tooltipped" data-tooltip="Ver movimientos" onclick="mostrarNotificacion('Historial INV-006', 'info')"><i class="material-icons">history</i></a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO ITEM -->
+    <div id="modal-nuevo-item" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <h4><i class="material-icons left">inventory_2</i>Nuevo Item</h4>
+            <div class="row">
+                <div class="input-field col s12 m6">
+                    <i class="material-icons prefix">label</i>
+                    <input id="nombre_item" type="text" class="validate">
+                    <label for="nombre_item">Nombre del Producto *</label>
+                </div>
+                <div class="input-field col s12 m6">
+                    <select id="cat_item">
+                        <option value="" disabled selected>Seleccione</option>
+                        <option>Verduras</option><option>Carnes</option><option>Lácteos</option><option>Bebidas</option><option>Otros</option>
+                    </select>
+                    <label>Categoría *</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <input id="stock_actual" type="number" min="0" class="validate">
+                    <label for="stock_actual">Stock Actual *</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <input id="stock_min" type="number" min="0" class="validate">
+                    <label for="stock_min">Stock Mínimo *</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <select id="unidad">
+                        <option value="" disabled selected>Unidad</option>
+                        <option>Kg</option><option>g</option><option>L</option><option>mL</option><option>Unidades</option>
+                    </select>
+                    <label>Unidad *</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cancelar</a>
+            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Item agregado al inventario', 'success')">
+                <i class="material-icons left">save</i>Guardar
+            </a>
+        </div>
+    </div>
+
+    <!-- MODAL AJUSTAR STOCK -->
+    <div id="modal-ajustar-stock" class="modal">
+        <div class="modal-content">
+            <h4>Ajustar Stock</h4>
+            <p><strong>Producto:</strong> Tomates &nbsp; <strong>Stock actual:</strong> 5 Kg</p>
+            <div class="row">
+                <div class="input-field col s12 m6">
+                    <select id="tipo_mov">
+                        <option value="" disabled selected>Tipo de movimiento</option>
+                        <option>Entrada (Agregar)</option>
+                        <option>Salida (Restar)</option>
+                        <option>Ajuste Manual</option>
+                    </select>
+                    <label>Tipo *</label>
+                </div>
+                <div class="input-field col s12 m6">
+                    <input id="cant_mov" type="number" min="0" class="validate">
+                    <label for="cant_mov">Cantidad *</label>
+                </div>
+                <div class="input-field col s12">
+                    <textarea id="motivo" class="materialize-textarea"></textarea>
+                    <label for="motivo">Motivo del ajuste *</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cancelar</a>
+            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Stock ajustado correctamente', 'success')">
+                <i class="material-icons left">done</i>Confirmar
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="../JS/app.js"></script>
+</body>
+</html>

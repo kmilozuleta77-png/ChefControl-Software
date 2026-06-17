@@ -13,4 +13,5 @@ urlpatterns = [
     path('facturacion/', views.facturacion_view, name='facturacion'),
     path('pedido/<int:id_pedido>/pagar/', views.pagar_pedido_api, name='pagar_pedido_api'),
     path('pedido/<int:id_pedido>/completar/', views.completar_pedido_api, name='completar_pedido_api'),
+    path('inventario/ajustar-stock/<int:id_producto>/', views.ajustar_stock_view, name='ajustar_stock'),
 ]    
