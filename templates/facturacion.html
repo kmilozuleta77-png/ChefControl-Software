@@ -763,7 +763,8 @@
                             <label class="select-label">Método de pago</label>
                             <select class="custom-select js-metodo-pago">
                                 <option value="efectivo">💵 Efectivo</option>
-                                <option value="tarjeta">💳 Tarjeta / Datáfono</option>
+                                <option value="tarjeta_debito">💳 Tarjeta Débito</option>
+                                <option value="tarjeta_credito">💳 Tarjeta Crédito</option>
                                 <option value="nequi">📱 Nequi / Daviplata</option>
                             </select>
                         </div>
@@ -1019,9 +1020,10 @@
             }
 
             const LABEL_METODO = {
-                efectivo: '💵 Efectivo',
-                tarjeta:  '💳 Tarjeta / Datáfono',
-                nequi:    '📱 Nequi / Daviplata',
+                efectivo:        '💵 Efectivo',
+                tarjeta_debito:  '💳 Tarjeta Débito',
+                tarjeta_credito: '💳 Tarjeta Crédito',
+                nequi:           '📱 Nequi / Daviplata',
             };
             const LABEL_TIPO = {
                 pos: '🧾 Tiquete POS',
@@ -1072,13 +1074,18 @@
             const tarjeta  = tarjetaActiva;
             const idPedido = tarjeta.dataset.pedidoId;
             const tipo     = tarjeta.querySelector('.js-tipo-factura').value;
+            const metodo   = tarjeta.querySelector('.js-metodo-pago').value;
 
             fetch(`/pedido/${idPedido}/pagar/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': CSRF_TOKEN,
-                }
+                },
+                body: JSON.stringify({
+                    metodo_pago      : metodo,
+                    tipo_comprobante : tipo,
+                })
             })
             .then(r => r.json())
             .then(data => {

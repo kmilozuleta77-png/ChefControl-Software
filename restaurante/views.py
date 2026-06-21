@@ -17,6 +17,14 @@ from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, 
 
 logger = logging.getLogger('restaurante')
 
+# Mapeo de códigos frontend → valores exactos del ENUM metodo_pago en la BD
+METODOS_PAGO_DB = {
+    'efectivo':        'Efectivo',
+    'tarjeta_debito':  'Tarjeta Débito',
+    'tarjeta_credito': 'Tarjeta Crédito',
+    'nequi':           'Transferencia',
+}
+
 # -----------------------------------------------------------------------
 # DECORADOR DE ROL — Verifica que el usuario tenga un Empleado activo con
 # el cargo indicado. Redirige al dashboard si no cumple el requisito.
@@ -350,15 +358,59 @@ def facturacion_view(request):
 
 @login_required(login_url='login')
 def pagar_pedido_api(request, id_pedido):
+    """Cierra un pedido: lo marca Pagado y emite el registro Factura correspondiente."""
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
     try:
-        pedido = Pedido.objects.get(id_pedido=id_pedido)
-        pedido.estado = 'Pagado'
-        pedido.save()
+        data               = json.loads(request.body) if request.body else {}
+        metodo_pago_codigo = data.get('metodo_pago', 'efectivo')
+        if metodo_pago_codigo not in METODOS_PAGO_DB:
+            logger.warning(
+                "metodo_pago desconocido '%s' en pedido #%s; aplicando fallback 'Efectivo'",
+                metodo_pago_codigo, id_pedido,
+            )
+        metodo_pago      = METODOS_PAGO_DB.get(metodo_pago_codigo, 'Efectivo')
+        tipo_comprobante = data.get('tipo_comprobante', 'pos')
+
+        pedido   = Pedido.objects.get(id_pedido=id_pedido)
+        empleado = Empleado.objects.get(email=request.user.email, estado='Activo')
+
+        # Guardia contra doble pago (id_pedido es OneToOne; un segundo create lanzaría IntegrityError)
+        if pedido.estado == 'Pagado' or Factura.objects.filter(id_pedido=pedido).exists():
+            return JsonResponse(
+                {'status': 'error', 'mensaje': 'Este pedido ya fue facturado.'},
+                status=400
+            )
+
+        # pedido.total ya incluye el INC 8% (Impuesto Nacional al Consumo para restaurantes)
+        subtotal = (pedido.total / Decimal('1.08')).quantize(Decimal('0.01'))
+        impuesto = (pedido.total - subtotal).quantize(Decimal('0.01'))
+        # total = pedido.total → subtotal + impuesto cuadran exacto por construcción
+
+        with transaction.atomic():
+            Factura.objects.create(
+                id_pedido    =pedido,
+                id_empleado  =empleado,
+                fecha_factura=timezone.now(),
+                subtotal     =subtotal,
+                impuesto     =impuesto,
+                total        =pedido.total,
+                metodo_pago  =metodo_pago,
+                estado       ='Pagada',
+                observaciones='Factura DIAN' if tipo_comprobante == 'fe' else 'Tiquete POS',
+            )
+            pedido.estado = 'Pagado'
+            pedido.save()
+
         return JsonResponse({'status': 'success'})
+
     except Pedido.DoesNotExist:
         return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado.'}, status=404)
+    except Empleado.DoesNotExist:
+        return JsonResponse({'status': 'error', 'mensaje': 'Empleado no encontrado para este usuario.'}, status=404)
+    except (InvalidOperation, ValueError) as e:
+        logger.warning("Datos inválidos al pagar pedido #%s: %s", id_pedido, e)
+        return JsonResponse({'status': 'error', 'mensaje': 'Datos de pago inválidos.'}, status=400)
     except Exception:
         logger.exception("Error al procesar pago del pedido #%s", id_pedido)
         return JsonResponse({'status': 'error', 'mensaje': 'Error interno.'}, status=500)

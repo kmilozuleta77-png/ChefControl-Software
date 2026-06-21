@@ -78,6 +78,9 @@ Actualiza este archivo al completar o agregar tareas.
 - [x] `fix/dashboard-pedidos-recientes`: título, formato COP, badges reales, alertas BD, modal Ver pedido (02/06/2026)
 - [x] `fix/fechas-dashboard`: "Pedidos Hoy" = 0 — causa: `fecha_pedido` quedaba NULL + `__date` requiere `CONVERT_TZ` en MySQL (sin tablas cargadas). Fix: `fecha_pedido=timezone.now()` al crear pedido + `rango_dia()` con `__gte/__lt` en `dashboard_view` (04/06/2026)
 - [ ] **Deuda técnica menor**: cambiar `fecha_pedido` a `auto_now_add=True` en modelo `Pedido` para garantizar que nunca quede NULL sin depender de la vista
+- [ ] **Deuda tecnica**: ampliar `Factura.metodo_pago` a `max_length=30` con migracion — coordinar con Sofia; hoy `'Tarjeta Credito'` ocupa 14 chars, cabe justo; riesgo si se agregan metodos mas largos
+- [ ] **Deuda tecnica**: centralizar codigos de metodo de pago en constante JS compartida en `facturacion.html` — hoy el literal `'efectivo'` esta disperso en `calcularCambio()`, `abrirModal()` y `confirmarPago()`
+- [ ] **Deuda tecnica**: convertir `Factura.estado` a campo `choices` — hoy `CharField(9)` libre; `'Pagada'` cabe justo, cualquier estado mas largo (ej. `'Pendiente'`) agota el limite
 - [ ] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` en la BD (script UPDATE + ajustar views.py línea 107) — elimina doble condición en template
 
 ### Mejoras de lÃ³gica
