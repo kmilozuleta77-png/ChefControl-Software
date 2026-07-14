@@ -59,7 +59,7 @@ Actualiza este archivo al completar o agregar tareas.
 ### Flujo principal (implementado)
 - [x] Crear pedido con `transaction.atomic` (validaciones, detalles)
 - [x] API de cocina con polling â€” `api_pedidos_cocina`
-- [x] Marcar pedido como Listo â€” `completar_pedido_api`
+- [x] Transición de estado en cocina: Pendiente → En Preparación (`iniciar_preparacion_api`) → Listo (`completar_pedido_api`, ahora exige que el pedido ya esté "En Preparación") (14/07/2026)
 - [x] Registrar pago y emitir factura â€” `pagar_pedido_api`
 - [x] Dashboard con mÃ©tricas: ventas del dÃ­a, alertas de stock, pedidos recientes
 
@@ -84,7 +84,9 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Deuda tecnica**: ampliar `Factura.metodo_pago` a `max_length=30` con migracion — coordinar con Sofia; hoy `'Tarjeta Credito'` ocupa 14 chars, cabe justo; riesgo si se agregan metodos mas largos
 - [ ] **Deuda tecnica**: centralizar codigos de metodo de pago en constante JS compartida en `facturacion.html` — hoy el literal `'efectivo'` esta disperso en `calcularCambio()`, `abrirModal()` y `confirmarPago()`
 - [ ] **Deuda tecnica**: convertir `Factura.estado` a campo `choices` — hoy `CharField(9)` libre; `'Pagada'` cabe justo, cualquier estado mas largo (ej. `'Pendiente'`) agota el limite
-- [ ] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` en la BD (script UPDATE + ajustar views.py línea 107) — elimina doble condición en template
+- [x] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` — corregido en views.py; no requirió migración porque el estado nunca llegó a asignarse en BD (14/07/2026)
+- [ ] `api_pedidos_cocina` sin `@requiere_rol` — cualquier usuario autenticado puede leer el listado de cocina (hallazgo de seguridad, prioridad media)
+- [ ] index.html (y otras vistas internas) no muestran {% for message in messages %} — los mensajes de error/éxito de Django se acumulan silenciosamente hasta el próximo login en vez de mostrarse al momento (detectado al probar @requiere_rol)
 
 ### Mejoras de lÃ³gica
 - [ ] Propina de monto libre en facturaciÃ³n (actualmente solo porcentaje)
@@ -165,13 +167,9 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] Reconciliar conteo de alertas dashboard (2) vs inventario (13)
 - [ ] Verificar paleta completa de badges de estado
 - [ ] Migrar cocina.html a design-system.css
-- [ ] Normalizar "En preparacion" en BD (migración de datos)
+- [x] Normalizar "En preparacion" en BD → resuelto: flujo Pendiente → En Preparación → Listo implementado (14/07/2026)
 - [ ] Logo jaguar en sidebar
 ## Bugs / Arquitectura conocidos
-- [ ] Estado "En preparacion" nunca se asigna: el flujo va Pendiente → Listo → Pagado.
-      El KPI "En Cocina" del dashboard (filter estado='En preparacion') siempre da 0.
-      Decidir: ¿agregar transición a "En preparacion" en cocina, o cambiar el KPI a contar "Pendiente"?
-
       - [ ] BUG crear_pedido.html: el carrito se congela tras el 1er producto.
       Causa: #cart-empty está dentro de #ticket-items; innerHTML lo destruye y
       en el siguiente render getElementById('cart-empty')=null → null.style crashea.

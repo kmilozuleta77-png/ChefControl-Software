@@ -129,7 +129,7 @@ def dashboard_view(request):
     mesas_ocupadas = Mesa.objects.filter(estado='Ocupada').count()
     mesas_reservadas = Mesa.objects.filter(estado='Reservada').count()
     mesas_lista = Mesa.objects.all().order_by('numero_mesa')
-    pedidos_en_cocina = Pedido.objects.filter(estado='En preparacion').count()
+    pedidos_en_cocina = Pedido.objects.filter(estado='En Preparación').count()
 
     # select_related completo: mesa, empleado y cliente evitan N+1 queries en el template
     pedidos_recientes = (
@@ -275,7 +275,7 @@ def crear_pedido_view(request):
 def cocina_view(request):
     pedidos_cocina = (
         Pedido.objects
-        .filter(estado='Pendiente')
+        .filter(estado__in=['Pendiente', 'En Preparación'])
         .prefetch_related('detallepedido_set__id_producto')
         .order_by('fecha_pedido')
     )
@@ -291,7 +291,7 @@ def api_pedidos_cocina(request):
     """Devuelve los pedidos pendientes en JSON para el polling del KDS."""
     pedidos_qs = (
         Pedido.objects
-        .filter(estado='Pendiente')
+        .filter(estado__in=['Pendiente', 'En Preparación'])
         .prefetch_related('detallepedido_set__id_producto')
         .select_related('id_mesa')
         .order_by('fecha_pedido')
@@ -308,6 +308,7 @@ def api_pedidos_cocina(request):
         ]
         pedidos_data.append({
             'id': pedido.id_pedido,
+            'estado': pedido.estado,
             'mesa': pedido.id_mesa.numero_mesa if pedido.id_mesa else '—',
             'observaciones': pedido.observaciones or '',
             'detalles': detalles,
@@ -317,15 +318,47 @@ def api_pedidos_cocina(request):
 
 
 # -----------------------------------------------------------------------
+# MINI-API: INICIAR PREPARACIÓN DESDE COCINA
+# -----------------------------------------------------------------------
+
+@login_required(login_url='login')
+@requiere_rol('Cocinero', 'Administrador')
+def iniciar_preparacion_api(request, id_pedido):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
+    try:
+        pedido = Pedido.objects.get(id_pedido=id_pedido)
+        if pedido.estado != 'Pendiente':
+            return JsonResponse(
+                {'status': 'error', 'mensaje': 'El pedido no está en estado Pendiente.'},
+                status=400
+            )
+        pedido.estado = 'En Preparación'
+        pedido.save()
+        return JsonResponse({'status': 'success', 'mensaje': 'Preparación iniciada.'})
+    except Pedido.DoesNotExist:
+        return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado.'}, status=404)
+    except Exception:
+        logger.exception("Error al iniciar preparación del pedido #%s", id_pedido)
+        return JsonResponse({'status': 'error', 'mensaje': 'Error interno.'}, status=500)
+
+
+# -----------------------------------------------------------------------
 # MINI-API: CAMBIAR ESTADO A LISTO DESDE COCINA
 # -----------------------------------------------------------------------
 
 @login_required(login_url='login')
+@requiere_rol('Cocinero', 'Administrador')
 def completar_pedido_api(request, id_pedido):
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
     try:
         pedido = Pedido.objects.get(id_pedido=id_pedido)
+        if pedido.estado != 'En Preparación':
+            return JsonResponse(
+                {'status': 'error', 'mensaje': 'El pedido debe iniciarse primero.'},
+                status=400
+            )
         pedido.estado = 'Listo'
         pedido.save()
         return JsonResponse({'status': 'success', 'mensaje': 'Orden completada.'})
