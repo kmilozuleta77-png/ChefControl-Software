@@ -214,6 +214,13 @@
         /* Alerta de antigüedad: borde naranja ≥ 15 min */
         .comanda-card.aging-warning { border-color: var(--accent); }
 
+        /* Pedido en preparación: tarjeta tintada en naranja para diferenciarla de "Pendiente" */
+        .comanda-card.en-preparacion { border-color: rgba(249, 115, 22, 0.35); }
+        .comanda-card.en-preparacion .comanda-header {
+            background: rgba(249, 115, 22, 0.08);
+            border-bottom-color: rgba(249, 115, 22, 0.25);
+        }
+
         /* Alerta crítica: borde rojo pulsante ≥ 25 min */
         .comanda-card.aging-critical {
             animation: card-enter 0.35s ease both, border-pulse 1.5s ease-in-out infinite;
@@ -239,6 +246,24 @@
             color: var(--text-muted);
             margin-top: 2px;
         }
+
+        /* Píldora de estado "Preparando" */
+        .estado-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--accent);
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.28);
+            border-radius: 20px;
+            padding: 2px 8px;
+            margin-top: 6px;
+            width: fit-content;
+        }
+
+        .estado-badge .material-icons { font-size: 12px; }
 
         .tiempo-espera {
             font-size: 0.78rem;
@@ -343,6 +368,38 @@
         .btn-despachar.loading .material-icons { display: none; }
         .btn-despachar.loading .btn-spinner { display: block; }
 
+        /* Botón iniciar preparación — mismo patrón que despachar, en color --accent */
+        .btn-iniciar {
+            width: 100%;
+            padding: 15px;
+            background: rgba(249, 115, 22, 0.08);
+            border: none;
+            border-top: 1px solid rgba(249, 115, 22, 0.18);
+            color: var(--accent);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-iniciar:hover:not(:disabled) { background: rgba(249, 115, 22, 0.16); }
+        .btn-iniciar:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-iniciar .material-icons { font-size: 18px; }
+
+        .btn-iniciar .btn-spinner {
+            border-color: rgba(249, 115, 22, 0.3);
+            border-top-color: var(--accent);
+        }
+
+        .btn-iniciar.loading .btn-text    { display: none; }
+        .btn-iniciar.loading .material-icons { display: none; }
+        .btn-iniciar.loading .btn-spinner { display: block; }
+
         /* ── Estado vacío ───────────────────────────────────── */
         .cocina-vacia {
             grid-column: 1 / -1;
@@ -404,7 +461,7 @@
         <!-- Badge de pendientes -->
         <div class="badge-pendientes" id="badge-pendientes">
             <div class="badge-dot"></div>
-            <span id="badge-count">0</span>&nbsp;pendientes
+            <span id="badge-count">0</span>&nbsp;en cocina
         </div>
 
         <div class="topbar-spacer"></div>
@@ -438,7 +495,7 @@
         <div class="kds-grid" id="kds-grid">
 
             {% for pedido in pedidos %}
-                <div class="comanda-card"
+                <div class="comanda-card{% if pedido.estado == 'En Preparación' %} en-preparacion{% endif %}"
                      id="card-pedido-{{ pedido.id_pedido }}"
                      data-arrival-ts="{{ pedido.fecha_pedido|date:'U'|default:'0' }}">
 
@@ -446,6 +503,9 @@
                         <div>
                             <div class="mesa-label">Mesa {{ pedido.id_mesa.numero_mesa }}</div>
                             <div class="pedido-ref">#{{ pedido.id_pedido }}</div>
+                            {% if pedido.estado == 'En Preparación' %}
+                                <div class="estado-badge"><i class="material-icons">soup_kitchen</i>Preparando</div>
+                            {% endif %}
                         </div>
                         <div class="tiempo-espera" id="tiempo-{{ pedido.id_pedido }}">—</div>
                     </div>
@@ -466,11 +526,19 @@
                         {% endif %}
                     </div>
 
-                    <button class="btn-despachar" data-pedido-id="{{ pedido.id_pedido }}">
-                        <i class="material-icons">check_circle</i>
-                        <span class="btn-text">Despachar</span>
-                        <div class="btn-spinner"></div>
-                    </button>
+                    {% if pedido.estado == 'Pendiente' %}
+                        <button class="btn-iniciar" data-pedido-id="{{ pedido.id_pedido }}">
+                            <i class="material-icons">play_circle</i>
+                            <span class="btn-text">Iniciar preparación</span>
+                            <div class="btn-spinner"></div>
+                        </button>
+                    {% else %}
+                        <button class="btn-despachar" data-pedido-id="{{ pedido.id_pedido }}">
+                            <i class="material-icons">check_circle</i>
+                            <span class="btn-text">Despachar</span>
+                            <div class="btn-spinner"></div>
+                        </button>
+                    {% endif %}
 
                 </div>
             {% empty %}
@@ -492,6 +560,7 @@
 
         /* ── Constantes ──────────────────────────────────────── */
         const CSRF_TOKEN    = '{{ csrf_token }}';
+        const URL_INICIAR   = id => `/pedido/${id}/iniciar/`;
         const URL_COMPLETAR = id => `/pedido/${id}/completar/`;
         const URL_POLLING   = '/api/pedidos-cocina/';
         const POLL_INTERVAL = 15_000;           // 15 segundos entre ciclos de polling
@@ -601,6 +670,32 @@
             });
         }
 
+        /* ── Marcar tarjeta existente como "En Preparación" ──── */
+        function marcarComoEnPreparacion(card) {
+            if (!card || card.classList.contains('en-preparacion')) return;
+            card.classList.add('en-preparacion');
+
+            const headerInfo = card.querySelector('.comanda-header > div:first-child');
+            if (headerInfo && !headerInfo.querySelector('.estado-badge')) {
+                const badge = document.createElement('div');
+                badge.className = 'estado-badge';
+                badge.innerHTML = '<i class="material-icons">soup_kitchen</i>Preparando';
+                headerInfo.appendChild(badge);
+            }
+
+            const btnIniciar = card.querySelector('.btn-iniciar');
+            if (btnIniciar) {
+                const btnDespachar = document.createElement('button');
+                btnDespachar.className = 'btn-despachar';
+                btnDespachar.dataset.pedidoId = btnIniciar.dataset.pedidoId;
+                btnDespachar.innerHTML = `
+                    <i class="material-icons">check_circle</i>
+                    <span class="btn-text">Despachar</span>
+                    <div class="btn-spinner"></div>`;
+                btnIniciar.replaceWith(btnDespachar);
+            }
+        }
+
         /* ── Construir tarjeta (usado por el polling) ────────── */
         function construirTarjeta(pedido) {
             const detallesHtml = pedido.detalles.map(d =>
@@ -622,8 +717,26 @@
                 ? parseInt(pedido.hora_pedido) * 1000
                 : Date.now();
 
+            const enPreparacion = pedido.estado === 'En Preparación';
+
+            const badgeHtml = enPreparacion
+                ? '<div class="estado-badge"><i class="material-icons">soup_kitchen</i>Preparando</div>'
+                : '';
+
+            const botonHtml = enPreparacion
+                ? `<button class="btn-despachar" data-pedido-id="${pedido.id}">
+                       <i class="material-icons">check_circle</i>
+                       <span class="btn-text">Despachar</span>
+                       <div class="btn-spinner"></div>
+                   </button>`
+                : `<button class="btn-iniciar" data-pedido-id="${pedido.id}">
+                       <i class="material-icons">play_circle</i>
+                       <span class="btn-text">Iniciar preparación</span>
+                       <div class="btn-spinner"></div>
+                   </button>`;
+
             const card = document.createElement('div');
-            card.className      = 'comanda-card';
+            card.className      = enPreparacion ? 'comanda-card en-preparacion' : 'comanda-card';
             card.id             = `card-pedido-${pedido.id}`;
             card.dataset.arrivalTs = arrivalTs;
             card.innerHTML = `
@@ -631,6 +744,7 @@
                     <div>
                         <div class="mesa-label">Mesa ${pedido.mesa}</div>
                         <div class="pedido-ref">#${pedido.id}</div>
+                        ${badgeHtml}
                     </div>
                     <div class="tiempo-espera" id="tiempo-${pedido.id}">ahora</div>
                 </div>
@@ -638,20 +752,52 @@
                     ${detallesHtml}
                     ${notaHtml}
                 </div>
-                <button class="btn-despachar" data-pedido-id="${pedido.id}">
-                    <i class="material-icons">check_circle</i>
-                    <span class="btn-text">Despachar</span>
-                    <div class="btn-spinner"></div>
-                </button>`;
+                ${botonHtml}`;
             return card;
         }
 
-        /* ── Despachar pedido ────────────────────────────────── */
+        /* ── Iniciar preparación / Despachar pedido ──────────── */
         document.getElementById('kds-grid').addEventListener('click', function (e) {
-            const btn = e.target.closest('.btn-despachar');
-            if (!btn || btn.disabled) return;
-            despacharPedido(parseInt(btn.dataset.pedidoId), btn);
+            const btnDespachar = e.target.closest('.btn-despachar');
+            if (btnDespachar && !btnDespachar.disabled) {
+                despacharPedido(parseInt(btnDespachar.dataset.pedidoId), btnDespachar);
+                return;
+            }
+
+            const btnIniciar = e.target.closest('.btn-iniciar');
+            if (btnIniciar && !btnIniciar.disabled) {
+                iniciarPreparacion(parseInt(btnIniciar.dataset.pedidoId), btnIniciar);
+            }
         });
+
+        function iniciarPreparacion(idPedido, btn) {
+            btn.disabled = true;
+            btn.classList.add('loading');
+
+            fetch(URL_INICIAR(idPedido), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast('Preparación iniciada', 'success');
+                    marcarComoEnPreparacion(document.getElementById(`card-pedido-${idPedido}`));
+                } else {
+                    showToast('Error: ' + (data.mensaje || 'Sin respuesta del servidor'), 'error');
+                    btn.disabled = false;
+                    btn.classList.remove('loading');
+                }
+            })
+            .catch(() => {
+                showToast('Error de conexión — intenta de nuevo', 'error');
+                btn.disabled = false;
+                btn.classList.remove('loading');
+            });
+        }
 
         function despacharPedido(idPedido, btn) {
             btn.disabled = true;
@@ -704,13 +850,15 @@
                     const idsFrescos = new Set(data.pedidos.map(p => p.id));
                     let   hayNuevos  = false;
 
-                    /* Agregar tarjetas nuevas */
+                    /* Agregar tarjetas nuevas o sincronizar cambio de estado desde otro terminal */
                     data.pedidos.forEach(pedido => {
                         if (!pedidosEnDom.has(pedido.id)) {
                             const tarjeta = construirTarjeta(pedido);
                             grid.appendChild(tarjeta);
                             pedidosEnDom.add(pedido.id);
                             hayNuevos = true;
+                        } else if (pedido.estado === 'En Preparación') {
+                            marcarComoEnPreparacion(document.getElementById(`card-pedido-${pedido.id}`));
                         }
                     });
 

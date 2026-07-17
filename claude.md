@@ -7,7 +7,7 @@ Siempre en español. Comentarios, explicaciones y commits en español.
 # REGLAS GIT
 - Nunca tocar master/main directamente
 - Una rama por feature: feature/nombre o fix/nombre
-- Un commit por tarea completada con mensaje descriptivo
+
 
 # CALIDAD DE CÓDIGO
 - Clean Code + principios SOLID
@@ -28,7 +28,6 @@ Siempre en español. Comentarios, explicaciones y commits en español.
 # REGLA ANTI-DEUDA TÉCNICA
 - NUNCA modificar más de 1 archivo por sesión sin aprobación explícita
 - Antes de cualquier refactor global, presentar un plan de máximo 10 líneas
-- Si un cambio afecta más de 2 archivos, DETENTE y pregunta primero
 - Priorizar siempre: ¿esto rompe algo que ya funciona?
 # REGLA DE VALIDACIÓN
 - Después de cada cambio: indica exactamente cómo probarlo
@@ -36,8 +35,7 @@ Siempre en español. Comentarios, explicaciones y commits en español.
 - Si algo se rompe: revertir con git antes de continuar
 
 # REGLA DE TOKENS
-- Una tarea por chat, una pantalla por sesión
-- Si la tarea requiere tocar más de 3 archivos: dividirla en subtareas
+- una funcionalidad coherente y completable por sesión; puede tocar más de un archivo si forman una sola unidad lógica.
 - Al terminar cada tarea: actualizar memory.md y TASKS.md en 3 líneas máximo
 
 # REGLA DE ARQUITECTURA

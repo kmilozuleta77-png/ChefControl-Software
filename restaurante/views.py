@@ -17,6 +17,14 @@ from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, 
 
 logger = logging.getLogger('restaurante')
 
+# Mapeo de códigos frontend → valores exactos del ENUM metodo_pago en la BD
+METODOS_PAGO_DB = {
+    'efectivo':        'Efectivo',
+    'tarjeta_debito':  'Tarjeta Débito',
+    'tarjeta_credito': 'Tarjeta Crédito',
+    'nequi':           'Transferencia',
+}
+
 # -----------------------------------------------------------------------
 # DECORADOR DE ROL — Verifica que el usuario tenga un Empleado activo con
 # el cargo indicado. Redirige al dashboard si no cumple el requisito.
@@ -121,7 +129,7 @@ def dashboard_view(request):
     mesas_ocupadas = Mesa.objects.filter(estado='Ocupada').count()
     mesas_reservadas = Mesa.objects.filter(estado='Reservada').count()
     mesas_lista = Mesa.objects.all().order_by('numero_mesa')
-    pedidos_en_cocina = Pedido.objects.filter(estado='En preparacion').count()
+    pedidos_en_cocina = Pedido.objects.filter(estado='En Preparación').count()
 
     # select_related completo: mesa, empleado y cliente evitan N+1 queries en el template
     pedidos_recientes = (
@@ -320,7 +328,7 @@ def crear_pedido_view(request):
 def cocina_view(request):
     pedidos_cocina = (
         Pedido.objects
-        .filter(estado='Pendiente')
+        .filter(estado__in=['Pendiente', 'En Preparación'])
         .prefetch_related('detallepedido_set__id_producto')
         .order_by('fecha_pedido')
     )
@@ -336,7 +344,7 @@ def api_pedidos_cocina(request):
     """Devuelve los pedidos pendientes en JSON para el polling del KDS."""
     pedidos_qs = (
         Pedido.objects
-        .filter(estado='Pendiente')
+        .filter(estado__in=['Pendiente', 'En Preparación'])
         .prefetch_related('detallepedido_set__id_producto')
         .select_related('id_mesa')
         .order_by('fecha_pedido')
@@ -353,6 +361,7 @@ def api_pedidos_cocina(request):
         ]
         pedidos_data.append({
             'id': pedido.id_pedido,
+            'estado': pedido.estado,
             'mesa': pedido.id_mesa.numero_mesa if pedido.id_mesa else '—',
             'observaciones': pedido.observaciones or '',
             'detalles': detalles,
@@ -362,15 +371,47 @@ def api_pedidos_cocina(request):
 
 
 # -----------------------------------------------------------------------
+# MINI-API: INICIAR PREPARACIÓN DESDE COCINA
+# -----------------------------------------------------------------------
+
+@login_required(login_url='login')
+@requiere_rol('Cocinero', 'Administrador')
+def iniciar_preparacion_api(request, id_pedido):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
+    try:
+        pedido = Pedido.objects.get(id_pedido=id_pedido)
+        if pedido.estado != 'Pendiente':
+            return JsonResponse(
+                {'status': 'error', 'mensaje': 'El pedido no está en estado Pendiente.'},
+                status=400
+            )
+        pedido.estado = 'En Preparación'
+        pedido.save()
+        return JsonResponse({'status': 'success', 'mensaje': 'Preparación iniciada.'})
+    except Pedido.DoesNotExist:
+        return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado.'}, status=404)
+    except Exception:
+        logger.exception("Error al iniciar preparación del pedido #%s", id_pedido)
+        return JsonResponse({'status': 'error', 'mensaje': 'Error interno.'}, status=500)
+
+
+# -----------------------------------------------------------------------
 # MINI-API: CAMBIAR ESTADO A LISTO DESDE COCINA
 # -----------------------------------------------------------------------
 
 @login_required(login_url='login')
+@requiere_rol('Cocinero', 'Administrador')
 def completar_pedido_api(request, id_pedido):
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
     try:
         pedido = Pedido.objects.get(id_pedido=id_pedido)
+        if pedido.estado != 'En Preparación':
+            return JsonResponse(
+                {'status': 'error', 'mensaje': 'El pedido debe iniciarse primero.'},
+                status=400
+            )
         pedido.estado = 'Listo'
         pedido.save()
         return JsonResponse({'status': 'success', 'mensaje': 'Orden completada.'})
@@ -403,16 +444,63 @@ def facturacion_view(request):
 
 @login_required(login_url='login')
 def pagar_pedido_api(request, id_pedido):
+    """Cierra un pedido: lo marca Pagado y emite el registro Factura correspondiente."""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
+    try:
+        data               = json.loads(request.body) if request.body else {}
+        metodo_pago_codigo = data.get('metodo_pago', 'efectivo')
+        if metodo_pago_codigo not in METODOS_PAGO_DB:
+            logger.warning(
+                "metodo_pago desconocido '%s' en pedido #%s; aplicando fallback 'Efectivo'",
+                metodo_pago_codigo, id_pedido,
+            )
+        metodo_pago      = METODOS_PAGO_DB.get(metodo_pago_codigo, 'Efectivo')
+        tipo_comprobante = data.get('tipo_comprobante', 'pos')
 
-    if request.method == 'POST':
-        try:
-            pedido = Pedido.objects.get(id_pedido=id_pedido)
-            pedido.estado = 'Pagado' # Cerramos el ciclo de vida del pedido
-            # NOTA PARA EL FUTURO: Aquí podríamos insertar el registro en la tabla Factura
+        pedido   = Pedido.objects.get(id_pedido=id_pedido)
+        empleado = Empleado.objects.get(email=request.user.email, estado='Activo')
+
+        # Guardia contra doble pago (id_pedido es OneToOne; un segundo create lanzaría IntegrityError)
+        if pedido.estado == 'Pagado' or Factura.objects.filter(id_pedido=pedido).exists():
+            return JsonResponse(
+                {'status': 'error', 'mensaje': 'Este pedido ya fue facturado.'},
+                status=400
+            )
+
+        # pedido.total ya incluye el INC 8% (Impuesto Nacional al Consumo para restaurantes)
+        subtotal = (pedido.total / Decimal('1.08')).quantize(Decimal('0.01'))
+        impuesto = (pedido.total - subtotal).quantize(Decimal('0.01'))
+        # total = pedido.total → subtotal + impuesto cuadran exacto por construcción
+
+        with transaction.atomic():
+            Factura.objects.create(
+                id_pedido    =pedido,
+                id_empleado  =empleado,
+                fecha_factura=timezone.now(),
+                subtotal     =subtotal,
+                impuesto     =impuesto,
+                total        =pedido.total,
+                metodo_pago  =metodo_pago,
+                estado       ='Pagada',
+                observaciones='Factura DIAN' if tipo_comprobante == 'fe' else 'Tiquete POS',
+            )
+            pedido.estado = 'Pagado'
             pedido.save()
-            return JsonResponse({'status': 'success'})
-        except Pedido.DoesNotExist:
-            return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado'})
+
+        return JsonResponse({'status': 'success'})
+
+    except Pedido.DoesNotExist:
+        return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado.'}, status=404)
+    except Empleado.DoesNotExist:
+        return JsonResponse({'status': 'error', 'mensaje': 'Empleado no encontrado para este usuario.'}, status=404)
+    except (InvalidOperation, ValueError) as e:
+        logger.warning("Datos inválidos al pagar pedido #%s: %s", id_pedido, e)
+        return JsonResponse({'status': 'error', 'mensaje': 'Datos de pago inválidos.'}, status=400)
+    except Exception:
+        logger.exception("Error al procesar pago del pedido #%s", id_pedido)
+        return JsonResponse({'status': 'error', 'mensaje': 'Error interno.'}, status=500)
+
 # -------------------------------------------------------------------
 # VISTA 8: AJUSTAR STOCK
 # -------------------------------------------------------------------
@@ -420,9 +508,9 @@ def pagar_pedido_api(request, id_pedido):
 def ajustar_stock_view(request, id_producto):
     if request.method == 'POST':
         try:
-            producto    = Producto.objects.get(id_producto=id_producto)
-            tipo_mov    = request.POST.get('tipo_mov')
-            cantidad    = int(request.POST.get('cant_mov', 0))
+            producto = Producto.objects.get(id_producto=id_producto)
+            tipo_mov = request.POST.get('tipo_mov')
+            cantidad = int(request.POST.get('cant_mov', 0))
 
             if tipo_mov == 'entrada':
                 producto.stock += cantidad
@@ -432,22 +520,12 @@ def ajustar_stock_view(request, id_producto):
                 producto.stock = cantidad
 
             producto.save()
-            messages.success(request, f'Stock de "{producto.nombre}" actualizado correctamente.')
+            messages.success(
+                request,
+                f'Stock de "{producto.nombre}" actualizado correctamente.'
+            )
+
         except Producto.DoesNotExist:
             messages.error(request, 'Producto no encontrado.')
 
-    return redirect('inventario')            
-
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
-    try:
-        pedido = Pedido.objects.get(id_pedido=id_pedido)
-        pedido.estado = 'Pagado'
-        pedido.save()
-        return JsonResponse({'status': 'success'})
-    except Pedido.DoesNotExist:
-        return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado.'}, status=404)
-    except Exception:
-        logger.exception("Error al procesar pago del pedido #%s", id_pedido)
-        return JsonResponse({'status': 'error', 'mensaje': 'Error interno.'}, status=500)
-
+    return redirect('inventario')
