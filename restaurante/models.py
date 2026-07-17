@@ -1,12 +1,12 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
+# Modelos generados con 'inspectdb' desde el esquema MySQL existente.
+# managed=False en todos los modelos de negocio: Django no crea ni altera estas tablas;
+# el esquema está gestionado directamente en MySQL (ver chefcontrol_database/chefcontrol_database.sql).
 from django.db import models
 
+
+# -----------------------------------------------------------------------
+# TABLAS INTERNAS DE DJANGO (autogeneradas — no modificar)
+# -----------------------------------------------------------------------
 
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=150)
@@ -77,65 +77,6 @@ class AuthUserUserPermissions(models.Model):
         unique_together = (('user', 'permission'),)
 
 
-class Cargo(models.Model):
-    id_cargo = models.AutoField(primary_key=True)
-    nombre = models.CharField(unique=True, max_length=50)
-    descripcion = models.CharField(max_length=200, blank=True, null=True)
-    fecha_creacion = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'cargo'
-    # NUEVO: Le decimos a Django que muestre el 'nombre' del cargo
-    def __str__(self):
-        return self.nombre
-
-
-class Categoria(models.Model):
-    id_categoria = models.AutoField(primary_key=True)
-    nombre = models.CharField(unique=True, max_length=50)
-    descripcion = models.CharField(max_length=200, blank=True, null=True)
-    fecha_creacion = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'categoria'
-    def __str__(self):
-        return self.nombre
-
-
-class Cliente(models.Model):
-    id_cliente = models.AutoField(primary_key=True)
-    nombres = models.CharField(max_length=100)
-    apellidos = models.CharField(max_length=100)
-    cedula = models.CharField(unique=True, max_length=20, blank=True, null=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    email = models.CharField(unique=True, max_length=100, blank=True, null=True)
-    direccion = models.CharField(max_length=200, blank=True, null=True)
-    estado = models.CharField(max_length=8, blank=True, null=True)
-    fecha_creacion = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'cliente'
-    def __str__(self):
-        return f"{self.nombres} {self.apellidos}"
-
-
-class Detallepedido(models.Model):
-    id_detalle = models.AutoField(primary_key=True)
-    id_pedido = models.ForeignKey('Pedido', models.DO_NOTHING, db_column='id_pedido')
-    id_producto = models.ForeignKey('Producto', models.DO_NOTHING, db_column='id_producto')
-    cantidad = models.IntegerField()
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    #subtotal = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    observaciones = models.CharField(max_length=300, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'detallepedido'
-
-
 class DjangoAdminLog(models.Model):
     action_time = models.DateTimeField()
     object_id = models.TextField(blank=True, null=True)
@@ -181,6 +122,73 @@ class DjangoSession(models.Model):
         db_table = 'django_session'
 
 
+# -----------------------------------------------------------------------
+# MODELOS DE NEGOCIO
+# -----------------------------------------------------------------------
+
+class Cargo(models.Model):
+    id_cargo = models.AutoField(primary_key=True)
+    nombre = models.CharField(unique=True, max_length=50)
+    descripcion = models.CharField(max_length=200, blank=True, null=True)
+    fecha_creacion = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'cargo'
+
+    def __str__(self):
+        return self.nombre
+
+
+class Categoria(models.Model):
+    id_categoria = models.AutoField(primary_key=True)
+    nombre = models.CharField(unique=True, max_length=50)
+    descripcion = models.CharField(max_length=200, blank=True, null=True)
+    fecha_creacion = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'categoria'
+
+    def __str__(self):
+        return self.nombre
+
+
+class Cliente(models.Model):
+    id_cliente = models.AutoField(primary_key=True)
+    nombres = models.CharField(max_length=100)
+    apellidos = models.CharField(max_length=100)
+    cedula = models.CharField(unique=True, max_length=20, blank=True, null=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    email = models.CharField(unique=True, max_length=100, blank=True, null=True)
+    direccion = models.CharField(max_length=200, blank=True, null=True)
+    estado = models.CharField(max_length=8, blank=True, null=True)
+    fecha_creacion = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'cliente'
+
+    def __str__(self):
+        return f"{self.nombres} {self.apellidos}"
+
+
+class Mesa(models.Model):
+    id_mesa = models.AutoField(primary_key=True)
+    numero_mesa = models.IntegerField(unique=True)
+    capacidad = models.IntegerField()
+    estado = models.CharField(max_length=16, blank=True, null=True)
+    ubicacion = models.CharField(max_length=100, blank=True, null=True)
+    fecha_creacion = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'mesa'
+
+    def __str__(self):
+        return f"Mesa {self.numero_mesa}"
+
+
 class Empleado(models.Model):
     id_empleado = models.AutoField(primary_key=True)
     id_cargo = models.ForeignKey(Cargo, models.DO_NOTHING, db_column='id_cargo')
@@ -197,61 +205,9 @@ class Empleado(models.Model):
     class Meta:
         managed = False
         db_table = 'empleado'
-    # NUEVO: Le decimos que junte el nombre y el apellido
+
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"
-
-
-class Factura(models.Model):
-    id_factura = models.AutoField(primary_key=True)
-    id_pedido = models.OneToOneField('Pedido', models.DO_NOTHING, db_column='id_pedido')
-    id_empleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='id_empleado')
-    fecha_factura = models.DateTimeField(blank=True, null=True)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    impuesto = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    descuento = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-    metodo_pago = models.CharField(max_length=15, blank=True, null=True)
-    estado = models.CharField(max_length=9, blank=True, null=True)
-    observaciones = models.CharField(max_length=300, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'factura'
-
-
-class Mesa(models.Model):
-    id_mesa = models.AutoField(primary_key=True)
-    numero_mesa = models.IntegerField(unique=True)
-    capacidad = models.IntegerField()
-    estado = models.CharField(max_length=16, blank=True, null=True)
-    ubicacion = models.CharField(max_length=100, blank=True, null=True)
-    fecha_creacion = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'mesa'
-    def __str__(self):
-        return f"Mesa {self.numero_mesa}"
-
-
-class Pedido(models.Model):
-    id_pedido = models.AutoField(primary_key=True)
-    id_cliente = models.ForeignKey(Cliente, models.DO_NOTHING, db_column='id_cliente', blank=True, null=True)
-    id_empleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='id_empleado')
-    id_mesa = models.ForeignKey(Mesa, models.DO_NOTHING, db_column='id_mesa', blank=True, null=True)
-    fecha_pedido = models.DateTimeField(blank=True, null=True)
-    estado = models.CharField(max_length=14, blank=True, null=True)
-    tipo_pedido = models.CharField(max_length=11, blank=True, null=True)
-    observaciones = models.CharField(max_length=500, blank=True, null=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'pedido'
-    # NUEVO: Mostrará algo como "Pedido #1"
-    def __str__(self):
-        return f"Pedido #{self.id_pedido}"
 
 
 class Producto(models.Model):
@@ -269,5 +225,71 @@ class Producto(models.Model):
     class Meta:
         managed = False
         db_table = 'producto'
+        # Índice en stock para acelerar el filtro de alertas de inventario (stock <= stock_minimo)
+        indexes = [
+            models.Index(fields=['stock'], name='idx_producto_stock'),
+        ]
+
     def __str__(self):
         return self.nombre
+
+
+class Pedido(models.Model):
+    id_pedido = models.AutoField(primary_key=True)
+    # id_cliente es nullable: soporta pedidos "para llevar" sin cliente registrado
+    id_cliente = models.ForeignKey(Cliente, models.DO_NOTHING, db_column='id_cliente', blank=True, null=True)
+    id_empleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='id_empleado')
+    # id_mesa es nullable: soporta pedidos "para llevar" sin mesa asignada
+    id_mesa = models.ForeignKey(Mesa, models.DO_NOTHING, db_column='id_mesa', blank=True, null=True)
+    fecha_pedido = models.DateTimeField(blank=True, null=True)
+    estado = models.CharField(max_length=14, blank=True, null=True)
+    tipo_pedido = models.CharField(max_length=11, blank=True, null=True)
+    observaciones = models.CharField(max_length=500, blank=True, null=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'pedido'
+        indexes = [
+            # Acelera los filtros por estado usados en KDS (cocina) y caja (facturación)
+            models.Index(fields=['estado'], name='idx_pedido_estado'),
+            # Acelera el ordenamiento por fecha en dashboard y KDS
+            models.Index(fields=['-fecha_pedido'], name='idx_pedido_fecha_desc'),
+        ]
+
+    def __str__(self):
+        return f"Pedido #{self.id_pedido}"
+
+
+class Detallepedido(models.Model):
+    id_detalle = models.AutoField(primary_key=True)
+    # PROTECT: impide borrar un Pedido si tiene detalles, preservando el historial
+    id_pedido = models.ForeignKey(Pedido, models.PROTECT, db_column='id_pedido')
+    # PROTECT: impide borrar un Producto que ya fue vendido, preservando integridad contable
+    id_producto = models.ForeignKey(Producto, models.PROTECT, db_column='id_producto')
+    cantidad = models.IntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    observaciones = models.CharField(max_length=300, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'detallepedido'
+
+
+class Factura(models.Model):
+    id_factura = models.AutoField(primary_key=True)
+    # PROTECT: impide borrar un Pedido que ya tiene factura emitida (regla contable)
+    id_pedido = models.OneToOneField(Pedido, models.PROTECT, db_column='id_pedido')
+    id_empleado = models.ForeignKey(Empleado, models.DO_NOTHING, db_column='id_empleado')
+    fecha_factura = models.DateTimeField(blank=True, null=True)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    impuesto = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    descuento = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    metodo_pago = models.CharField(max_length=15, blank=True, null=True)
+    estado = models.CharField(max_length=9, blank=True, null=True)
+    observaciones = models.CharField(max_length=300, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'factura'

@@ -1,4 +1,9 @@
-import json
+﻿import json
+import logging
+from datetime import date, datetime, timedelta
+from django.utils import timezone
+from decimal import Decimal, InvalidOperation
+
 from django.http import JsonResponse
 from django.db import transaction
 from django.shortcuts import render, redirect
@@ -6,72 +11,150 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, F
+from functools import wraps
 
-# Importamos las tablas de MySQL que el Dashboard necesita
 from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, Cliente, Cargo, Factura
 
-# -------------------------------------------------------------------
+logger = logging.getLogger('restaurante')
+
+# -----------------------------------------------------------------------
+# DECORADOR DE ROL — Verifica que el usuario tenga un Empleado activo con
+# el cargo indicado. Redirige al dashboard si no cumple el requisito.
+# -----------------------------------------------------------------------
+
+def requiere_rol(*cargos_permitidos):
+    """Restringe una vista a empleados con los cargos indicados."""
+    def decorador(funcion):
+        @wraps(funcion)
+        def wrapper(request, *args, **kwargs):
+            # Superusuarios de Django pasan siempre (para administración)
+            if request.user.is_superuser:
+                return funcion(request, *args, **kwargs)
+            try:
+                empleado = Empleado.objects.select_related('id_cargo').get(
+                    email=request.user.email,
+                    estado='Activo'
+                )
+                if empleado.id_cargo.nombre in cargos_permitidos:
+                    return funcion(request, *args, **kwargs)
+            except Empleado.DoesNotExist:
+                pass
+            messages.error(request, 'No tienes permisos para acceder a esta sección.')
+            return redirect('dashboard')
+        return wrapper
+    return decorador
+
+
+# -----------------------------------------------------------------------
 # VISTA 1: LOGIN
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------
+
 def login_view(request):
     if request.method == 'POST':
-        usu = request.POST.get('username')
-        pas = request.POST.get('password')
-        
+        usu = request.POST.get('username', '').strip()
+        pas = request.POST.get('password', '')
+
+        if not usu or not pas:
+            messages.error(request, 'Ingresa usuario y contraseña.')
+            return render(request, 'login.html')
+
         usuario_valido = authenticate(request, username=usu, password=pas)
-        
+
         if usuario_valido is not None:
             login(request, usuario_valido)
             return redirect('dashboard')
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
-            
+
     return render(request, 'login.html')
 
-# -------------------------------------------------------------------
+
+# -----------------------------------------------------------------------
 # VISTA 2: CERRAR SESIÓN
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------
+
 def logout_view(request):
     logout(request)
     return redirect('login')
 
-# -------------------------------------------------------------------
-# VISTA 3: DASHBOARD PRINCIPAL (Con datos 100% reales)
-# -------------------------------------------------------------------
+
+# -----------------------------------------------------------------------
+# VISTA 3: DASHBOARD PRINCIPAL
+# -----------------------------------------------------------------------
+
+def rango_dia(fecha):
+    """Devuelve (inicio_aware, fin_aware) del día calendario dado en America/Bogota."""
+    tz = timezone.get_current_timezone()
+    inicio = timezone.make_aware(datetime.combine(fecha, datetime.min.time()), tz)
+    return inicio, inicio + timedelta(days=1)
+
+
 @login_required(login_url='login')
 def dashboard_view(request):
-    # 1. Total de empleados
-    total_empleados = Empleado.objects.count()
-    
-    # 2. Total de pedidos
-    total_pedidos = Pedido.objects.count()
-    
-    # 3. Ventas totales (Sumamos la columna 'total' de todos los pedidos)
-    suma_ventas = Pedido.objects.aggregate(Sum('total'))['total__sum']
+    hoy = timezone.localdate()
+    inicio_hoy, fin_hoy = rango_dia(hoy)
+    inicio_ayer, fin_ayer = rango_dia(hoy - timedelta(days=1))
+
+    empleados_activos = Empleado.objects.filter(estado='Activo').count()
+    empleados_descanso = Empleado.objects.filter(estado='Descanso').count()
+    total_pedidos = Pedido.objects.filter(
+        fecha_pedido__gte=inicio_hoy, fecha_pedido__lt=fin_hoy
+    ).count()
+
+    suma_ventas = Factura.objects.filter(
+        fecha_factura__gte=inicio_hoy, fecha_factura__lt=fin_hoy
+    ).aggregate(Sum('total'))['total__sum']
     ventas_dia = suma_ventas if suma_ventas is not None else 0
-    
-    # 4. Alertas de Inventario (Comparamos la columna stock vs stock_minimo)
+
+    suma_ayer = Factura.objects.filter(
+        fecha_factura__gte=inicio_ayer, fecha_factura__lt=fin_ayer
+    ).aggregate(Sum('total'))['total__sum']
+    ventas_ayer = suma_ayer if suma_ayer is not None else 0
+    if ventas_ayer > 0:
+        porcentaje_ventas = round(((ventas_dia - ventas_ayer) / ventas_ayer) * 100, 1)
+    else:
+        porcentaje_ventas = None
+
     alertas_inventario = Producto.objects.filter(stock__lte=F('stock_minimo')).count()
-    
-    # 5. Últimos 5 Pedidos (select_related nos trae la info de la mesa y el empleado vinculados)
-    pedidos_recientes = Pedido.objects.select_related('id_mesa', 'id_empleado').order_by('-fecha_pedido')[:5]
-    
-    # Empacamos los datos calculados en la caja (context)
+    alertas = Producto.objects.filter(stock__lte=F('stock_minimo')).select_related('id_categoria').order_by('stock')
+    mesas_libres = Mesa.objects.filter(estado='Disponible').count()
+    mesas_ocupadas = Mesa.objects.filter(estado='Ocupada').count()
+    mesas_reservadas = Mesa.objects.filter(estado='Reservada').count()
+    mesas_lista = Mesa.objects.all().order_by('numero_mesa')
+    pedidos_en_cocina = Pedido.objects.filter(estado='En preparacion').count()
+
+    # select_related completo: mesa, empleado y cliente evitan N+1 queries en el template
+    pedidos_recientes = (
+        Pedido.objects
+        .select_related('id_mesa', 'id_empleado', 'id_cliente')
+        .order_by('-fecha_pedido')[:10]
+    )
+
     context = {
-        'cantidad_empleados': total_empleados,
+        'empleados_activos': empleados_activos,
+        'empleados_descanso': empleados_descanso,
         'total_pedidos': total_pedidos,
         'ventas_dia': ventas_dia,
         'alertas_inventario': alertas_inventario,
+        'alertas': alertas,
+        'porcentaje_ventas': porcentaje_ventas,
+        'mesas_libres': mesas_libres,
+        'mesas_ocupadas': mesas_ocupadas,
+        'mesas_reservadas': mesas_reservadas,
+        'mesas_lista': mesas_lista,
+        'pedidos_en_cocina': pedidos_en_cocina,
         'pedidos_recientes': pedidos_recientes,
     }
-    
     return render(request, 'index.html', context)
 
-# -------------------------------------------------------------------
-# VISTA 4: INVENTARIO (Ruta de Sofía)
-# -------------------------------------------------------------------
+
+# -----------------------------------------------------------------------
+# VISTA 4: INVENTARIO
+# -----------------------------------------------------------------------
+
 @login_required(login_url='login')
 def inventario_view(request):
+
     from django.db.models import F
 
     # GUARDAR NUEVO PRODUCTO
@@ -122,113 +205,205 @@ def inventario_view(request):
 # -------------------------------------------------------------------
 # VISTA 5: PUNTO DE VENTA POS (Avanzado - API JSON)
 # -------------------------------------------------------------------
+
+    return render(request, 'inventario.html')
+
+
+# -----------------------------------------------------------------------
+# VISTA 5: PUNTO DE VENTA POS
+# -----------------------------------------------------------------------
+
+
 @login_required(login_url='login')
+@requiere_rol('Mesero', 'Administrador')
 def crear_pedido_view(request):
-    # 1. SI RECIBIMOS DATOS DE JAVASCRIPT (GUARDAR PEDIDO)
     if request.method == 'POST':
         try:
-            # Desempacamos el paquete JSON que nos envía JavaScript
             data = json.loads(request.body)
-            
-            # Extraemos los datos generales del pedido
-            id_empleado_front = data['id_empleado']
-            id_mesa_front = data['id_mesa']
-            tipo_pedido_front = data['tipo_pedido']
-            observaciones_front = data.get('observaciones', '')
-            total_front = data['total']
-            lista_productos = data['productos'] # Esto es una lista de los platos elegidos
-            
-            # Abrimos la bóveda de seguridad de la base de datos
+        except (json.JSONDecodeError, ValueError):
+            return JsonResponse({'status': 'error', 'mensaje': 'Formato de datos inválido.'}, status=400)
+
+        # --- Validación de campos obligatorios ---
+        id_empleado_front = data.get('id_empleado')
+        id_mesa_front = data.get('id_mesa')
+        tipo_pedido_front = data.get('tipo_pedido', '').strip()
+        observaciones_front = data.get('observaciones', '').strip()
+        total_front = data.get('total')
+        lista_productos = data.get('productos', [])
+
+        if not id_empleado_front or not id_mesa_front:
+            return JsonResponse({'status': 'error', 'mensaje': 'Mesero y mesa son obligatorios.'}, status=400)
+
+        if not lista_productos:
+            return JsonResponse({'status': 'error', 'mensaje': 'El pedido no puede estar vacío.'}, status=400)
+
+        if tipo_pedido_front not in ('En mesa', 'Para llevar'):
+            return JsonResponse({'status': 'error', 'mensaje': 'Tipo de pedido no válido.'}, status=400)
+
+        # --- Validación del total ---
+        try:
+            total_validado = Decimal(str(total_front))
+            if total_validado <= 0:
+                raise ValueError
+        except (InvalidOperation, ValueError, TypeError):
+            return JsonResponse({'status': 'error', 'mensaje': 'Total inválido.'}, status=400)
+
+        try:
             with transaction.atomic():
-                # A. Buscamos los objetos reales en la base de datos
-                empleado_obj = Empleado.objects.get(id_empleado=id_empleado_front)
-                mesa_obj = Mesa.objects.get(id_mesa=id_mesa_front)
-                
-                # B. Guardamos el PADRE (La tabla Pedido)
+                # Validamos existencia de empleado y mesa antes de crear
+                try:
+                    empleado_obj = Empleado.objects.get(id_empleado=id_empleado_front)
+                except Empleado.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'mensaje': 'Mesero no encontrado.'}, status=400)
+
+                try:
+                    mesa_obj = Mesa.objects.get(id_mesa=id_mesa_front)
+                except Mesa.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'mensaje': 'Mesa no encontrada.'}, status=400)
+
                 nuevo_pedido = Pedido.objects.create(
                     id_empleado=empleado_obj,
                     id_mesa=mesa_obj,
                     tipo_pedido=tipo_pedido_front,
                     observaciones=observaciones_front,
-                    total=total_front,
-                    estado='Pendiente' # El estado inicial para que la cocina lo vea
+                    total=total_validado,
+                    estado='Pendiente',
+                    fecha_pedido=timezone.now(),
                 )
-                
-                # C. Guardamos los HIJOS (La tabla Detallepedido)
+
                 for item in lista_productos:
-                    producto_obj = Producto.objects.get(id_producto=item['id'])
+                    id_prod = item.get('id')
+                    cantidad = item.get('cantidad', 0)
+
+                    if not id_prod or int(cantidad) <= 0:
+                        raise ValueError(f"Producto inválido en el carrito: {item}")
+
+                    try:
+                        producto_obj = Producto.objects.get(id_producto=id_prod)
+                    except Producto.DoesNotExist:
+                        raise ValueError(f"Producto #{id_prod} no existe en el menú.")
+
                     Detallepedido.objects.create(
-                        id_pedido=nuevo_pedido, # Lo amarramos al pedido que acabamos de crear
+                        id_pedido=nuevo_pedido,
                         id_producto=producto_obj,
-                        cantidad=item['cantidad'],
+                        cantidad=int(cantidad),
                         precio_unitario=producto_obj.precio,
-                        
                     )
-            
-            # Si todo salió perfecto, le respondemos a JavaScript con éxito
-            return JsonResponse({'status': 'success', 'mensaje': 'Pedido guardado en Maestro-Detalle correctamente.'})
-            
-        except Exception as e:
-            # Si algo explota (ej. falta un dato), le avisamos a JavaScript el error
-            return JsonResponse({'status': 'error', 'mensaje': str(e)})
 
-    # 2. SI ABRIMOS LA PÁGINA NORMALMENTE (GET)
-    categorias_menu = Categoria.objects.all()
-    productos_menu = Producto.objects.all()
-    # Como ya no usamos forms.py, enviamos las listas manualmente al HTML
-    empleados_activos = Empleado.objects.filter(id_cargo__nombre='Mesero')
-    mesas_activas = Mesa.objects.all()
-    
+            return JsonResponse({'status': 'success', 'mensaje': 'Pedido enviado a cocina.'})
+
+        except ValueError as e:
+            # Error de validación de negocio — mensaje seguro para el cliente
+            logger.warning("Pedido rechazado por validación: %s", e)
+            return JsonResponse({'status': 'error', 'mensaje': str(e)}, status=400)
+        except Exception:
+            # Error inesperado — log detallado interno, mensaje genérico al cliente
+            logger.exception("Error inesperado al guardar pedido")
+            return JsonResponse({'status': 'error', 'mensaje': 'Error interno. Intenta nuevamente.'}, status=500)
+
+    # GET — Carga inicial del POS
     context = {
-        'categorias': categorias_menu,
-        'productos': productos_menu,
-        'empleados': empleados_activos,
-        'mesas': mesas_activas
+        'categorias': Categoria.objects.all(),
+        'productos': Producto.objects.filter(estado='Disponible').select_related('id_categoria'),
+        'empleados': Empleado.objects.filter(id_cargo__nombre='Mesero', estado='Activo'),
+        'mesas': Mesa.objects.all(),
     }
-    
     return render(request, 'crear_pedido.html', context)
-# -------------------------------------------------------------------
-# VISTA 6: PANTALLA DE COCINA (KDS - Kitchen Display System)
-# -------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------
+# VISTA 6: PANTALLA DE COCINA (KDS)
+# -----------------------------------------------------------------------
+
 @login_required(login_url='login')
+@requiere_rol('Cocinero', 'Administrador')
 def cocina_view(request):
-    # La cocina solo ve órdenes en estado 'Pendiente', las más antiguas primero
-    pedidos_cocina = Pedido.objects.filter(estado='Pendiente').order_by('fecha_pedido')
-    
-    context = {
-        'pedidos': pedidos_cocina
-    }
-    return render(request, 'cocina.html', context)
+    pedidos_cocina = (
+        Pedido.objects
+        .filter(estado='Pendiente')
+        .prefetch_related('detallepedido_set__id_producto')
+        .order_by('fecha_pedido')
+    )
+    return render(request, 'cocina.html', {'pedidos': pedidos_cocina})
 
 
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# MINI-API: POLLING DE PEDIDOS PENDIENTES PARA KDS (reemplaza location.reload)
+# -----------------------------------------------------------------------
+
+@login_required(login_url='login')
+def api_pedidos_cocina(request):
+    """Devuelve los pedidos pendientes en JSON para el polling del KDS."""
+    pedidos_qs = (
+        Pedido.objects
+        .filter(estado='Pendiente')
+        .prefetch_related('detallepedido_set__id_producto')
+        .select_related('id_mesa')
+        .order_by('fecha_pedido')
+    )
+
+    pedidos_data = []
+    for pedido in pedidos_qs:
+        detalles = [
+            {
+                'cantidad': d.cantidad,
+                'producto': d.id_producto.nombre,
+            }
+            for d in pedido.detallepedido_set.all()
+        ]
+        pedidos_data.append({
+            'id': pedido.id_pedido,
+            'mesa': pedido.id_mesa.numero_mesa if pedido.id_mesa else '—',
+            'observaciones': pedido.observaciones or '',
+            'detalles': detalles,
+        })
+
+    return JsonResponse({'pedidos': pedidos_data})
+
+
+# -----------------------------------------------------------------------
 # MINI-API: CAMBIAR ESTADO A LISTO DESDE COCINA
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------
+
 @login_required(login_url='login')
 def completar_pedido_api(request, id_pedido):
-    if request.method == 'POST':
-        try:
-            # Buscamos el pedido en MySQL
-            pedido = Pedido.objects.get(id_pedido=id_pedido)
-            pedido.estado = 'Listo' # Cambiamos el estado
-            pedido.save()
-            return JsonResponse({'status': 'success', 'mensaje': 'Orden completada'})
-        except Pedido.DoesNotExist:
-            return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado'})
-# -------------------------------------------------------------------
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
+    try:
+        pedido = Pedido.objects.get(id_pedido=id_pedido)
+        pedido.estado = 'Listo'
+        pedido.save()
+        return JsonResponse({'status': 'success', 'mensaje': 'Orden completada.'})
+    except Pedido.DoesNotExist:
+        return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado.'}, status=404)
+    except Exception:
+        logger.exception("Error al completar pedido #%s", id_pedido)
+        return JsonResponse({'status': 'error', 'mensaje': 'Error interno.'}, status=500)
+
+
+# -----------------------------------------------------------------------
 # VISTA 7: CAJA Y FACTURACIÓN
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------
+
 @login_required(login_url='login')
+@requiere_rol('Cajero', 'Administrador')
 def facturacion_view(request):
-    # El cajero solo ve los pedidos que ya salieron de la cocina ('Listo')
-    pedidos_listos = Pedido.objects.filter(estado='Listo').order_by('fecha_pedido')
+    pedidos_listos = (
+        Pedido.objects
+        .filter(estado='Listo')
+        .select_related('id_mesa', 'id_empleado')
+        .order_by('fecha_pedido')
+    )
     return render(request, 'facturacion.html', {'pedidos': pedidos_listos})
 
-# -------------------------------------------------------------------
+
+# -----------------------------------------------------------------------
 # MINI-API: PROCESAR PAGO
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------
+
 @login_required(login_url='login')
 def pagar_pedido_api(request, id_pedido):
+
     if request.method == 'POST':
         try:
             pedido = Pedido.objects.get(id_pedido=id_pedido)
@@ -262,3 +437,17 @@ def ajustar_stock_view(request, id_producto):
             messages.error(request, 'Producto no encontrado.')
 
     return redirect('inventario')            
+
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido.'}, status=405)
+    try:
+        pedido = Pedido.objects.get(id_pedido=id_pedido)
+        pedido.estado = 'Pagado'
+        pedido.save()
+        return JsonResponse({'status': 'success'})
+    except Pedido.DoesNotExist:
+        return JsonResponse({'status': 'error', 'mensaje': 'Pedido no encontrado.'}, status=404)
+    except Exception:
+        logger.exception("Error al procesar pago del pedido #%s", id_pedido)
+        return JsonResponse({'status': 'error', 'mensaje': 'Error interno.'}, status=500)
+

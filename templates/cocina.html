@@ -1,106 +1,778 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cocina | ChefControl</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <title>Cocina — KDS | ChefControl</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        body { background-color: #121212; color: #ffffff; font-family: sans-serif; padding: 20px; }
-        .kds-grid { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
-        .comanda-card { 
-            background-color: #1e1e1e; border: 2px solid #333; border-radius: 16px; 
-            width: 300px; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-base:      #0a0a0a;
+            --bg-card:      #111111;
+            --bg-elevated:  #1a1a1a;
+            --border:       #1f1f1f;
+            --border-light: #2a2a2a;
+            --accent:       #f97316;
+            --accent-hover: #ea580c;
+            --text-primary: #f5f5f5;
+            --text-secondary: #737373;
+            --text-muted:   #525252;
+            --green:        #4ade80;
+            --amber:        #f59e0b;
+            --red:          #ef4444;
+            --radius-card:  12px;
+            --radius-btn:   8px;
         }
-        .comanda-header { 
-            background-color: #2c2c2c; padding: 12px; border-top-left-radius: 14px; border-top-right-radius: 14px;
-            display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444;
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .comanda-body { padding: 15px; flex-grow: 1; }
-        .comanda-item { font-size: 1.3rem; font-weight: bold; margin-bottom: 8px; color: #fff59d; }
-        .comanda-notas { background-color: #2b1d1d; color: #ff8a80; padding: 8px; border-radius: 8px; margin-top: 15px; font-style: italic; }
-        .btn-listo { 
-            background-color: #00e676 !important; color: #121212 !important; font-weight: bold; 
-            width: 100%; height: 50px; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;
+
+        /* ── Topbar ─────────────────────────────────────────── */
+        .kds-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #0d0d0d;
+            border-bottom: 1px solid var(--border);
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 14px;
+            flex-shrink: 0;
         }
+
+        .kds-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .kds-brand-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: var(--radius-btn);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .kds-brand-icon .material-icons { color: #fff; font-size: 20px; }
+
+        .kds-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+        }
+
+        .kds-title span {
+            font-weight: 400;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            margin-left: 4px;
+        }
+
+        /* Badge conteo de pendientes */
+        .badge-pendientes {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.28);
+            color: var(--accent);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1;   transform: scale(1); }
+            50%       { opacity: 0.4; transform: scale(0.7); }
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .topbar-spacer { flex: 1; }
+
+        /* Indicador de sincronización */
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .sync-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            transition: background 0.3s;
+        }
+
+        .sync-dot.offline  { background: var(--red); }
+        .sync-dot.syncing  { background: var(--amber); animation: pulse-dot 0.8s linear infinite; }
+
+        /* Botones de topbar */
+        .topbar-btn {
+            width: 36px;
+            height: 36px;
+            background: none;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .topbar-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+        .topbar-btn.active { color: var(--accent); border-color: rgba(249,115,22,0.4); }
+        .topbar-btn .material-icons { font-size: 18px; }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+            padding: 0 14px;
+            background: none;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-back:hover { background: var(--bg-elevated); color: var(--text-primary); }
+        .btn-back .material-icons { font-size: 16px; }
+
+        /* ── Grid principal ─────────────────────────────────── */
+        .kds-main { flex: 1; padding: 24px; }
+
+        .kds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* ── Comanda card ───────────────────────────────────── */
+        @keyframes card-enter {
+            from { opacity: 0; transform: translateY(14px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)   scale(1); }
+        }
+
+        @keyframes border-pulse {
+            0%, 100% { border-color: var(--red); }
+            50%       { border-color: rgba(239, 68, 68, 0.25); }
+        }
+
+        .comanda-card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-card);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: border-color 0.4s ease;
+            animation: card-enter 0.35s ease both;
+        }
+
+        /* Alerta de antigüedad: borde naranja ≥ 15 min */
+        .comanda-card.aging-warning { border-color: var(--accent); }
+
+        /* Alerta crítica: borde rojo pulsante ≥ 25 min */
+        .comanda-card.aging-critical {
+            animation: card-enter 0.35s ease both, border-pulse 1.5s ease-in-out infinite;
+        }
+
+        .comanda-header {
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .mesa-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .pedido-ref {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .tiempo-espera {
+            font-size: 0.78rem;
+            font-weight: 500;
+            padding: 3px 9px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            color: var(--text-secondary);
+            white-space: nowrap;
+            transition: background 0.35s, color 0.35s, border-color 0.35s;
+        }
+
+        .comanda-card.aging-warning .tiempo-espera {
+            background: rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.3);
+            color: var(--accent);
+        }
+
+        .comanda-card.aging-critical .tiempo-espera {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--red);
+        }
+
+        .comanda-body { padding: 14px 16px; flex: 1; }
+
+        .comanda-item {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .comanda-item:last-child { border-bottom: none; }
+
+        .item-cantidad {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1rem;
+            min-width: 28px;
+            flex-shrink: 0;
+        }
+
+        .item-nombre { color: var(--text-primary); }
+
+        .comanda-nota {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 10px 12px;
+            background: rgba(245, 158, 11, 0.07);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 8px;
+            font-size: 0.83rem;
+            color: var(--amber);
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        .comanda-nota .material-icons { font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+
+        /* Botón despachar */
+        .btn-despachar {
+            width: 100%;
+            padding: 15px;
+            background: rgba(74, 222, 128, 0.08);
+            border: none;
+            border-top: 1px solid rgba(74, 222, 128, 0.18);
+            color: var(--green);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-despachar:hover:not(:disabled) { background: rgba(74, 222, 128, 0.16); }
+        .btn-despachar:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-despachar .material-icons { font-size: 18px; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .btn-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(74, 222, 128, 0.3);
+            border-top-color: var(--green);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .btn-despachar.loading .btn-text    { display: none; }
+        .btn-despachar.loading .material-icons { display: none; }
+        .btn-despachar.loading .btn-spinner { display: block; }
+
+        /* ── Estado vacío ───────────────────────────────────── */
+        .cocina-vacia {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .cocina-vacia .material-icons { font-size: 64px; opacity: 0.2; margin-bottom: 16px; }
+        .cocina-vacia p    { font-size: 1rem; font-weight: 500; color: var(--text-secondary); }
+        .cocina-vacia small { font-size: 0.8rem; margin-top: 6px; display: block; }
+
+        /* ── Sistema de toasts ──────────────────────────────── */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 9999;
+        }
+
+        .custom-toast {
+            padding: 12px 18px;
+            border-radius: var(--radius-btn);
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateX(16px);
+            transition: opacity 0.25s, transform 0.25s;
+            max-width: 300px;
+            pointer-events: none;
+            border: 1px solid transparent;
+        }
+
+        .custom-toast.visible { opacity: 1; transform: translateX(0); }
+        .custom-toast.success { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25); color: var(--green); }
+        .custom-toast.error   { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.25);  color: var(--red); }
+        .custom-toast.warning { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.25); color: var(--amber); }
     </style>
 </head>
 <body>
 
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="margin: 0; font-weight: bold;"><i class="material-icons left" style="font-size: 2.5rem; color: #00e676;">soup_kitchen</i> Pantalla de Cocina (KDS)</h4>
-        <a href="{% url 'dashboard' %}" class="grey-text"><i class="material-icons left">arrow_back</i> Panel</a>
-    </div>
+    <!-- ── Topbar ─────────────────────────────────────────── -->
+    <header class="kds-topbar">
 
-    <div class="kds-grid">
-        {% for pedido in pedidos %}
-            <div class="comanda-card" id="card-pedido-{{ pedido.id_pedido }}">
-                <div class="comanda-header">
-                    <span style="font-size: 1.2rem; font-weight: bold;">Mesa {{ pedido.id_mesa.numero_mesa }}</span>
-                    <span class="grey-text text-lighten-1" style="font-size: 0.9rem;">#{{ pedido.id_pedido }}</span>
-                </div>
-                
-                <div class="comanda-body">
-                    <ul style="margin: 0; padding: 0; list-style: none;">
-                        {% for detalle in pedido.detallepedido_set.all %}
-                            <li class="comanda-item">
-                                <span class="teal-text text-lighten-3">{{ detalle.cantidad }}x</span> {{ detalle.id_producto.nombre }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                    
-                    {% if pedido.observaciones %}
-                        <div class="comanda-notas">
-                            <i class="material-icons left" style="font-size: 1.2rem;">gavel</i> "{{ pedido.observaciones }}"
+        <div class="kds-brand">
+            <div class="kds-brand-icon">
+                <i class="material-icons">soup_kitchen</i>
+            </div>
+            <div class="kds-title">KDS <span>Cocina</span></div>
+        </div>
+
+        <!-- Badge de pendientes -->
+        <div class="badge-pendientes" id="badge-pendientes">
+            <div class="badge-dot"></div>
+            <span id="badge-count">0</span>&nbsp;pendientes
+        </div>
+
+        <div class="topbar-spacer"></div>
+
+        <!-- Indicador de sincronización -->
+        <div class="sync-indicator">
+            <div class="sync-dot" id="sync-dot"></div>
+            <span id="sync-status">Conectando...</span>
+        </div>
+
+        <!-- Toggle de sonido -->
+        <button class="topbar-btn active" id="btn-sound" title="Activar / silenciar sonido de alerta">
+            <i class="material-icons" id="sound-icon">volume_up</i>
+        </button>
+
+        <!-- Pantalla completa -->
+        <button class="topbar-btn" id="btn-fullscreen" title="Pantalla completa">
+            <i class="material-icons" id="fullscreen-icon">fullscreen</i>
+        </button>
+
+        <!-- Volver al dashboard -->
+        <a href="{% url 'dashboard' %}" class="btn-back">
+            <i class="material-icons">arrow_back</i>
+            Panel
+        </a>
+
+    </header>
+
+    <!-- ── Grid KDS ───────────────────────────────────────── -->
+    <main class="kds-main">
+        <div class="kds-grid" id="kds-grid">
+
+            {% for pedido in pedidos %}
+                <div class="comanda-card"
+                     id="card-pedido-{{ pedido.id_pedido }}"
+                     data-arrival-ts="{{ pedido.fecha_pedido|date:'U'|default:'0' }}">
+
+                    <div class="comanda-header">
+                        <div>
+                            <div class="mesa-label">Mesa {{ pedido.id_mesa.numero_mesa }}</div>
+                            <div class="pedido-ref">#{{ pedido.id_pedido }}</div>
                         </div>
-                    {% endif %}
-                </div>
-                
-                <button class="btn waves-effect waves-light btn-listo" onclick="marcarComoListo({{ pedido.id_pedido }})">
-                    <i class="material-icons left">check_circle</i> ¡DESPACHAR!
-                </button>
-            </div>
-        {% empty %}
-            <div class="center-align grey-text" style="width: 100%; margin-top: 80px;">
-                <i class="material-icons" style="font-size: 5rem; opacity: 0.3;">done_all</i>
-                <h5>¡Cocina limpia! No hay pedidos pendientes.</h5>
-            </div>
-        {% endfor %}
-    </div>
+                        <div class="tiempo-espera" id="tiempo-{{ pedido.id_pedido }}">—</div>
+                    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+                    <div class="comanda-body">
+                        {% for detalle in pedido.detallepedido_set.all %}
+                            <div class="comanda-item">
+                                <span class="item-cantidad">{{ detalle.cantidad }}x</span>
+                                <span class="item-nombre">{{ detalle.id_producto.nombre }}</span>
+                            </div>
+                        {% endfor %}
+
+                        {% if pedido.observaciones %}
+                            <div class="comanda-nota">
+                                <i class="material-icons">sticky_note_2</i>
+                                <span>{{ pedido.observaciones }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <button class="btn-despachar" data-pedido-id="{{ pedido.id_pedido }}">
+                        <i class="material-icons">check_circle</i>
+                        <span class="btn-text">Despachar</span>
+                        <div class="btn-spinner"></div>
+                    </button>
+
+                </div>
+            {% empty %}
+                <div class="cocina-vacia" id="cocina-vacia">
+                    <i class="material-icons">done_all</i>
+                    <p>¡Cocina limpia!</p>
+                    <small>Sin pedidos pendientes</small>
+                </div>
+            {% endfor %}
+
+        </div>
+    </main>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <script>
-        function marcarComoListo(idPedido) {
-            // Le enviamos la señal de POST a Python silenciosamente
-            fetch(`/pedido/${idPedido}/completar/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    M.toast({html: '¡Orden despachada!', classes: 'rounded green'});
-                    
-                    // Efecto visual: Desvanecer la tarjeta y borrarla de la pantalla
-                    const card = document.getElementById(`card-pedido-${idPedido}`);
-                    card.style.transition = 'all 0.5s ease';
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.8)';
-                    setTimeout(() => { card.remove(); }, 500);
-                } else {
-                    M.toast({html: 'Error: ' + data.mensaje, classes: 'rounded red'});
-                }
+        'use strict';
+
+        /* ── Constantes ──────────────────────────────────────── */
+        const CSRF_TOKEN    = '{{ csrf_token }}';
+        const URL_COMPLETAR = id => `/pedido/${id}/completar/`;
+        const URL_POLLING   = '/api/pedidos-cocina/';
+        const POLL_INTERVAL = 15_000;           // 15 segundos entre ciclos de polling
+        const AGING_WARN_MS = 15 * 60 * 1000;  // 15 min → borde naranja
+        const AGING_CRIT_MS = 25 * 60 * 1000;  // 25 min → borde rojo pulsante
+
+        let soundEnabled = true;
+
+        /* IDs de pedidos actualmente en el DOM */
+        const pedidosEnDom = new Set(
+            [...document.querySelectorAll('.comanda-card')].map(el =>
+                parseInt(el.id.replace('card-pedido-', ''))
+            )
+        );
+
+        /* ── Inicializar timestamps de tarjetas del servidor ─── */
+        document.querySelectorAll('.comanda-card').forEach(card => {
+            const ts = parseInt(card.dataset.arrivalTs);
+            /* Django date:'U' devuelve segundos Unix; convertir a ms */
+            card.dataset.arrivalTs = (ts > 1_000_000_000)
+                ? ts * 1000
+                : Date.now();   /* fallback si el campo no existe en el modelo */
+        });
+
+        /* ── Toast ───────────────────────────────────────────── */
+        function showToast(msg, tipo = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `custom-toast ${tipo}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => toast.classList.add('visible'));
+            });
+            setTimeout(() => {
+                toast.classList.remove('visible');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* ── Beep (Web Audio API — sin archivos externos) ───── */
+        function playBeep() {
+            if (!soundEnabled) return;
+            try {
+                const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+                const osc  = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.35);
+            } catch (_) { /* navegador sin AudioContext */ }
+        }
+
+        /* ── Badge de conteo ─────────────────────────────────── */
+        function actualizarBadge() {
+            const count  = document.querySelectorAll('.comanda-card').length;
+            const badge  = document.getElementById('badge-pendientes');
+            badge.style.display = count > 0 ? '' : 'none';
+            document.getElementById('badge-count').textContent = count;
+        }
+
+        /* ── Estado vacío ────────────────────────────────────── */
+        function sincronizarEstadoVacio() {
+            const grid   = document.getElementById('kds-grid');
+            const haCards = grid.querySelector('.comanda-card');
+            let   vacio  = document.getElementById('cocina-vacia');
+
+            if (!haCards && !vacio) {
+                vacio = document.createElement('div');
+                vacio.id = 'cocina-vacia';
+                vacio.className = 'cocina-vacia';
+                vacio.innerHTML = `
+                    <i class="material-icons">done_all</i>
+                    <p>¡Cocina limpia!</p>
+                    <small>Sin pedidos pendientes</small>`;
+                grid.appendChild(vacio);
+            } else if (haCards && vacio) {
+                vacio.remove();
+            }
+        }
+
+        /* ── Tiempo de espera y alertas por antigüedad ───────── */
+        function formatMinutos(ms) {
+            const min = Math.floor(ms / 60_000);
+            if (min < 1)   return 'ahora';
+            if (min === 1) return '1 min';
+            return `${min} min`;
+        }
+
+        function actualizarEdadTarjetas() {
+            const ahora = Date.now();
+            document.querySelectorAll('.comanda-card').forEach(card => {
+                const elapsed  = ahora - parseInt(card.dataset.arrivalTs);
+                const idPedido = card.id.replace('card-pedido-', '');
+
+                const spanTiempo = document.getElementById(`tiempo-${idPedido}`);
+                if (spanTiempo) spanTiempo.textContent = formatMinutos(elapsed);
+
+                card.classList.remove('aging-warning', 'aging-critical');
+                if (elapsed >= AGING_CRIT_MS)      card.classList.add('aging-critical');
+                else if (elapsed >= AGING_WARN_MS) card.classList.add('aging-warning');
             });
         }
 
-        // Auto-recarga automática cada 15 segundos para capturar pedidos nuevos del mesero sin refrescar la página manualmente
-        setInterval(() => {
-            location.reload();
-        }, 15000);
+        /* ── Construir tarjeta (usado por el polling) ────────── */
+        function construirTarjeta(pedido) {
+            const detallesHtml = pedido.detalles.map(d =>
+                `<div class="comanda-item">
+                     <span class="item-cantidad">${d.cantidad}x</span>
+                     <span class="item-nombre">${d.producto}</span>
+                 </div>`
+            ).join('');
+
+            const notaHtml = pedido.observaciones
+                ? `<div class="comanda-nota">
+                       <i class="material-icons">sticky_note_2</i>
+                       <span>${pedido.observaciones}</span>
+                   </div>`
+                : '';
+
+            /* Si el API devuelve hora_pedido como Unix timestamp en segundos */
+            const arrivalTs = pedido.hora_pedido
+                ? parseInt(pedido.hora_pedido) * 1000
+                : Date.now();
+
+            const card = document.createElement('div');
+            card.className      = 'comanda-card';
+            card.id             = `card-pedido-${pedido.id}`;
+            card.dataset.arrivalTs = arrivalTs;
+            card.innerHTML = `
+                <div class="comanda-header">
+                    <div>
+                        <div class="mesa-label">Mesa ${pedido.mesa}</div>
+                        <div class="pedido-ref">#${pedido.id}</div>
+                    </div>
+                    <div class="tiempo-espera" id="tiempo-${pedido.id}">ahora</div>
+                </div>
+                <div class="comanda-body">
+                    ${detallesHtml}
+                    ${notaHtml}
+                </div>
+                <button class="btn-despachar" data-pedido-id="${pedido.id}">
+                    <i class="material-icons">check_circle</i>
+                    <span class="btn-text">Despachar</span>
+                    <div class="btn-spinner"></div>
+                </button>`;
+            return card;
+        }
+
+        /* ── Despachar pedido ────────────────────────────────── */
+        document.getElementById('kds-grid').addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-despachar');
+            if (!btn || btn.disabled) return;
+            despacharPedido(parseInt(btn.dataset.pedidoId), btn);
+        });
+
+        function despacharPedido(idPedido, btn) {
+            btn.disabled = true;
+            btn.classList.add('loading');
+
+            fetch(URL_COMPLETAR(idPedido), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast('¡Orden despachada con éxito!', 'success');
+                    const card = document.getElementById(`card-pedido-${idPedido}`);
+                    card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    card.style.opacity    = '0';
+                    card.style.transform  = 'scale(0.9)';
+                    setTimeout(() => {
+                        card.remove();
+                        pedidosEnDom.delete(idPedido);
+                        sincronizarEstadoVacio();
+                        actualizarBadge();
+                    }, 420);
+                } else {
+                    showToast('Error: ' + (data.mensaje || 'Sin respuesta del servidor'), 'error');
+                    btn.disabled = false;
+                    btn.classList.remove('loading');
+                }
+            })
+            .catch(() => {
+                showToast('Error de conexión — intenta de nuevo', 'error');
+                btn.disabled = false;
+                btn.classList.remove('loading');
+            });
+        }
+
+        /* ── Polling ─────────────────────────────────────────── */
+        function sincronizarCocina() {
+            const syncDot    = document.getElementById('sync-dot');
+            const syncStatus = document.getElementById('sync-status');
+            syncDot.className = 'sync-dot syncing';
+
+            fetch(URL_POLLING)
+                .then(r => r.json())
+                .then(data => {
+                    const grid       = document.getElementById('kds-grid');
+                    const idsFrescos = new Set(data.pedidos.map(p => p.id));
+                    let   hayNuevos  = false;
+
+                    /* Agregar tarjetas nuevas */
+                    data.pedidos.forEach(pedido => {
+                        if (!pedidosEnDom.has(pedido.id)) {
+                            const tarjeta = construirTarjeta(pedido);
+                            grid.appendChild(tarjeta);
+                            pedidosEnDom.add(pedido.id);
+                            hayNuevos = true;
+                        }
+                    });
+
+                    /* Eliminar tarjetas despachadas por otro terminal */
+                    pedidosEnDom.forEach(id => {
+                        if (!idsFrescos.has(id)) {
+                            const card = document.getElementById(`card-pedido-${id}`);
+                            if (card) card.remove();
+                            pedidosEnDom.delete(id);
+                        }
+                    });
+
+                    if (hayNuevos) playBeep();
+
+                    sincronizarEstadoVacio();
+                    actualizarBadge();
+                    actualizarEdadTarjetas();
+
+                    syncDot.className    = 'sync-dot';
+                    syncStatus.textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-CO');
+                })
+                .catch(() => {
+                    syncDot.className    = 'sync-dot offline';
+                    syncStatus.textContent = 'Sin conexión — reintentando...';
+                });
+        }
+
+        /* ── Controles del topbar ────────────────────────────── */
+        document.getElementById('btn-sound').addEventListener('click', function () {
+            soundEnabled = !soundEnabled;
+            this.classList.toggle('active', soundEnabled);
+            document.getElementById('sound-icon').textContent = soundEnabled ? 'volume_up' : 'volume_off';
+            showToast(soundEnabled ? 'Sonido activado' : 'Sonido silenciado', 'warning');
+        });
+
+        document.getElementById('btn-fullscreen').addEventListener('click', function () {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+                document.getElementById('fullscreen-icon').textContent = 'fullscreen_exit';
+                this.classList.add('active');
+            } else {
+                document.exitFullscreen();
+                document.getElementById('fullscreen-icon').textContent = 'fullscreen';
+                this.classList.remove('active');
+            }
+        });
+
+        /* Sincronizar ícono si el usuario sale de fullscreen con Esc */
+        document.addEventListener('fullscreenchange', function () {
+            if (!document.fullscreenElement) {
+                document.getElementById('fullscreen-icon').textContent = 'fullscreen';
+                document.getElementById('btn-fullscreen').classList.remove('active');
+            }
+        });
+
+        /* ── Arranque ────────────────────────────────────────── */
+        actualizarBadge();
+        actualizarEdadTarjetas();
+        sincronizarCocina();
+        setInterval(sincronizarCocina, POLL_INTERVAL);
+        setInterval(actualizarEdadTarjetas, 60_000); /* refresca "X min" cada minuto */
     </script>
+
 </body>
 </html>

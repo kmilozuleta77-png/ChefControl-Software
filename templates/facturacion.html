@@ -1,225 +1,1149 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caja Enterprise | ChefControl</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <title>Facturación | ChefControl</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        body { background-color: #121212; color: #ffffff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .caja-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 25px; margin-top: 20px;}
-        .factura-card { background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
-        .total-text { font-size: 2.2rem; color: #00e676; font-weight: bold; margin: 10px 0; border-bottom: 1px solid #333; padding-bottom: 10px;}
-        
-        .input-field select { background-color: #252525; color: white; border: 1px solid #444; border-radius: 8px; margin-bottom: 15px;}
-        .dropdown-content { background-color: #252525; }
-        .dropdown-content li>a, .dropdown-content li>span { color: #fff; }
-        .input-pago { color: white !important; font-size: 1.5rem !important; border-bottom: 2px solid #00bfa5 !important; margin-bottom: 5px !important;}
-        
-        .cambio-text { font-size: 1.3rem; color: #ffca28; font-weight: bold; min-height: 30px;}
-        .resumen-item { display: flex; justify-content: space-between; font-size: 1.1rem; color: #a0a0a0; margin-bottom: 5px;}
-        
-        .badge-premium { background-color: #311b92; color: #b388ff; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; float: right;}
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-base:       #0a0a0a;
+            --bg-card:       #111111;
+            --bg-elevated:   #1a1a1a;
+            --border:        #1f1f1f;
+            --border-light:  #2a2a2a;
+            --accent:        #f97316;
+            --accent-hover:  #ea580c;
+            --text-primary:  #f5f5f5;
+            --text-secondary:#737373;
+            --text-muted:    #525252;
+            --green:         #4ade80;
+            --amber:         #f59e0b;
+            --red:           #ef4444;
+            --radius-card:   12px;
+            --radius-btn:    8px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Topbar ──────────────────────────────────────────── */
+        .caja-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #0d0d0d;
+            border-bottom: 1px solid var(--border);
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .caja-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .caja-brand-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: var(--radius-btn);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .caja-brand-icon .material-icons { color: #fff; font-size: 20px; }
+
+        .caja-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+        }
+
+        .caja-title span {
+            font-weight: 400;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            margin-left: 4px;
+        }
+
+        /* Badge de cuentas pendientes */
+        .badge-cuentas {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.28);
+            color: var(--accent);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1;   transform: scale(1); }
+            50%       { opacity: 0.4; transform: scale(0.7); }
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .topbar-spacer { flex: 1; }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+            padding: 0 14px;
+            background: none;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            flex-shrink: 0;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-back:hover { background: var(--bg-elevated); color: var(--text-primary); }
+        .btn-back .material-icons { font-size: 16px; }
+
+        /* ── Grid principal ──────────────────────────────────── */
+        .caja-main { flex: 1; padding: 24px; }
+
+        .caja-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+            gap: 20px;
+            align-items: start;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        /* ── Factura card ────────────────────────────────────── */
+        @keyframes card-enter {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .factura-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: card-enter 0.3s ease both;
+        }
+
+        /* ── Card header ─────────────────────────────────────── */
+        .card-header {
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mesa-label {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .empleado-ref {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .empleado-ref .material-icons { font-size: 13px; }
+
+        .btn-toggle-detalle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 10px;
+            background: none;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-toggle-detalle:hover { background: var(--bg-card); color: var(--text-primary); }
+        .btn-toggle-detalle .material-icons { font-size: 15px; }
+        .btn-toggle-detalle .chevron { transition: transform 0.25s ease; }
+
+        /* ── Acordeón de detalle (Sugerencia A) ─────────────── */
+        .pedido-detalle {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: var(--bg-base);
+            border-bottom: 1px solid transparent;
+        }
+
+        .pedido-detalle.open {
+            max-height: 400px;
+            border-bottom-color: var(--border);
+        }
+
+        .detalle-inner { padding: 12px 18px; }
+
+        .detalle-item {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .detalle-item:last-child { border-bottom: none; }
+
+        .detalle-cantidad {
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 26px;
+            flex-shrink: 0;
+        }
+
+        .detalle-nombre { color: var(--text-secondary); flex: 1; }
+
+        /* ── Resumen de montos ───────────────────────────────── */
+        .resumen {
+            padding: 14px 18px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .resumen-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* ── Total a pagar ───────────────────────────────────── */
+        .total-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            margin-top: 12px;
+        }
+
+        .total-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .total-amount {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        /* ── Toggle de propina ───────────────────────────────── */
+        .propina-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .propina-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch { display: inline-flex; align-items: center; cursor: pointer; }
+        .toggle-switch input[type="checkbox"] { display: none; }
+
+        .toggle-track {
+            width: 42px;
+            height: 24px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            position: relative;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .toggle-switch input:checked + .toggle-track {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: transform 0.22s ease, background 0.2s;
+        }
+
+        .toggle-switch input:checked + .toggle-track .toggle-thumb {
+            transform: translateX(18px);
+            background: #fff;
+        }
+
+        /* ── Selects ─────────────────────────────────────────── */
+        .selects-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .select-group { display: flex; flex-direction: column; gap: 6px; }
+
+        .select-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .custom-select {
+            width: 100%;
+            appearance: none;
+            background-color: var(--bg-elevated);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f97316' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
+            padding: 9px 32px 9px 10px;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .custom-select:focus { border-color: var(--accent); }
+
+        /* Badge PRO en el select de comprobante */
+        .badge-pro {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #a78bfa;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-left: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Zona de efectivo ────────────────────────────────── */
+        .efectivo-zone {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-efectivo-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-left {
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .input-efectivo {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-light);
+            outline: none;
+            padding: 10px 10px 10px 28px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: border-bottom-color 0.2s;
+        }
+
+        .input-efectivo::placeholder { color: var(--text-muted); font-weight: 400; font-size: 0.95rem; }
+        .input-efectivo:focus { border-bottom-color: var(--accent); }
+
+        /* Billetes sugeridos (Sugerencia B) */
+        .billetes-sugeridos {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip-billete {
+            padding: 5px 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .chip-billete:hover {
+            background: rgba(249,115,22,0.1);
+            border-color: rgba(249,115,22,0.35);
+            color: var(--accent);
+        }
+
+        /* ── Cambio display ──────────────────────────────────── */
+        .cambio-display {
+            min-height: 22px;
+            padding: 0 18px 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .cambio-display.suficiente  { color: var(--green); }
+        .cambio-display.insuficiente { color: var(--red); }
+        .cambio-display.digital      { color: var(--text-muted); }
+
+        /* ── Botón pagar ─────────────────────────────────────── */
+        .btn-pagar {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+            box-shadow: 0 4px 20px rgba(249,115,22,0.2);
+        }
+
+        .btn-pagar:hover:not(:disabled) { background: var(--accent-hover); }
+        .btn-pagar:disabled { opacity: 0.55; cursor: not-allowed; }
+        .btn-pagar .material-icons { font-size: 18px; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .btn-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .btn-pagar.loading .btn-text      { display: none; }
+        .btn-pagar.loading .material-icons { display: none; }
+        .btn-pagar.loading .btn-spinner   { display: block; }
+
+        /* ── Estado vacío ────────────────────────────────────── */
+        .caja-vacia {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .caja-vacia .material-icons { font-size: 64px; opacity: 0.2; margin-bottom: 16px; }
+        .caja-vacia p     { font-size: 1rem; font-weight: 500; color: var(--text-secondary); }
+        .caja-vacia small { font-size: 0.8rem; margin-top: 6px; display: block; }
+
+        /* ── Modal de confirmación (Sugerencia C) ────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            padding: 24px;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            width: 400px;
+            max-width: 100%;
+            transform: scale(0.95);
+            transition: transform 0.22s ease;
+            overflow: hidden;
+        }
+
+        .modal-overlay.visible .modal-card { transform: scale(1); }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-elevated);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-header .material-icons { color: var(--accent); font-size: 20px; }
+
+        .modal-body { padding: 20px; }
+
+        .modal-resumen-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .modal-resumen-row:last-child { border-bottom: none; }
+        .modal-resumen-row span { color: var(--text-secondary); }
+        .modal-resumen-row strong { color: var(--text-primary); font-weight: 600; }
+        .modal-total { color: var(--accent) !important; font-size: 1.1rem; }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-btn-cancel {
+            flex: 1;
+            padding: 11px;
+            background: none;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn);
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .modal-btn-cancel:hover { background: var(--bg-elevated); color: var(--text-primary); }
+
+        .modal-btn-confirm {
+            flex: 2;
+            padding: 11px;
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius-btn);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal-btn-confirm:hover:not(:disabled) { background: var(--accent-hover); }
+        .modal-btn-confirm:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* ── Toast system ────────────────────────────────────── */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 9999;
+        }
+
+        .custom-toast {
+            padding: 12px 18px;
+            border-radius: var(--radius-btn);
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateX(16px);
+            transition: opacity 0.25s, transform 0.25s;
+            max-width: 320px;
+            pointer-events: none;
+            border: 1px solid transparent;
+        }
+
+        .custom-toast.visible   { opacity: 1; transform: translateX(0); }
+        .custom-toast.success   { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.25); color: var(--green); }
+        .custom-toast.error     { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.25);  color: var(--red); }
+        .custom-toast.warning   { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.25); color: var(--amber); }
     </style>
 </head>
 <body>
+
     {% csrf_token %}
 
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px;">
-        <h4 style="margin: 0; font-weight: bold;"><i class="material-icons left" style="font-size: 2.5rem; color: #00bfa5;">point_of_sale</i> Terminal de Facturación</h4>
-        <a href="{% url 'dashboard' %}" class="btn-flat grey-text waves-effect"><i class="material-icons left">arrow_back</i> Volver al Dashboard</a>
-    </div>
+    <!-- ── Topbar ──────────────────────────────────────────── -->
+    <header class="caja-topbar">
 
-    <div class="caja-grid">
-        {% for pedido in pedidos %}
-            <div class="factura-card" id="caja-pedido-{{ pedido.id_pedido }}" data-subtotal="{{ pedido.total|stringformat:'f' }}">
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-size: 1.4rem;"><b>Mesa {{ pedido.id_mesa.numero_mesa }}</b></span>
-                    <span class="grey-text"><i class="material-icons left" style="font-size: 1.2rem; margin-right: 5px;">person</i>{{ pedido.id_empleado }}</span>
-                </div>
+        <div class="caja-brand">
+            <div class="caja-brand-icon">
+                <i class="material-icons">point_of_sale</i>
+            </div>
+            <div class="caja-title">Facturación <span>Terminal de Caja</span></div>
+        </div>
 
-                <div class="resumen-item"><span>Subtotal (Con INC 8%):</span> <span>${{ pedido.total|floatformat:"0g" }}</span></div>
-                <div class="resumen-item"><span>Propina Voluntaria (10%):</span> <span id="propina-display-{{ pedido.id_pedido }}">$0</span></div>
-                
-                <div class="total-text">
-                    Total a Pagar: $<span id="total-{{ pedido.id_pedido }}">{{ pedido.total|floatformat:"0g" }}</span>
-                </div>
+        <!-- Badge de cuentas pendientes (Sugerencia D) -->
+        <div class="badge-cuentas" id="badge-cuentas">
+            <div class="badge-dot"></div>
+            <span id="badge-count">0</span>&nbsp;cuentas
+        </div>
 
-                <div class="row" style="margin-bottom: 0;">
-                    <div class="col s12" style="margin-bottom: 15px;">
-                        <div class="switch">
-                            <label style="color: #fff; font-size: 1.1rem;">
-                                Sin Propina
-                                <input type="checkbox" id="check-propina-{{ pedido.id_pedido }}" onchange="recalcularTotal({{ pedido.id_pedido }})">
-                                <span class="lever"></span>
-                                +10% Servicio
-                            </label>
+        <div class="topbar-spacer"></div>
+
+        <a href="{% url 'dashboard' %}" class="btn-back">
+            <i class="material-icons">arrow_back</i>
+            Panel
+        </a>
+
+    </header>
+
+    <!-- ── Grid de facturas ────────────────────────────────── -->
+    <main class="caja-main">
+        <div class="caja-grid" id="caja-grid">
+
+            {% for pedido in pedidos %}
+                <div class="factura-card"
+                     id="caja-pedido-{{ pedido.id_pedido }}"
+                     data-pedido-id="{{ pedido.id_pedido }}"
+                     data-subtotal="{{ pedido.total|stringformat:'f' }}">
+
+                    <!-- Header de la tarjeta -->
+                    <div class="card-header">
+                        <div>
+                            <div class="mesa-label">Mesa {{ pedido.id_mesa.numero_mesa }}</div>
+                            <div class="empleado-ref">
+                                <i class="material-icons">person</i>
+                                {{ pedido.id_empleado }}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-toggle-detalle"
+                                data-target="detalle-{{ pedido.id_pedido }}">
+                            <i class="material-icons">receipt_long</i>
+                            <span>Ver pedido</span>
+                            <i class="material-icons chevron">expand_more</i>
+                        </button>
+                    </div>
+
+                    <!-- Acordeón: detalle de ítems (Sugerencia A) -->
+                    <div class="pedido-detalle" id="detalle-{{ pedido.id_pedido }}">
+                        <div class="detalle-inner">
+                            {% for detalle in pedido.detallepedido_set.all %}
+                                <div class="detalle-item">
+                                    <span class="detalle-cantidad">{{ detalle.cantidad }}x</span>
+                                    <span class="detalle-nombre">{{ detalle.id_producto.nombre }}</span>
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
 
-                    <div class="col s6">
-                        <label>Método de Pago</label>
-                        <select id="metodo-pago-{{ pedido.id_pedido }}">
-                            <option value="efectivo" selected>💵 Efectivo</option>
-                            <option value="tarjeta">💳 Tarjeta / Datáfono</option>
-                            <option value="nequi">📱 Nequi / Daviplata</option>
-                        </select>
+                    <!-- Resumen de montos -->
+                    <div class="resumen">
+                        <div class="resumen-row">
+                            <span>Subtotal (INC 8%)</span>
+                            <span>${{ pedido.total|floatformat:"0g" }}</span>
+                        </div>
+                        <div class="resumen-row">
+                            <span>Propina voluntaria (10%)</span>
+                            <span class="js-propina-display">$0</span>
+                        </div>
                     </div>
 
-                    <div class="col s6">
-                        <label>Tipo de Comprobante</label>
-                        <select id="tipo-factura-{{ pedido.id_pedido }}">
-                            <option value="pos" selected>🧾 Tiquete POS</option>
-                            <option value="fe">🏢 Factura DIAN <span class="badge-premium">PRO</span></option>
-                        </select>
+                    <!-- Total a pagar -->
+                    <div class="total-display">
+                        <span class="total-label">Total a pagar</span>
+                        <span class="total-amount">
+                            $<span class="js-total-display">{{ pedido.total|floatformat:"0g" }}</span>
+                        </span>
                     </div>
-                </div>
 
-                <div class="input-field" style="margin-top: 5px;">
-                    <i class="material-icons prefix grey-text" style="margin-top: 10px;">payments</i>
-                    <input type="text" inputmode="numeric" class="input-pago" id="input-recibido-{{ pedido.id_pedido }}" placeholder="Monto recibido (Efectivo)" 
-                           onkeyup="formatoMiles(this); calcularCambio({{ pedido.id_pedido }})">
-                </div>
-                <div class="cambio-text" id="cambio-{{ pedido.id_pedido }}"></div>
+                    <!-- Toggle de propina -->
+                    <div class="propina-row">
+                        <span class="propina-label">Incluir propina voluntaria (+10%)</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="js-check-propina">
+                            <span class="toggle-track">
+                                <span class="toggle-thumb"></span>
+                            </span>
+                        </label>
+                    </div>
 
-                <button class="btn waves-effect waves-light" style="width: 100%; background-color: #00bfa5; border-radius: 8px; font-weight: bold; height: 50px; font-size: 1.1rem; margin-top: 10px;" 
-                        onclick="procesarPago({{ pedido.id_pedido }})">
-                    <i class="material-icons left">check_circle</i> CERRAR CUENTA Y FACTURAR
+                    <!-- Selects: método de pago y tipo de comprobante -->
+                    <div class="selects-row">
+                        <div class="select-group">
+                            <label class="select-label">Método de pago</label>
+                            <select class="custom-select js-metodo-pago">
+                                <option value="efectivo">💵 Efectivo</option>
+                                <option value="tarjeta">💳 Tarjeta / Datáfono</option>
+                                <option value="nequi">📱 Nequi / Daviplata</option>
+                            </select>
+                        </div>
+                        <div class="select-group">
+                            <label class="select-label">Comprobante</label>
+                            <select class="custom-select js-tipo-factura">
+                                <option value="pos">🧾 Tiquete POS</option>
+                                <option value="fe">🏢 Factura DIAN</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Zona de efectivo (Sugerencia B incluida) -->
+                    <div class="efectivo-zone js-efectivo-zone">
+                        <div class="input-efectivo-wrapper">
+                            <i class="material-icons input-icon-left">payments</i>
+                            <input type="text"
+                                   inputmode="numeric"
+                                   class="input-efectivo js-input-recibido"
+                                   placeholder="Monto recibido en efectivo">
+                        </div>
+                        <!-- Billetes sugeridos generados por JS (Sugerencia B) -->
+                        <div class="billetes-sugeridos" id="billetes-{{ pedido.id_pedido }}"></div>
+                    </div>
+
+                    <!-- Cambio a entregar -->
+                    <div class="cambio-display js-cambio-display"></div>
+
+                    <!-- Botón de cobro -->
+                    <button type="button" class="btn-pagar js-btn-pagar">
+                        <i class="material-icons">check_circle</i>
+                        <span class="btn-text">Cerrar cuenta y facturar</span>
+                        <div class="btn-spinner"></div>
+                    </button>
+
+                </div>
+            {% empty %}
+                <div class="caja-vacia" id="caja-vacia">
+                    <i class="material-icons">price_check</i>
+                    <p>¡Caja al día!</p>
+                    <small>No hay cuentas pendientes por cobrar</small>
+                </div>
+            {% endfor %}
+
+        </div>
+    </main>
+
+    <!-- ── Modal de confirmación (Sugerencia C) ────────────── -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <i class="material-icons">check_circle_outline</i>
+                <span>Confirmar cobro</span>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn-cancel" id="modal-cancel">Cancelar</button>
+                <button type="button" class="modal-btn-confirm" id="modal-confirm">
+                    Confirmar y facturar
                 </button>
             </div>
-        {% empty %}
-            <div class="center-align grey-text" style="width: 100%; grid-column: 1 / -1; margin-top: 80px;">
-                <i class="material-icons" style="font-size: 6rem; opacity: 0.2;">price_check</i>
-                <h4>Caja al día</h4>
-                <p>No hay cuentas pendientes por cobrar en este momento.</p>
-            </div>
-        {% endfor %}
+        </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Toast container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var elems = document.querySelectorAll('select');
-            M.FormSelect.init(elems);
-        });
+        'use strict';
 
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        /* ── Constantes ────────────────────────────────────────── */
+        const CSRF_TOKEN   = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const BILLETES_CO  = [1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000];
 
-        // Función nueva para poner puntos de mil automáticamente mientras escribes
-        function formatoMiles(input) {
-            // Quitamos todo lo que no sea número
-            let valorNum = input.value.replace(/\D/g, "");
-            if (valorNum === "") {
-                input.value = "";
-                return;
-            }
-            // Formateamos con puntos
-            input.value = parseInt(valorNum).toLocaleString('es-CO');
-        }
+        /* Referencia a la tarjeta activa durante el flujo de confirmación */
+        let tarjetaActiva = null;
 
-        // Obtener el total real desde los atributos seguros (sin importar los puntos visibles)
-        function obtenerTotalReal(idPedido) {
-            const card = document.getElementById(`caja-pedido-${idPedido}`);
-            // Django nos manda el subtotal con coma en vez de punto, lo normalizamos a estándar JS
-            const rawSubtotal = card.getAttribute('data-subtotal').replace(',', '.');
-            const subtotal = parseFloat(rawSubtotal);
-            const checkPropina = document.getElementById(`check-propina-${idPedido}`).checked;
-            
-            return checkPropina ? subtotal * 1.10 : subtotal;
-        }
+        /* ── Inicialización ────────────────────────────────────── */
+        document.addEventListener('DOMContentLoaded', () => {
+            actualizarBadge();
 
-        function recalcularTotal(idPedido) {
-            const card = document.getElementById(`caja-pedido-${idPedido}`);
-            const rawSubtotal = card.getAttribute('data-subtotal').replace(',', '.');
-            const subtotal = parseFloat(rawSubtotal);
-            const checkPropina = document.getElementById(`check-propina-${idPedido}`).checked;
-            
-            const propina = checkPropina ? subtotal * 0.10 : 0;
-            const totalFinal = subtotal + propina;
-            
-            document.getElementById(`propina-display-${idPedido}`).innerText = "$" + propina.toLocaleString('es-CO');
-            document.getElementById(`total-${idPedido}`).innerText = totalFinal.toLocaleString('es-CO');
-            
-            calcularCambio(idPedido);
-        }
+            document.querySelectorAll('.factura-card').forEach(tarjeta => {
+                const checkPropina  = tarjeta.querySelector('.js-check-propina');
+                const metodoPago    = tarjeta.querySelector('.js-metodo-pago');
+                const inputRecibido = tarjeta.querySelector('.js-input-recibido');
 
-        function calcularCambio(idPedido) {
-            const metodoPago = document.getElementById(`metodo-pago-${idPedido}`).value;
-            const inputRecibido = document.getElementById(`input-recibido-${idPedido}`);
-            const divCambio = document.getElementById(`cambio-${idPedido}`);
-            
-            if(metodoPago !== 'efectivo') {
-                inputRecibido.value = '';
-                inputRecibido.disabled = true;
-                divCambio.innerText = "Transacción digital. Sin vuelto.";
-                divCambio.style.color = "#a0a0a0";
-                return;
-            } else {
-                inputRecibido.disabled = false;
-            }
+                /* Inicializar billetes sugeridos según subtotal base */
+                actualizarBilletes(tarjeta);
 
-            const totalReal = obtenerTotalReal(idPedido);
-            // Quitamos los puntos visuales que le puso formatoMiles para hacer la resta matemática
-            const pagoIngresado = parseFloat(inputRecibido.value.replace(/\./g, ''));
-            
-            if (!pagoIngresado || pagoIngresado < totalReal) {
-                divCambio.innerText = "Monto insuficiente";
-                divCambio.style.color = "#ff5252";
-            } else {
-                let cambio = pagoIngresado - totalReal;
-                divCambio.innerText = "Vuelto a entregar: $" + cambio.toLocaleString('es-CO');
-                divCambio.style.color = "#00e676";
-            }
-        }
+                checkPropina.addEventListener('change', () => {
+                    recalcularTotal(tarjeta);
+                    actualizarBilletes(tarjeta);  /* ajustar billetes al nuevo total */
+                });
 
-        document.querySelectorAll('select[id^="metodo-pago-"]').forEach(select => {
-            select.addEventListener('change', function() {
-                const idPedido = this.id.split('-')[2];
-                calcularCambio(idPedido);
+                metodoPago.addEventListener('change', () => {
+                    toggleEfectivoZone(tarjeta);
+                    calcularCambio(tarjeta);
+                });
+
+                inputRecibido.addEventListener('input', () => {
+                    formatoMiles(inputRecibido);
+                    calcularCambio(tarjeta);
+                });
+
+                tarjeta.querySelector('.js-btn-pagar').addEventListener('click', () => {
+                    abrirModal(tarjeta);
+                });
+
+                /* Acordeón de detalle */
+                tarjeta.querySelector('.btn-toggle-detalle').addEventListener('click', function () {
+                    const detalle = document.getElementById(this.dataset.target);
+                    const abierto = detalle.classList.toggle('open');
+                    this.querySelector('.chevron').style.transform = abierto ? 'rotate(180deg)' : '';
+                    this.querySelector('span').textContent = abierto ? 'Ocultar pedido' : 'Ver pedido';
+                });
+            });
+
+            /* Modal: cerrar con el overlay o el botón cancelar */
+            document.getElementById('modal-cancel').addEventListener('click', cerrarModal);
+            document.getElementById('modal-confirm').addEventListener('click', confirmarPago);
+            document.getElementById('modal-overlay').addEventListener('click', function (e) {
+                if (e.target === this) cerrarModal();
             });
         });
 
-        function procesarPago(idPedido) {
-            const metodoPago = document.getElementById(`metodo-pago-${idPedido}`).value;
-            const tipoFactura = document.getElementById(`tipo-factura-${idPedido}`).value;
-            const totalReal = obtenerTotalReal(idPedido);
-            
-            if(metodoPago === 'efectivo') {
-                const inputTexto = document.getElementById(`input-recibido-${idPedido}`).value;
-                const pagoIngresado = parseFloat(inputTexto.replace(/\./g, ''));
-                if (!pagoIngresado || pagoIngresado < totalReal) {
-                    M.toast({html: 'Ingrese un monto en efectivo válido', classes: 'rounded red'});
+        /* ── Badge de cuentas pendientes ───────────────────────── */
+        function actualizarBadge() {
+            const count = document.querySelectorAll('.factura-card').length;
+            const badge = document.getElementById('badge-cuentas');
+            badge.style.display = count > 0 ? '' : 'none';
+            document.getElementById('badge-count').textContent = count;
+        }
+
+        /* ── Zona de efectivo ──────────────────────────────────── */
+        function toggleEfectivoZone(tarjeta) {
+            const esEfectivo = tarjeta.querySelector('.js-metodo-pago').value === 'efectivo';
+            const zone = tarjeta.querySelector('.js-efectivo-zone');
+            zone.style.display = esEfectivo ? '' : 'none';
+            if (!esEfectivo) tarjeta.querySelector('.js-input-recibido').value = '';
+        }
+
+        /* ── Helpers ───────────────────────────────────────────── */
+        function obtenerSubtotal(tarjeta) {
+            /* Django puede usar coma como separador decimal en algunos locales */
+            return parseFloat(tarjeta.dataset.subtotal.replace(',', '.'));
+        }
+
+        function obtenerTotalReal(tarjeta) {
+            const subtotal = obtenerSubtotal(tarjeta);
+            return tarjeta.querySelector('.js-check-propina').checked
+                ? subtotal * 1.10
+                : subtotal;
+        }
+
+        function formatoMiles(input) {
+            const num = input.value.replace(/\D/g, '');
+            input.value = num === '' ? '' : parseInt(num).toLocaleString('es-CO');
+        }
+
+        function parsearMonto(str) {
+            /* Elimina puntos de miles del formato es-CO y convierte a número */
+            return parseFloat(str.replace(/\./g, '').replace(/,/g, '.')) || 0;
+        }
+
+        /* ── Billetes sugeridos (Sugerencia B) ─────────────────── */
+        function sugerirBilletes(total) {
+            /* Billetes exactos suficientes para cubrir el total */
+            const exactos = BILLETES_CO.filter(b => b >= total);
+            if (exactos.length >= 3) return exactos.slice(0, 3);
+
+            /* Para montos superiores a $200k, proponer redondeos */
+            const r1 = Math.ceil(total / 10000)  * 10000;
+            const r2 = Math.ceil(total / 50000)  * 50000;
+            const r3 = Math.ceil(total / 100000) * 100000;
+            const candidatos = [...new Set([...exactos, r1, r2, r3])].sort((a, b) => a - b);
+            return candidatos.slice(0, 3);
+        }
+
+        function actualizarBilletes(tarjeta) {
+            const total       = obtenerTotalReal(tarjeta);
+            const idPedido    = tarjeta.dataset.pedidoId;
+            const contenedor  = document.getElementById(`billetes-${idPedido}`);
+            if (!contenedor) return;
+
+            const billetes = sugerirBilletes(total);
+            contenedor.innerHTML = billetes
+                .map(b => `<button type="button" class="chip-billete" data-monto="${b}">
+                                $${b.toLocaleString('es-CO')}
+                            </button>`)
+                .join('');
+
+            /* Escuchar clic en cada chip para rellenar el input */
+            contenedor.querySelectorAll('.chip-billete').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const input = tarjeta.querySelector('.js-input-recibido');
+                    input.value = parseInt(chip.dataset.monto).toLocaleString('es-CO');
+                    calcularCambio(tarjeta);
+                });
+            });
+        }
+
+        /* ── Recalcular totales ─────────────────────────────────── */
+        function recalcularTotal(tarjeta) {
+            const subtotal   = obtenerSubtotal(tarjeta);
+            const conPropina = tarjeta.querySelector('.js-check-propina').checked;
+            const propina    = conPropina ? subtotal * 0.10 : 0;
+            const total      = subtotal + propina;
+
+            tarjeta.querySelector('.js-propina-display').textContent = '$' + propina.toLocaleString('es-CO');
+            tarjeta.querySelector('.js-total-display').textContent   = total.toLocaleString('es-CO');
+            calcularCambio(tarjeta);
+        }
+
+        /* ── Calcular vuelto ────────────────────────────────────── */
+        function calcularCambio(tarjeta) {
+            const metodo    = tarjeta.querySelector('.js-metodo-pago').value;
+            const divCambio = tarjeta.querySelector('.js-cambio-display');
+
+            if (metodo !== 'efectivo') {
+                setCambioDisplay(divCambio, 'Transacción digital — sin vuelto', 'digital');
+                return;
+            }
+
+            const totalReal     = obtenerTotalReal(tarjeta);
+            const pagoIngresado = parsearMonto(tarjeta.querySelector('.js-input-recibido').value);
+
+            if (!pagoIngresado || pagoIngresado < totalReal) {
+                setCambioDisplay(divCambio, 'Monto insuficiente', 'insuficiente');
+            } else {
+                const cambio = pagoIngresado - totalReal;
+                setCambioDisplay(divCambio, `Vuelto: $${cambio.toLocaleString('es-CO')}`, 'suficiente');
+            }
+        }
+
+        function setCambioDisplay(div, texto, clase) {
+            div.textContent = texto;
+            div.className   = `cambio-display js-cambio-display ${clase}`;
+        }
+
+        /* ── Modal de confirmación (Sugerencia C) ──────────────── */
+        function abrirModal(tarjeta) {
+            const metodo = tarjeta.querySelector('.js-metodo-pago').value;
+            const tipo   = tarjeta.querySelector('.js-tipo-factura').value;
+            const total  = obtenerTotalReal(tarjeta);
+
+            /* Validar monto en efectivo antes de abrir el modal */
+            if (metodo === 'efectivo') {
+                const pago = parsearMonto(tarjeta.querySelector('.js-input-recibido').value);
+                if (!pago || pago < total) {
+                    showToast('Ingresa un monto en efectivo válido', 'error');
                     return;
                 }
             }
+
+            const LABEL_METODO = {
+                efectivo: '💵 Efectivo',
+                tarjeta:  '💳 Tarjeta / Datáfono',
+                nequi:    '📱 Nequi / Daviplata',
+            };
+            const LABEL_TIPO = {
+                pos: '🧾 Tiquete POS',
+                fe:  '🏢 Factura Electrónica DIAN',
+            };
+
+            const mesa    = tarjeta.querySelector('.mesa-label').textContent;
+            const propina = tarjeta.querySelector('.js-check-propina').checked;
+
+            document.getElementById('modal-body').innerHTML = `
+                <div class="modal-resumen-row">
+                    <span>Mesa</span>
+                    <strong>${mesa}</strong>
+                </div>
+                <div class="modal-resumen-row">
+                    <span>Total a cobrar</span>
+                    <strong class="modal-total">$${total.toLocaleString('es-CO')}</strong>
+                </div>
+                <div class="modal-resumen-row">
+                    <span>Propina</span>
+                    <strong>${propina ? 'Sí (+10%)' : 'No'}</strong>
+                </div>
+                <div class="modal-resumen-row">
+                    <span>Método de pago</span>
+                    <strong>${LABEL_METODO[metodo] || metodo}</strong>
+                </div>
+                <div class="modal-resumen-row">
+                    <span>Comprobante</span>
+                    <strong>${LABEL_TIPO[tipo] || tipo}</strong>
+                </div>`;
+
+            tarjetaActiva = tarjeta;
+            document.getElementById('modal-overlay').classList.add('visible');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-overlay').classList.remove('visible');
+            tarjetaActiva = null;
+        }
+
+        function confirmarPago() {
+            if (!tarjetaActiva) return;
+
+            const btnConfirmar = document.getElementById('modal-confirm');
+            btnConfirmar.disabled    = true;
+            btnConfirmar.textContent = 'Procesando...';
+
+            const tarjeta  = tarjetaActiva;
+            const idPedido = tarjeta.dataset.pedidoId;
+            const tipo     = tarjeta.querySelector('.js-tipo-factura').value;
 
             fetch(`/pedido/${idPedido}/pagar/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
+                    'X-CSRFToken': CSRF_TOKEN,
                 }
             })
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
-                if(data.status === 'success') {
-                    let msg = tipoFactura === 'fe' ? 'Factura Electrónica a la DIAN' : 'Tiquete POS generado';
-                    M.toast({html: `¡Cobro exitoso! ${msg}`, classes: 'rounded green'});
-                    const card = document.getElementById(`caja-pedido-${idPedido}`);
-                    card.style.transition = "all 0.5s ease";
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.9)';
-                    setTimeout(() => { card.remove(); }, 500);
+                cerrarModal();
+                btnConfirmar.disabled    = false;
+                btnConfirmar.textContent = 'Confirmar y facturar';
+
+                if (data.status === 'success') {
+                    const msg = tipo === 'fe'
+                        ? '¡Cobro exitoso! Factura Electrónica registrada'
+                        : '¡Cobro exitoso! Tiquete POS generado';
+                    showToast(msg, 'success');
+
+                    tarjeta.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    tarjeta.style.opacity    = '0';
+                    tarjeta.style.transform  = 'scale(0.92)';
+                    setTimeout(() => {
+                        tarjeta.remove();
+                        actualizarBadge();
+                        sincronizarEstadoVacio();
+                    }, 420);
                 } else {
-                    M.toast({html: 'Error DB: ' + data.mensaje, classes: 'rounded red'});
+                    showToast('Error: ' + (data.mensaje || 'Sin respuesta del servidor'), 'error');
                 }
             })
-            .catch(error => {
-                M.toast({html: 'Error de conexión con el servidor', classes: 'rounded red'});
+            .catch(() => {
+                cerrarModal();
+                btnConfirmar.disabled    = false;
+                btnConfirmar.textContent = 'Confirmar y facturar';
+                showToast('Error de conexión con el servidor', 'error');
             });
         }
+
+        /* ── Estado vacío ───────────────────────────────────────── */
+        function sincronizarEstadoVacio() {
+            const grid  = document.getElementById('caja-grid');
+            const haCards = grid.querySelector('.factura-card');
+            if (!haCards && !document.getElementById('caja-vacia')) {
+                const vacio = document.createElement('div');
+                vacio.id        = 'caja-vacia';
+                vacio.className = 'caja-vacia';
+                vacio.innerHTML = `
+                    <i class="material-icons">price_check</i>
+                    <p>¡Caja al día!</p>
+                    <small>No hay cuentas pendientes por cobrar</small>`;
+                grid.appendChild(vacio);
+            }
+        }
+
+        /* ── Toast ──────────────────────────────────────────────── */
+        function showToast(msg, tipo = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className  = `custom-toast ${tipo}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => toast.classList.add('visible'));
+            });
+            setTimeout(() => {
+                toast.classList.remove('visible');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
     </script>
+
 </body>
 </html>

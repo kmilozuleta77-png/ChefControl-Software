@@ -1,0 +1,103 @@
+[ERROR] 2026-06-02 21:38:13,652 log — Internal Server Error: /admin/restaurante/empleado/3/delete/
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 78, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.IntegrityError: (1451, 'Cannot delete or update a parent row: a foreign key constraint fails (`chefcontrol_db`.`pedido`, CONSTRAINT `fk_pedido_empleado` FOREIGN KEY (`id_empleado`) REFERENCES `empleado` (`id_empleado`) ON DELETE RESTRICT ON UPDATE CASCADE)')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\contrib\admin\options.py", line 711, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\contrib\admin\sites.py", line 247, in inner
+    return view(request, *args, **kwargs)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\contrib\admin\options.py", line 2168, in delete_view
+    return self._delete_view(request, object_id, extra_context)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\contrib\admin\options.py", line 2204, in _delete_view
+    self.delete_model(request, obj)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\contrib\admin\options.py", line 1279, in delete_model
+    obj.delete()
+    ~~~~~~~~~~^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\base.py", line 1300, in delete
+    return collector.delete()
+           ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\deletion.py", line 452, in delete
+    count = sql.DeleteQuery(model).delete_batch(
+        [instance.pk], self.using
+    )
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\sql\subqueries.py", line 43, in delete_batch
+    num_deleted += self.do_query(
+                   ~~~~~~~~~~~~~^
+        self.get_meta().db_table, self.where, using=using
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\sql\subqueries.py", line 25, in do_query
+    return self.get_compiler(using).execute_sql(ROW_COUNT)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 78, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.IntegrityError: (1451, 'Cannot delete or update a parent row: a foreign key constraint fails (`chefcontrol_db`.`pedido`, CONSTRAINT `fk_pedido_empleado` FOREIGN KEY (`id_empleado`) REFERENCES `empleado` (`id_empleado`) ON DELETE RESTRICT ON UPDATE CASCADE)')
