@@ -73,7 +73,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **ConfiguraciÃ³n**: ajustes globales del sistema (nombre del local, IVA, etc.)
 
 ### Bugs conocidos
-- [ ] `crear_pedido_view`: menÃºs y meseros no cargan desde BD (revisar `GET` context)
+- [x] `crear_pedido_view`: menÃºs y meseros no cargan desde BD (revisar `GET` context)
 - [x] `dashboard_view`: dashboard renderiza + datos reales BD (01/06/2026)
 - [x] `fix/dashboard-pedidos-recientes`: título, formato COP, badges reales, alertas BD, modal Ver pedido (02/06/2026)
 - [x] `fix/fechas-dashboard`: "Pedidos Hoy" = 0 — causa: `fecha_pedido` quedaba NULL + `__date` requiere `CONVERT_TZ` en MySQL (sin tablas cargadas). Fix: `fecha_pedido=timezone.now()` al crear pedido + `rango_dia()` con `__gte/__lt` en `dashboard_view` (04/06/2026)
@@ -85,7 +85,6 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Deuda tecnica**: centralizar codigos de metodo de pago en constante JS compartida en `facturacion.html` — hoy el literal `'efectivo'` esta disperso en `calcularCambio()`, `abrirModal()` y `confirmarPago()`
 - [ ] **Deuda tecnica**: convertir `Factura.estado` a campo `choices` — hoy `CharField(9)` libre; `'Pagada'` cabe justo, cualquier estado mas largo (ej. `'Pendiente'`) agota el limite
 - [x] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` — corregido en views.py; no requirió migración porque el estado nunca llegó a asignarse en BD (14/07/2026)
-- [ ] `api_pedidos_cocina` sin `@requiere_rol` — cualquier usuario autenticado puede leer el listado de cocina (hallazgo de seguridad, prioridad media)
 - [ ] index.html (y otras vistas internas) no muestran {% for message in messages %} — los mensajes de error/éxito de Django se acumulan silenciosamente hasta el próximo login en vez de mostrarse al momento (detectado al probar @requiere_rol)
 
 ### Mejoras de lÃ³gica
@@ -170,7 +169,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [x] Normalizar "En preparacion" en BD → resuelto: flujo Pendiente → En Preparación → Listo implementado (14/07/2026)
 - [ ] Logo jaguar en sidebar
 ## Bugs / Arquitectura conocidos
-      - [ ] BUG crear_pedido.html: el carrito se congela tras el 1er producto.
+      - [x] BUG crear_pedido.html: el carrito se congela tras el 1er producto.
       Causa: #cart-empty está dentro de #ticket-items; innerHTML lo destruye y
       en el siguiente render getElementById('cart-empty')=null → null.style crashea.
       Fix: renderizar el estado vacío como string dentro de innerHTML, sin mantener

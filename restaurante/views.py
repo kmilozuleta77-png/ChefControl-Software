@@ -287,6 +287,7 @@ def cocina_view(request):
 # -----------------------------------------------------------------------
 
 @login_required(login_url='login')
+@requiere_rol('Cocinero', 'Administrador')
 def api_pedidos_cocina(request):
     """Devuelve los pedidos pendientes en JSON para el polling del KDS."""
     pedidos_qs = (
