@@ -672,6 +672,72 @@ table tbody tr td:last-child  { white-space: nowrap; }
 
 
 /* ================================================================
+   TOASTS DE MENSAJES DJANGO (usado por templates/base.html)
+   Distinto de .custom-toast (toasts JS locales de cocina.html /
+   crear_pedido.html) para evitar colisión cuando esos archivos
+   migren a base.html más adelante.
+   ================================================================ */
+.msg-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 360px;
+    pointer-events: none;
+}
+
+.msg-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: var(--radius-btn);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transform: translateX(24px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: auto;
+}
+
+.msg-toast.visible { opacity: 1; transform: translateX(0); }
+
+.msg-toast-icon { font-size: 20px; flex-shrink: 0; }
+.msg-toast-text {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.msg-toast-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-secondary);
+    display: flex; align-items: center;
+    padding: 2px; border-radius: 4px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+.msg-toast-close:hover { color: var(--text-primary); }
+
+.msg-toast-success .msg-toast-icon { color: var(--color-success); }
+.msg-toast-error   .msg-toast-icon { color: var(--color-danger); }
+.msg-toast-warning .msg-toast-icon { color: var(--color-warning); }
+.msg-toast-info    .msg-toast-icon,
+.msg-toast-debug   .msg-toast-icon { color: var(--color-info); }
+
+.msg-toast-success { border-color: rgba(34,197,94,0.3); }
+.msg-toast-error   { border-color: rgba(239,68,68,0.3); }
+.msg-toast-warning { border-color: rgba(245,158,11,0.3); }
+
+
+/* ================================================================
    ANIMACIONES GLOBALES
    ================================================================ */
 

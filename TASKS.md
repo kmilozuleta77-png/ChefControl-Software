@@ -85,7 +85,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Deuda tecnica**: centralizar codigos de metodo de pago en constante JS compartida en `facturacion.html` — hoy el literal `'efectivo'` esta disperso en `calcularCambio()`, `abrirModal()` y `confirmarPago()`
 - [ ] **Deuda tecnica**: convertir `Factura.estado` a campo `choices` — hoy `CharField(9)` libre; `'Pagada'` cabe justo, cualquier estado mas largo (ej. `'Pendiente'`) agota el limite
 - [x] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` — corregido en views.py; no requirió migración porque el estado nunca llegó a asignarse en BD (14/07/2026)
-- [ ] index.html (y otras vistas internas) no muestran {% for message in messages %} — los mensajes de error/éxito de Django se acumulan silenciosamente hasta el próximo login en vez de mostrarse al momento (detectado al probar @requiere_rol)
+- [x] index.html no mostraba {% for message in messages %} — creado templates/base.html con toast de mensajes Django (error/warning 8s, success/info 6s) e index.html migrado a extends; resto de templates queda pendiente de migrar (18/07/2026)
 
 ### Mejoras de lÃ³gica
 - [ ] Propina de monto libre en facturaciÃ³n (actualmente solo porcentaje)

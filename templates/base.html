@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ChefControl{% endblock %}</title>
+
+    <!-- Fuentes e íconos -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Sistema de diseño centralizado (tokens, sidebar, topbar, componentes) -->
+    <link href="{% static 'CSS/design-system.css' %}" rel="stylesheet">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MENSAJES DE DJANGO (messages.error, .success, etc.)
+     Antes se acumulaban en silencio porque ningún template los
+     renderizaba (ver requiere_rol en views.py). Se muestran aquí
+     como toasts flotantes, disponibles en toda vista que extienda
+     este layout.
+════════════════════════════════════════════════════════════════ -->
+{% if messages %}
+<div class="msg-toast-container">
+    {% for message in messages %}
+    <div class="msg-toast msg-toast-{{ message.tags }}"
+         data-duration="{% if message.tags == 'error' or message.tags == 'warning' %}8000{% else %}6000{% endif %}">
+        <i class="material-icons msg-toast-icon">
+            {% if message.tags == 'success' %}check_circle
+            {% elif message.tags == 'error' %}error
+            {% elif message.tags == 'warning' %}warning
+            {% else %}info{% endif %}
+        </i>
+        <span class="msg-toast-text">{{ message }}</span>
+        <button type="button" class="msg-toast-close" aria-label="Cerrar">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<script>
+    /* ── Toasts de mensajes Django: entrada, cierre manual y auto-ocultado ──
+       Duración diferenciada: error/warning 8s (más tiempo para leer el
+       problema), success/info 6s. Viene del atributo data-duration. */
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.msg-toast').forEach(toast => {
+            requestAnimationFrame(() => toast.classList.add('visible'));
+
+            const cerrar = () => {
+                toast.classList.remove('visible');
+                setTimeout(() => toast.remove(), 300);
+            };
+
+            toast.querySelector('.msg-toast-close').addEventListener('click', cerrar);
+            const duracion = parseInt(toast.dataset.duration, 10) || 6000;
+            setTimeout(cerrar, duracion);
+        });
+    });
+</script>
+</body>
+</html>

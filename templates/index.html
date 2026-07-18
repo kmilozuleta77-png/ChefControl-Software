@@ -1,19 +1,10 @@
-﻿{% load static %}
+﻿{% extends 'base.html' %}
+{% load static %}
 {% load filtros_custom %}
-<!DOCTYPE html>
-<html lang="es" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChefControl — Dashboard</title>
 
-    <!-- Fuentes e íconos -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% block title %}ChefControl — Dashboard{% endblock %}
 
-    <!-- Sistema de diseño centralizado (tokens, sidebar, topbar, componentes) -->
-    <link href="{% static 'CSS/design-system.css' %}" rel="stylesheet">
-
+{% block extra_head %}
     <style>
         /* ──────────────────────────────────────────────────────────────
            ESTILOS ESPECÍFICOS DEL DASHBOARD
@@ -121,13 +112,13 @@
         .modal-obs { margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic; }
         .modal-divider { border: none; border-top: 1px solid var(--border-light); margin: 0; }
     </style>
-</head>
+{% endblock %}
 
+{% block content %}
 <!--
     El tema se aplica via data-theme en <html>.
     El script al final lee localStorage para restaurar la preferencia del usuario.
 -->
-<body>
 
 <!-- ═══════════════════════════════════════════════════════════════
      SIDEBAR
@@ -701,5 +692,4 @@
         </div>
     </div>
 </div>
-</body>
-</html>
+{% endblock %}
