@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'restaurante',
 ]
 
@@ -83,11 +84,19 @@ WSGI_APPLICATION = 'chefcontrol_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+
+        'NAME': 'chefcontrol_db',
+        'USER': 'root', 
+        'PASSWORD': '8902',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+
         'NAME': os.getenv('DB_NAME', 'chefcontrol_db'),
         'USER': os.getenv('DB_USER', 'root'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
         'PORT': os.getenv('DB_PORT', '3306'),
+
     }
 }
 

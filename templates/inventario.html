@@ -7,6 +7,9 @@
     <title>ChefControl — Inventario</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link href="{% static 'css/custom-styles.css' %}" rel="stylesheet">
+
     <style>
         /* ─── TOKENS ─────────────────────────────────────────────── */
         :root {
@@ -300,6 +303,7 @@
         .toast.info    { border-left: 3px solid var(--accent); }
         .toast.info    .material-icons { color: var(--accent); }
     </style>
+
 </head>
 <body>
 {% csrf_token %}
@@ -382,23 +386,68 @@
             </div>
         </div>
 
+
+        <div class="container">
+            <!-- ESTADÍSTICAS -->
+            <div class="row" style="margin-top:24px">
+                <div class="col s12 m3">
+                    <div class="card-panel teal lighten-5 center">
+                        <h5 class="teal-text text-darken-2">{{ total }}</h5>
+                        <p class="grey-text">Total Productos</p>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="card-panel red lighten-5 center">
+                        <h5 class="red-text text-darken-2">{{ criticos }}</h5>
+                        <p class="grey-text">Stock Crítico</p>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="card-panel orange lighten-5 center">
+                        <h5 class="orange-text text-darken-2">{{ bajos }}</h5>
+                        <p class="grey-text">Stock Bajo</p>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="card-panel green lighten-5 center">
+                        <h5 class="green-text text-darken-2">{{ normales }}</h5>
+                        <p class="grey-text">Stock Normal</p>
+                    </div>
+                </div>
+
         <!-- Alerta dismissible (Sugerencia D: ícono animado + cerrable) -->
         <div class="alert-banner" id="alerta-critica">
             <div class="alert-icon"><i class="material-icons">warning</i></div>
             <div class="alert-text">
                 <strong>8 productos con stock crítico</strong>
                 <span>Tomates, Lechuga Romana y Pan Hamburguesa necesitan reabastecimiento urgente.</span>
+
             </div>
             <button class="alert-close" id="btn-cerrar-alerta" title="Cerrar alerta">
                 <i class="material-icons">close</i>
             </button>
         </div>
 
+
+            <!-- ALERTA -->
+            <div class="row">
+                <div class="col s12">
+                    {% if criticos > 0 %}
+                    <div class="card red lighten-4">
+                        <div class="card-content red-text text-darken-3">
+                            <span class="card-title"><i class="material-icons left">warning</i>⚠️ {{ criticos }} productos con stock crítico</span>
+                            <p>{% for p in criticos_lista %}{{ p.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %} necesitan reabastecimiento urgente.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
         <!-- Filtros en tiempo real (Sugerencia B) -->
         <div class="filters-bar">
             <div class="search-field">
                 <i class="material-icons">search</i>
                 <input type="text" id="filtro-buscar" placeholder="Buscar producto..." autocomplete="off">
+
             </div>
             <select class="custom-select" id="filtro-categoria">
                 <option value="">Todas las categorías</option>
@@ -417,11 +466,45 @@
             <span class="filter-count" id="filtro-conteo">6 de 6 productos</span>
         </div>
 
+
+            <!-- FILTROS -->
+            <div class="row">
+                <div class="col s12 m5">
+                    <div class="input-field">
+                        <i class="material-icons prefix">search</i>
+                        <input id="buscar" type="text" placeholder="Buscar producto...">
+                        <label for="buscar">Buscar</label>
+                    </div>
+                </div>
+                <div class="col s12 m4">
+                    <div class="input-field">
+                        <select id="filtro-categoria">
+                            <option value="">Todas las categorías</option>
+                            {% for cat in categorias %}
+                            <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <label>Categoría</label>
+                    </div>
+                </div>
+                <div class="col s12 m3">
+                    <div class="input-field">
+                        <select id="filtro-estado">
+                            <option value="">Todos los estados</option>
+                            <option value="normal">Normal</option>
+                            <option value="bajo">Bajo</option>
+                            <option value="crítico">Crítico</option>
+                        </select>
+                        <label>Estado</label>
+                    </div>
+                </div>
+
         <!-- Tabla con barras de progreso y highlight por estado -->
         <div class="table-card">
             <div class="table-header">
                 <h6><i class="material-icons">inventory_2</i> Productos en Stock</h6>
                 <span id="tabla-total">6 productos registrados</span>
+
             </div>
             <div class="table-wrap">
                 <table id="tabla-inventario">
@@ -561,6 +644,73 @@
             </div>
         </div>
 
+
+            <!-- TABLA -->
+            <div class="row">
+                <div class="col s12">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header">
+                                <h6><i class="material-icons tiny teal-text">inventory_2</i> Productos en Stock</h6>
+                                <span class="grey-text" style="font-size:0.82rem">{{ total }} productos registrados</span>
+                            </div>
+                            <table class="striped responsive-table highlight">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Producto</th>
+                                        <th>Categoría</th>
+                                        <th>Stock Actual</th>
+                                        <th>Unidad</th>
+                                        <th>Stock Mínimo</th>
+                                        <th>Estado</th>
+                                        <th>Actualización</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-productos">
+                                    {% for p in productos %}
+                                    <tr data-categoria="{{ p.id_categoria.nombre }}">
+                                        <td>INV-{{ p.id_producto|stringformat:"03d" }}</td>
+                                        <td><strong>{{ p.nombre }}</strong></td>
+                                        <td>{{ p.id_categoria.nombre }}</td>
+                                        {% if p.stock <= p.stock_minimo|divisibleby:2 %}
+                                        <td class="red-text text-darken-2"><strong>{{ p.stock }}</strong></td>
+                                        {% elif p.stock <= p.stock_minimo %}
+                                        <td class="orange-text"><strong>{{ p.stock }}</strong></td>
+                                        {% else %}
+                                        <td class="green-text"><strong>{{ p.stock }}</strong></td>
+                                        {% endif %}
+                                        <td>{{ p.descripcion|default:"Uds" }}</td>
+                                        <td>{{ p.stock_minimo }}</td>
+                                        {% if p.stock <= p.stock_minimo %}
+                                        <td><span class="chip red white-text">Crítico</span></td>
+                                        {% elif p.stock <= p.stock_minimo %}
+                                        <td><span class="chip orange white-text">Bajo</span></td>
+                                        {% else %}
+                                        <td><span class="chip green white-text">Normal</span></td>
+                                        {% endif %}
+                                        <td>{{ p.fecha_creacion|date:"d/m/Y"|default:"-" }}</td>
+                                        <td>
+                                            <a href="#modal-ajustar-stock" 
+                                            class="btn-small teal white-text modal-trigger tooltipped" 
+                                            data-tooltip="Ajustar stock"
+                                            data-id="{{ p.id_producto }}"
+                                            data-nombre="{{ p.nombre }}"
+                                            data-stock="{{ p.stock }}">
+                                                <i class="material-icons">edit</i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="9" class="center grey-text">No hay productos registrados</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
     </div><!-- /page-body -->
 </div><!-- /main-content -->
 
@@ -572,6 +722,7 @@
             <div class="form-field span2">
                 <label>Nombre del Producto *</label>
                 <input type="text" id="nuevo-nombre" placeholder="Ej: Papas Frescas">
+
             </div>
             <div class="form-field">
                 <label>Categoría *</label>
@@ -606,6 +757,104 @@
         </div>
     </div>
 </div>
+
+
+    <!-- MODAL NUEVO ITEM -->
+    <div id="modal-nuevo-item" class="modal modal-fixed-footer">
+        <form method="POST" action="{% url 'inventario' %}">
+            {% csrf_token %}
+            <div class="modal-content">
+                <h4><i class="material-icons left">inventory_2</i>Nuevo Item</h4>
+                <div class="row">
+                    <div class="input-field col s12 m6">
+                        <i class="material-icons prefix">label</i>
+                        <input id="nombre_item" name="nombre_item" type="text" class="validate" required>
+                        <label for="nombre_item">Nombre del Producto *</label>
+                    </div>
+                    <div class="input-field col s12 m6">
+                        <select id="cat_item" name="cat_item" required>
+                            <option value="" disabled selected>Seleccione</option>
+                            {% for cat in categorias %}
+                            <option value="{{ cat.id_categoria }}">{{ cat.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <label>Categoría *</label>
+                    </div>
+                    <div class="input-field col s12 m4">
+                        <input id="stock_actual" name="stock_actual" type="number" min="0" class="validate" required>
+                        <label for="stock_actual">Stock Actual *</label>
+                    </div>
+                    <div class="input-field col s12 m4">
+                        <input id="stock_min" name="stock_min" type="number" min="0" class="validate" required>
+                        <label for="stock_min">Stock Mínimo *</label>
+                    </div>
+                    <div class="input-field col s12 m4">
+                        <input id="precio" name="precio" type="number" min="0" step="0.01" class="validate" required>
+                        <label for="precio">Precio *</label>
+                    </div>
+                    <div class="input-field col s12 m4">
+                        <select id="unidad" name="unidad">
+                            <option value="" disabled selected>Seleccione</option>
+                            <option value="Kg">Kg</option>
+                            <option value="g">g</option>
+                            <option value="L">L</option>
+                            <option value="mL">mL</option>
+                            <option value="Unidades">Unidades</option>
+                        </select>
+                        <label>Unidad *</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#!" class="modal-close btn-flat">Cancelar</a>
+                <button type="submit" class="btn teal white-text">
+                    <i class="material-icons left">save</i>Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cancelar</a>
+            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Item agregado al inventario', 'success')">
+                <i class="material-icons left">save</i>Guardar
+            </a>
+        </div>
+    </div>
+
+    <!-- MODAL AJUSTAR STOCK -->
+    <div id="modal-ajustar-stock" class="modal">
+    <form method="POST" id="form-ajustar-stock" action="/inventario/ajustar-stock/0/">
+        {% csrf_token %}
+        <div class="modal-content">
+            <h4>Ajustar Stock</h4>
+            <p><strong>Producto:</strong> <span id="modal-nombre-producto">-</span> &nbsp; <strong>Stock actual:</strong> <span id="modal-stock-actual">-</span></p>
+            <div class="row">
+                <div class="input-field col s12 m6">
+                    <select id="tipo_mov" name="tipo_mov" required>
+                        <option value="" disabled selected>Tipo de movimiento</option>
+                        <option value="entrada">Entrada (Agregar)</option>
+                        <option value="salida">Salida (Restar)</option>
+                        <option value="ajuste">Ajuste Manual</option>
+                    </select>
+                    <label>Tipo *</label>
+                </div>
+                <div class="input-field col s12 m6">
+                    <input id="cant_mov" name="cant_mov" type="number" min="0" class="validate" required>
+                    <label for="cant_mov">Cantidad *</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn-flat">Cancelar</a>
+            <button type="submit" class="btn teal white-text">
+                <i class="material-icons left">done</i>Confirmar
+            </button>
+        </div>
+    </form>
+</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="{% static 'js/app.js' %}"></script>
 
 <!-- ═══════════════ MODAL AJUSTAR STOCK ══════════════════════════ -->
 <div class="modal-overlay" id="modal-ajustar">
@@ -883,5 +1132,6 @@ function mostrarToast(mensaje, tipo = 'info') {
     }, 3200);
 }
 </script>
+
 </body>
 </html>
