@@ -38,12 +38,11 @@ Actualiza este archivo al completar o agregar tareas.
 - [x] `login.html` â€” DiseÃ±o Dark Premium
 - [x] `cocina.html` â€” KDS Dark Premium con polling
 - [x] `facturacion.html` â€” Terminal de caja Dark Premium
-- [~] `inventario.html` â€” DiseÃ±o parcial (estructura lista, falta CRUD)
-- [ ] inventario.html sin estilo real: Materialize CSS nunca se cargó
-  (falta el <link>), custom-styles.css solo cubre .input-field
-  parcialmente (falta select, falta background, posible falta de
-  .container/.row/.col). Migrar a design-system.css como el resto
-  de pantallas Dark Premium, no parchear Materialize.
+- [x] `inventario.html` â€” migrado a `extends base.html`; toasts de mensajes ya se ven al instante (19/07/2026)
+- [x] Fix formulario ilegible: faltaba el `<link>` de `materialize.min.css` (causa real de selects sin estilo y columnas apiladas) + `custom-styles.css` ahora cubre `.input-field select` y el dropdown generado por `M.FormSelect.init()` (19/07/2026)
+- [x] `inventario.html` â€” reescrito 100% en design-system.css, sin Materialize CSS/JS (sidebar, top-nav, stat-card, tabla, status-badge, modales propios) (19/07/2026)
+- [x] Bug corregido: `stock_minimo|divisibleby:2` nunca calculaba la mitad del stock minimo (comparaba contra True/False); reemplazado por `{% widthratio %}` en el template (19/07/2026)
+- [ ] Modal de confirmaciÃ³n "Eliminar" con Dark Premium implementado; falta CRUD real de Categorias/Precio avanzado
 
 ### Pantallas pendientes de rediseÃ±o
 - [x] `index.html` â€” Dashboard Dark Premium âœ… â€” migrado a design-system.css, tema toggle, fuente A-/A+

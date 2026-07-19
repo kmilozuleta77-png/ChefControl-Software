@@ -1,540 +1,478 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChefControl — Inventario</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <link href="{% static 'css/custom-styles.css' %}" rel="stylesheet">
+{% block title %}ChefControl — Inventario{% endblock %}
 
+{% block extra_head %}
     <style>
-        /* ─── TOKENS ─────────────────────────────────────────────── */
-        :root {
-            --bg-base:      #0a0a0a;
-            --bg-card:      #111111;
-            --bg-elevated:  #1a1a1a;
-            --border:       #1f1f1f;
-            --border-light: #2a2a2a;
-            --accent:       #f97316;
-            --accent-hover: #ea580c;
-            --green:        #4ade80;
-            --amber:        #f59e0b;
-            --red:          #ef4444;
-            --text-primary: #f5f5f5;
-            --text-sec:     #737373;
-            --text-muted:   #525252;
-            --radius-card:  12px;
-            --radius-btn:   8px;
-            --sidebar-w:    240px;
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-base);
-            color: var(--text-primary);
-            display: flex;
-            min-height: 100vh;
-        }
+        /* ──────────────────────────────────────────────────────────────
+           ESTILOS ESPECÍFICOS DE INVENTARIO
+           Todo lo compartido (sidebar, top-nav, card, table, status-badge,
+           btn-accion, stat-icon/val/label) vive en design-system.css.
+           Aquí solo lo único de esta pantalla.
+        ────────────────────────────────────────────────────────────── */
 
-        /* ─── SIDEBAR ────────────────────────────────────────────── */
-        .sidebar {
-            width: var(--sidebar-w);
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0; left: 0;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-        }
-        .sidebar-brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
-        .sidebar-brand h5 { font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
-        .sidebar-brand p  { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
-        .sidebar-section  { padding: 20px 20px 6px; font-size: 0.65rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
-        .sidebar a {
-            display: flex; align-items: center; gap: 10px;
-            padding: 9px 20px; color: var(--text-sec); text-decoration: none;
-            font-size: 0.85rem; border-left: 3px solid transparent;
-            transition: color 0.18s, background 0.18s, border-color 0.18s;
-        }
-        .sidebar a:hover { background: var(--bg-elevated); color: var(--text-primary); }
-        .sidebar a.active { color: var(--accent); background: rgba(249,115,22,0.08); border-left-color: var(--accent); }
-        .sidebar a .material-icons { font-size: 18px; }
-        .sidebar-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 20px; min-width: 18px; text-align: center; }
-        .sidebar-badge.warn { background: var(--amber); color: #0a0a0a; }
-        .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
-        .sidebar-footer span { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
-        .sidebar-footer p { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+        .container { padding: 24px; }
 
-        /* ─── LAYOUT PRINCIPAL ───────────────────────────────────── */
-        .main-content { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-
-        /* ─── TOPBAR ─────────────────────────────────────────────── */
-        .topbar {
-            position: sticky; top: 0; z-index: 90;
-            background: rgba(10,10,10,0.9); backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 28px; height: 62px;
-            display: flex; align-items: center; justify-content: space-between;
+        /* ── Stats (grid + card propios; icon/val/label ya son globales) ── */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 16px; margin-bottom: 20px;
         }
-        .topbar-left h4 { font-size: 1rem; font-weight: 600; }
-        .topbar-left p  { font-size: 0.72rem; color: var(--text-muted); }
-        .topbar-right   { display: flex; gap: 10px; align-items: center; }
+        @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px)  { .stats-grid { grid-template-columns: 1fr; } }
 
-        /* ─── BOTONES ────────────────────────────────────────────── */
-        .btn-primary {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 16px; background: var(--accent); color: #fff;
-            border: none; border-radius: var(--radius-btn);
-            font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500;
-            cursor: pointer; transition: background 0.18s, transform 0.1s;
-        }
-        .btn-primary:hover  { background: var(--accent-hover); }
-        .btn-primary:active { transform: scale(0.97); }
-        .btn-primary .material-icons { font-size: 16px; }
-        .btn-ghost {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 7px 14px; background: transparent; color: var(--text-sec);
-            border: 1px solid var(--border-light); border-radius: var(--radius-btn);
-            font-family: 'Inter', sans-serif; font-size: 0.82rem;
-            cursor: pointer; transition: color 0.18s, border-color 0.18s, background 0.18s;
-        }
-        .btn-ghost:hover { color: var(--text-primary); border-color: var(--text-muted); background: var(--bg-elevated); }
-        .btn-ghost .material-icons { font-size: 16px; }
-        .btn-icon {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 30px; height: 30px; background: var(--bg-elevated);
-            border: 1px solid var(--border-light); border-radius: 6px;
-            color: var(--text-sec); cursor: pointer;
-            transition: color 0.15s, border-color 0.15s;
-        }
-        .btn-icon .material-icons { font-size: 15px; }
-        .btn-icon.edit:hover    { color: var(--accent); border-color: var(--accent); }
-        .btn-icon.buy:hover     { color: var(--amber);  border-color: var(--amber); }
-        .btn-icon.history:hover { color: var(--green);  border-color: var(--green); }
-
-        /* ─── CUERPO ─────────────────────────────────────────────── */
-        .page-body { padding: 28px; display: flex; flex-direction: column; gap: 20px; }
-
-        /* ─── STATS CARDS ────────────────────────────────────────── */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         .stat-card {
             background: var(--bg-card); border: 1px solid var(--border);
             border-radius: var(--radius-card); padding: 20px;
-            display: flex; align-items: flex-start; gap: 14px;
+            animation: card-enter 0.35s ease both;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
         }
-        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .stat-icon .material-icons { font-size: 20px; }
-        .stat-icon.total   { background: rgba(249,115,22,0.12); color: var(--accent); }
-        .stat-icon.critico { background: rgba(239,68,68,0.12);  color: var(--red); }
-        .stat-icon.bajo    { background: rgba(245,158,11,0.12); color: var(--amber); }
-        .stat-icon.normal  { background: rgba(74,222,128,0.12); color: var(--green); }
-        .stat-num   { font-size: 1.75rem; font-weight: 700; line-height: 1; color: var(--text-primary); }
-        .stat-label { font-size: 0.75rem; color: var(--text-sec);   margin-top: 4px; }
-        .stat-pct   { font-size: 0.7rem;  color: var(--text-muted); margin-top: 2px; }
+        .stat-card:hover { border-color: var(--border-light); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .stat-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
 
-        /* ─── ALERTA ─────────────────────────────────────────────── */
-        .alert-banner {
-            background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
-            border-radius: var(--radius-card); padding: 14px 18px;
-            display: flex; align-items: center; gap: 12px;
-            transition: opacity 0.25s, transform 0.25s;
-        }
-        .alert-banner.hidden { display: none; }
-        @keyframes pulse-icon { 0%,100% { opacity:1; } 50% { opacity:0.45; } }
-        .alert-icon { color: var(--red); animation: pulse-icon 2s ease-in-out infinite; }
-        .alert-icon .material-icons { font-size: 20px; }
-        .alert-text { flex: 1; }
-        .alert-text strong { font-size: 0.85rem; color: var(--red); display: block; margin-bottom: 2px; }
-        .alert-text span   { font-size: 0.78rem; color: var(--text-sec); }
-        .alert-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.15s; }
-        .alert-close:hover { color: var(--red); }
-        .alert-close .material-icons { font-size: 18px; }
-
-        /* ─── FILTROS ────────────────────────────────────────────── */
-        .filters-bar {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius-card); padding: 16px 20px;
+        /* ── Alerta de críticos ── */
+        .alerta-criticos {
             display: flex; gap: 12px; align-items: center;
+            background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.3);
+            border-radius: var(--radius-card); padding: 16px 20px; margin-bottom: 20px;
         }
-        .search-field { flex: 1; position: relative; max-width: 320px; }
-        .search-field .material-icons { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--text-muted); pointer-events: none; }
-        .search-field input {
-            width: 100%; background: var(--bg-elevated);
-            border: none; border-bottom: 1px solid var(--border-light); border-radius: 6px 6px 0 0;
+        .alerta-criticos strong { color: var(--color-danger); display: block; font-size: 0.9rem; }
+        .alerta-criticos span   { font-size: 0.82rem; color: var(--text-secondary); }
+
+        /* ── Filtros ── */
+        .filtros-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+        .filtro-group { display: flex; flex-direction: column; gap: 5px; }
+        .filtro-label { font-size: 0.65rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+
+        .search-input-wrapper { position: relative; display: flex; align-items: center; }
+        .search-input-wrapper .material-icons { position: absolute; left: 10px; color: var(--text-muted); font-size: 18px; pointer-events: none; }
+        .search-input {
+            width: 240px; background: var(--bg-elevated); border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn); padding: 8px 10px 8px 36px;
             color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.82rem;
-            padding: 9px 12px 9px 36px; outline: none; transition: border-color 0.18s;
+            outline: none; transition: border-color 0.2s;
         }
-        .search-field input:focus { border-bottom-color: var(--accent); }
-        .search-field input::placeholder { color: var(--text-muted); }
-        .custom-select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f97316' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 10px center; background-size: 12px;
-            background-color: var(--bg-elevated); border: none; border-bottom: 1px solid var(--border-light);
-            border-radius: 6px 6px 0 0; color: var(--text-primary);
-            font-family: 'Inter', sans-serif; font-size: 0.82rem;
-            padding: 9px 32px 9px 10px; outline: none; cursor: pointer; transition: border-color 0.18s;
-        }
-        .custom-select:focus { border-bottom-color: var(--accent); }
-        .custom-select option { background: var(--bg-elevated); color: var(--text-primary); }
-        .filter-count { margin-left: auto; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-input:focus { border-color: var(--accent); }
 
-        /* ─── TABLA ──────────────────────────────────────────────── */
-        .table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
-        .table-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); }
-        .table-header h6 { font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .table-header h6 .material-icons { font-size: 18px; color: var(--accent); }
-        .table-header span { font-size: 0.75rem; color: var(--text-muted); }
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        thead th {
-            padding: 12px 16px; text-align: left; font-size: 0.72rem; font-weight: 600;
-            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border); white-space: nowrap;
+        /* Select dark — mismo patrón que crear_pedido.html */
+        .select-dark {
+            background: var(--bg-elevated); color: var(--text-primary);
+            border: 1px solid var(--border-light); border-radius: var(--radius-btn);
+            padding: 8px 30px 8px 10px; font-family: 'Inter', sans-serif;
+            font-size: 0.82rem; font-weight: 500; outline: none; cursor: pointer;
+            transition: border-color 0.2s; -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23737373'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center;
         }
-        tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-        tbody tr:last-child { border-bottom: none; }
-        tbody tr:hover { background: var(--bg-elevated); }
-        /* Sugerencia D: borde izquierdo por estado */
-        tbody tr.row-critical { border-left: 3px solid var(--red); }
-        tbody tr.row-low      { border-left: 3px solid var(--amber); }
-        tbody tr.hidden-row   { display: none; }
-        td { padding: 12px 16px; font-size: 0.82rem; color: var(--text-primary); vertical-align: middle; }
-        td.code { color: var(--text-muted); font-size: 0.75rem; font-family: monospace; }
-        td.cat  { color: var(--text-sec); }
-        td.date { color: var(--text-muted); font-size: 0.75rem; }
-        td.actions { display: flex; gap: 6px; align-items: center; }
-        /* Sugerencia A: celda stock con mini barra */
-        .stock-cell { display: flex; flex-direction: column; gap: 5px; }
-        .stock-num          { font-weight: 700; }
-        .stock-num.critical { color: var(--red); }
-        .stock-num.low      { color: var(--amber); }
-        .stock-num.normal   { color: var(--green); }
-        .stock-bar-wrap { width: 80px; height: 4px; background: var(--border-light); border-radius: 2px; overflow: hidden; }
-        .stock-bar          { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
-        .stock-bar.critical { background: var(--red); }
-        .stock-bar.low      { background: var(--amber); }
-        .stock-bar.normal   { background: var(--green); }
-        /* Chips */
-        .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
-        .chip::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-        .chip.critical { background: rgba(239,68,68,0.12);  color: var(--red); }
-        .chip.critical::before { background: var(--red); }
-        .chip.low      { background: rgba(245,158,11,0.12); color: var(--amber); }
-        .chip.low::before { background: var(--amber); }
-        .chip.normal   { background: rgba(74,222,128,0.12); color: var(--green); }
-        .chip.normal::before { background: var(--green); }
+        .select-dark:focus { border-color: var(--accent); }
+        .select-dark option { background: #1a1a1a; color: var(--text-primary); }
 
-        /* ─── MODALES ────────────────────────────────────────────── */
+        .filtro-count { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; align-self: center; white-space: nowrap; }
+
+        tbody tr.fila-oculta { display: none; }
+
+        /* ── Modales (mismo patrón que #modal-ver-pedido de index.html) ── */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.65);
-            z-index: 200; display: flex; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; transition: opacity 0.22s, visibility 0.22s;
+            position: fixed; inset: 0; z-index: 1000; display: none;
+            align-items: center; justify-content: center;
         }
-        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); }
         .modal-panel {
-            background: var(--bg-card); border: 1px solid var(--border-light);
-            border-radius: var(--radius-card); width: 90%; max-width: 520px; padding: 28px;
-            transform: scale(0.95); transition: transform 0.22s;
+            position: relative; z-index: 1; background: #1a1a1a;
+            border: 1px solid var(--border-light); border-radius: 12px;
+            width: min(520px, 95vw); max-height: 88vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
         }
-        .modal-overlay.visible .modal-panel { transform: scale(1); }
-        .modal-panel h3 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-        .modal-panel h3 .material-icons { font-size: 20px; color: var(--accent); }
-        .modal-meta { font-size: 0.82rem; color: var(--text-sec); margin-bottom: 16px; }
-        .modal-meta strong { color: var(--text-primary); }
+        .modal-overlay.danger .modal-panel { border-color: var(--color-danger); }
+
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 22px; border-bottom: 1px solid var(--border-light);
+            background: rgba(249,115,22,0.06);
+        }
+        .modal-overlay.danger .modal-header { background: rgba(239,68,68,0.06); }
+        .modal-header h3 { margin: 0; font-size: 1.05rem; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        .modal-overlay.danger .modal-header h3 { color: var(--color-danger); }
+        .modal-header h3 .material-icons { font-size: 20px; }
+        .modal-close-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; padding: 4px; border-radius: 6px; transition: color 0.2s; }
+        .modal-close-btn:hover { color: var(--accent); }
+
+        .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--border-light); }
+
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-field { display: flex; flex-direction: column; gap: 5px; }
-        .form-field.span2 { grid-column: span 2; }
-        .form-field label { font-size: 0.72rem; color: var(--text-sec); font-weight: 500; }
-        .form-field input,
-        .form-field select,
-        .form-field textarea {
-            background: var(--bg-elevated); border: none;
-            border-bottom: 1px solid var(--border-light); border-radius: 6px 6px 0 0;
-            color: var(--text-primary); font-family: 'Inter', sans-serif;
-            font-size: 0.82rem; padding: 9px 10px; outline: none;
-            transition: border-color 0.18s; width: 100%;
-        }
-        .form-field input:focus,
-        .form-field select:focus,
-        .form-field textarea:focus { border-bottom-color: var(--accent); }
-        .form-field select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f97316' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 10px center; background-size: 12px;
-            cursor: pointer; padding-right: 32px;
-        }
-        .form-field select option { background: var(--bg-elevated); }
-        .form-field textarea { resize: vertical; min-height: 72px; }
-        /* Sugerencia E: preview resultado ajuste */
-        .stock-preview {
+        .form-grid .span2 { grid-column: span 2; }
+        .field-group { display: flex; flex-direction: column; gap: 5px; }
+        .field-label { font-size: 0.72rem; color: var(--text-secondary); font-weight: 500; }
+        .field-input {
             background: var(--bg-elevated); border: 1px solid var(--border-light);
-            border-radius: 8px; padding: 12px 16px;
-            display: none; gap: 16px; align-items: center; margin-top: 4px;
+            border-radius: var(--radius-btn); color: var(--text-primary);
+            font-family: 'Inter', sans-serif; font-size: 0.85rem;
+            padding: 9px 10px; outline: none; transition: border-color 0.2s; width: 100%;
         }
-        .stock-preview.visible { display: flex; }
-        .preview-item { flex: 1; }
-        .preview-label { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 3px; }
-        .preview-val   { font-size: 1rem; font-weight: 700; }
-        .preview-arrow .material-icons { font-size: 20px; color: var(--text-muted); }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-
-        /* ─── TOASTS ─────────────────────────────────────────────── */
-        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 400; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .toast {
-            display: flex; align-items: center; gap: 10px; padding: 12px 18px;
-            background: var(--bg-elevated); border: 1px solid var(--border-light);
-            border-radius: 10px; font-size: 0.82rem; color: var(--text-primary);
-            pointer-events: auto; opacity: 0; transform: translateX(20px);
-            transition: opacity 0.25s, transform 0.25s; max-width: 340px;
-        }
-        .toast.visible { opacity: 1; transform: translateX(0); }
-        .toast .material-icons { font-size: 16px; }
-        .toast.success { border-left: 3px solid var(--green); }
-        .toast.success .material-icons { color: var(--green); }
-        .toast.error   { border-left: 3px solid var(--red); }
-        .toast.error   .material-icons { color: var(--red); }
-        .toast.info    { border-left: 3px solid var(--accent); }
-        .toast.info    .material-icons { color: var(--accent); }
+        .field-input:focus { border-color: var(--accent); }
     </style>
+{% endblock %}
 
-</head>
-<body>
-{% csrf_token %}
+{% block content %}
+<!--
+    El tema se aplica via data-theme en <html>.
+    El script al final lee localStorage para restaurar la preferencia del usuario.
+-->
 
-<!-- ═══════════════ SIDEBAR ══════════════════════════════════════ -->
-<nav class="sidebar">
+<!-- ═══════════════════════════════════════════════════════════════
+     SIDEBAR — mismo patrón que index.html, "Inventario" activo
+════════════════════════════════════════════════════════════════ -->
+<div class="sidebar" id="sidebar">
+
     <div class="sidebar-brand">
-        <h5>ChefControl</h5>
-        <p>Gestión de Restaurante</p>
-    </div>
-    <div class="sidebar-section">Principal</div>
-    <a href="{% url 'dashboard' %}"><i class="material-icons">dashboard</i> Dashboard</a>
-    <div class="sidebar-section">Operaciones</div>
-    <a href="{% url 'crear_pedido' %}"><i class="material-icons">shopping_cart</i> Pedidos</a>
-    <a href="{% url 'cocina' %}"><i class="material-icons">soup_kitchen</i> Cocina</a>
-    <a href="{% url 'inventario' %}" class="active">
-        <i class="material-icons">inventory_2</i> Inventario
-        <span class="sidebar-badge warn">!</span>
-    </a>
-    <div class="sidebar-section">Administración</div>
-    <a href="{% url 'facturacion' %}"><i class="material-icons">receipt_long</i> Facturación</a>
-    <div class="sidebar-footer">
-        <span>{{ request.user.get_full_name|default:request.user.username }}</span>
-        <p>{{ request.user.email }}</p>
-    </div>
-</nav>
-
-<!-- ═══════════════ CONTENIDO PRINCIPAL ══════════════════════════ -->
-<div class="main-content">
-
-    <header class="topbar">
-        <div class="topbar-left">
-            <h4>Control de Inventario</h4>
-            <p>Gestión de productos y stock</p>
+        <div class="brand-icon-sidebar">
+            <i class="material-icons">restaurant</i>
         </div>
-        <div class="topbar-right">
-            <button class="btn-ghost" id="btn-exportar">
+        <div class="brand-text">
+            <div class="brand-name">ChefControl</div>
+            <div class="brand-sub">Gestión de restaurante</div>
+        </div>
+    </div>
+
+    <div class="sidebar-section sidebar-label">Principal</div>
+    <a href="{% url 'dashboard' %}">
+        <i class="material-icons">dashboard</i>
+        <span class="sidebar-label">Dashboard</span>
+    </a>
+
+    <div class="sidebar-section sidebar-label">Operaciones</div>
+    <a href="#">
+        <i class="material-icons">shopping_cart</i>
+        <span class="sidebar-label">Pedidos</span>
+        <span class="sidebar-badge">4</span>
+    </a>
+    <a href="{% url 'inventario' %}" class="active">
+        <i class="material-icons">inventory_2</i>
+        <span class="sidebar-label">Inventario</span>
+        <span class="sidebar-badge">!</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">restaurant_menu</i>
+        <span class="sidebar-label">Menús</span>
+    </a>
+    <a href="{% url 'crear_pedido' %}">
+        <i class="material-icons">add_circle_outline</i>
+        <span class="sidebar-label">Nuevo Pedido</span>
+    </a>
+    <a href="{% url 'cocina' %}">
+        <i class="material-icons">soup_kitchen</i>
+        <span class="sidebar-label">Cocina (KDS)</span>
+    </a>
+
+    <div class="sidebar-section sidebar-label">Administración</div>
+    <a href="#">
+        <i class="material-icons">people</i>
+        <span class="sidebar-label">Clientes</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">badge</i>
+        <span class="sidebar-label">Personal</span>
+    </a>
+    <a href="{% url 'facturacion' %}">
+        <i class="material-icons">receipt_long</i>
+        <span class="sidebar-label">Facturación</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">bar_chart</i>
+        <span class="sidebar-label">Reportes</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">settings</i>
+        <span class="sidebar-label">Configuración</span>
+    </a>
+
+    <a href="{% url 'logout' %}" class="logout-link" style="margin-top: 8px;">
+        <i class="material-icons">exit_to_app</i>
+        <span class="sidebar-label">Cerrar Sesión</span>
+    </a>
+
+    <div class="sidebar-footer">
+        <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+        <span class="user-email">{{ request.user.email|default:"" }}</span>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CONTENIDO PRINCIPAL
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content" id="main-content">
+
+    <!-- ── Topbar — mismo patrón que index.html ── -->
+    <div class="top-nav">
+        <div class="top-nav-left">
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Colapsar menú">
+                <i class="material-icons">menu</i>
+            </button>
+            <h5>Control de Inventario</h5>
+        </div>
+
+        <div class="top-nav-right">
+            <div class="datetime-badge">
+                <span id="fecha-actual"></span>
+                <span class="time-part" id="hora-actual"></span>
+            </div>
+
+            <button class="btn-accion-ghost" id="btn-exportar">
                 <i class="material-icons">file_download</i> Exportar
             </button>
-            <button class="btn-primary" id="btn-nuevo-item">
+
+            <button class="btn-quick-action" id="btn-nuevo-item">
                 <i class="material-icons">add</i> Nuevo Item
             </button>
+
+            <button class="icon-btn theme-toggle" id="theme-toggle-btn"
+                    onclick="toggleTema()" aria-label="Cambiar tema">
+                <i class="material-icons" id="theme-icon">light_mode</i>
+            </button>
+
+            <div class="font-size-ctrl" title="Tamaño de texto">
+                <button class="icon-btn" onclick="reducirFuente()" aria-label="Reducir fuente">A-</button>
+                <button class="icon-btn" onclick="aumentarFuente()" aria-label="Aumentar fuente">A+</button>
+            </div>
+
+            <button class="icon-btn" aria-label="Notificaciones">
+                <i class="material-icons">notifications</i>
+                <span class="notif-dot"></span>
+            </button>
+
+            <div class="user-avatar" title="{{ request.user.get_full_name|default:request.user.username }}">
+                {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
+            </div>
         </div>
-    </header>
+    </div>
 
-    <div class="page-body">
+    <!-- ── Cuerpo ── -->
+    <div class="container">
 
-        <div class="container">
-            <!-- ESTADÍSTICAS -->
-            <div class="row" style="margin-top:24px">
-                <div class="col s12 m3">
-                    <div class="card-panel teal lighten-5 center">
-                        <h5 class="teal-text text-darken-2">{{ total }}</h5>
-                        <p class="grey-text">Total Productos</p>
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ total }}</div>
+                        <div class="stat-label">Total Productos</div>
                     </div>
+                    <div class="stat-icon"><i class="material-icons" style="color: var(--accent)">inventory_2</i></div>
                 </div>
-                <div class="col s12 m3">
-                    <div class="card-panel red lighten-5 center">
-                        <h5 class="red-text text-darken-2">{{ criticos }}</h5>
-                        <p class="grey-text">Stock Crítico</p>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ criticos }}</div>
+                        <div class="stat-label">Stock Crítico</div>
                     </div>
+                    <div class="stat-icon"><i class="material-icons" style="color: var(--color-danger)">error</i></div>
                 </div>
-                <div class="col s12 m3">
-                    <div class="card-panel orange lighten-5 center">
-                        <h5 class="orange-text text-darken-2">{{ bajos }}</h5>
-                        <p class="grey-text">Stock Bajo</p>
+                {% if criticos > 0 %}
+                    <div class="stat-change down">Requieren reabastecimiento</div>
+                {% else %}
+                    <div class="stat-change up">✓ Sin críticos</div>
+                {% endif %}
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ bajos }}</div>
+                        <div class="stat-label">Stock Bajo</div>
                     </div>
+                    <div class="stat-icon"><i class="material-icons" style="color: var(--color-warning)">warning</i></div>
                 </div>
-                <div class="col s12 m3">
-                    <div class="card-panel green lighten-5 center">
-                        <h5 class="green-text text-darken-2">{{ normales }}</h5>
-                        <p class="grey-text">Stock Normal</p>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ normales }}</div>
+                        <div class="stat-label">Stock Normal</div>
                     </div>
+                    <div class="stat-icon"><i class="material-icons" style="color: var(--color-success)">check_circle</i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta de críticos -->
+        {% if criticos > 0 %}
+        <div class="alerta-criticos">
+            <i class="material-icons" style="color: var(--color-danger)">warning</i>
+            <div>
+                <strong>{{ criticos }} producto{{ criticos|pluralize }} con stock crítico</strong>
+                <span>{% for p in criticos_lista %}{{ p.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %} necesitan reabastecimiento urgente.</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filtros -->
+        <div class="filtros-row">
+            <div class="filtro-group">
+                <label class="filtro-label" for="buscar">Buscar</label>
+                <div class="search-input-wrapper">
+                    <i class="material-icons">search</i>
+                    <input id="buscar" type="text" class="search-input" placeholder="Buscar producto...">
+                </div>
+            </div>
+            <div class="filtro-group">
+                <label class="filtro-label" for="filtro-categoria">Categoría</label>
+                <select id="filtro-categoria" class="select-dark">
+                    <option value="">Todas las categorías</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label class="filtro-label" for="filtro-estado">Estado</label>
+                <select id="filtro-estado" class="select-dark">
+                    <option value="">Todos los estados</option>
+                    <option value="normal">Normal</option>
+                    <option value="bajo">Bajo</option>
+                    <option value="crítico">Crítico</option>
+                </select>
+            </div>
+            <span class="filtro-count" id="filtro-count"></span>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card">
+            <div class="card-content">
+                <div class="section-header">
+                    <h6><i class="material-icons">inventory_2</i> Productos en Stock</h6>
                 </div>
 
-            <!-- ALERTA -->
-            <div class="row">
-                <div class="col s12">
-                    {% if criticos > 0 %}
-                    <div class="card red lighten-4">
-                        <div class="card-content red-text text-darken-3">
-                            <span class="card-title"><i class="material-icons left">warning</i>⚠️ {{ criticos }} productos con stock crítico</span>
-                            <p>{% for p in criticos_lista %}{{ p.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %} necesitan reabastecimiento urgente.</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-
-            <!-- FILTROS -->
-            <div class="row">
-                <div class="col s12 m5">
-                    <div class="input-field">
-                        <i class="material-icons prefix">search</i>
-                        <input id="buscar" type="text" placeholder="Buscar producto...">
-                        <label for="buscar">Buscar</label>
-                    </div>
-                </div>
-                <div class="col s12 m4">
-                    <div class="input-field">
-                        <select id="filtro-categoria">
-                            <option value="">Todas las categorías</option>
-                            {% for cat in categorias %}
-                            <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                        <label>Categoría</label>
-                    </div>
-                </div>
-                <div class="col s12 m3">
-                    <div class="input-field">
-                        <select id="filtro-estado">
-                            <option value="">Todos los estados</option>
-                            <option value="normal">Normal</option>
-                            <option value="bajo">Bajo</option>
-                            <option value="crítico">Crítico</option>
-                        </select>
-                        <label>Estado</label>
-                    </div>
-                </div>
-
-            <!-- TABLA -->
-            <div class="row">
-                <div class="col s12">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="section-header">
-                                <h6><i class="material-icons tiny teal-text">inventory_2</i> Productos en Stock</h6>
-                                <span class="grey-text" style="font-size:0.82rem">{{ total }} productos registrados</span>
-                            </div>
-                            <table class="striped responsive-table highlight">
-                                <thead>
-                                    <tr>
-                                        <th>Código</th>
-                                        <th>Producto</th>
-                                        <th>Categoría</th>
-                                        <th>Stock Actual</th>
-                                        <th>Unidad</th>
-                                        <th>Stock Mínimo</th>
-                                        <th>Estado</th>
-                                        <th>Actualización</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-productos">
-                                    {% for p in productos %}
-                                    <tr data-categoria="{{ p.id_categoria.nombre }}">
-                                        <td>INV-{{ p.id_producto|stringformat:"03d" }}</td>
-                                        <td><strong>{{ p.nombre }}</strong></td>
-                                        <td>{{ p.id_categoria.nombre }}</td>
-                                        {% if p.stock <= p.stock_minimo|divisibleby:2 %}
-                                        <td class="red-text text-darken-2"><strong>{{ p.stock }}</strong></td>
-                                        {% elif p.stock <= p.stock_minimo %}
-                                        <td class="orange-text"><strong>{{ p.stock }}</strong></td>
-                                        {% else %}
-                                        <td class="green-text"><strong>{{ p.stock }}</strong></td>
-                                        {% endif %}
-                                        <td>{{ p.descripcion|default:"Uds" }}</td>
-                                        <td>{{ p.stock_minimo }}</td>
-                                        {% if p.stock <= p.stock_minimo %}
-                                        <td><span class="chip red white-text">Crítico</span></td>
-                                        {% elif p.stock <= p.stock_minimo %}
-                                        <td><span class="chip orange white-text">Bajo</span></td>
-                                        {% else %}
-                                        <td><span class="chip green white-text">Normal</span></td>
-                                        {% endif %}
-                                        <td>{{ p.fecha_creacion|date:"d/m/Y"|default:"-" }}</td>
-                                        <td>
-                                            <a href="#modal-ajustar-stock"
-                                            class="btn-small teal white-text modal-trigger tooltipped"
-                                            data-tooltip="Ajustar stock"
-                                            data-id="{{ p.id_producto }}"
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Unidad</th>
+                            <th>Stock Mínimo</th>
+                            <th>Estado</th>
+                            <th>Actualización</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-productos">
+                        {% for p in productos %}
+                        {% widthratio p.stock_minimo 2 1 as mitad_stock_raw %}
+                        {% with mitad_stock=mitad_stock_raw|add:0 %}
+                        <tr data-categoria="{{ p.id_categoria.nombre }}"
+                            data-estado="{% if p.stock <= mitad_stock %}crítico{% elif p.stock <= p.stock_minimo %}bajo{% else %}normal{% endif %}">
+                            <td>INV-{{ p.id_producto|stringformat:"03d" }}</td>
+                            <td><strong>{{ p.nombre }}</strong></td>
+                            <td>{{ p.id_categoria.nombre }}</td>
+                            {% if p.stock <= mitad_stock %}
+                                <td style="color: var(--color-danger); font-weight: 700">{{ p.stock }}</td>
+                            {% elif p.stock <= p.stock_minimo %}
+                                <td style="color: var(--color-warning); font-weight: 700">{{ p.stock }}</td>
+                            {% else %}
+                                <td style="color: var(--color-success); font-weight: 700">{{ p.stock }}</td>
+                            {% endif %}
+                            <td>{{ p.descripcion|default:"Uds" }}</td>
+                            <td>{{ p.stock_minimo }}</td>
+                            <td>
+                                {% if p.stock <= mitad_stock %}
+                                    <span class="status-badge badge-red">Crítico</span>
+                                {% elif p.stock <= p.stock_minimo %}
+                                    <span class="status-badge badge-orange">Bajo</span>
+                                {% else %}
+                                    <span class="status-badge badge-green">Normal</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ p.fecha_creacion|date:"d/m/Y"|default:"-" }}</td>
+                            <td style="display: flex; gap: 6px">
+                                <button type="button" class="btn-accion btn-ajustar-trigger"
+                                        data-id="{{ p.id_producto }}"
+                                        data-nombre="{{ p.nombre }}"
+                                        data-stock="{{ p.stock }}"
+                                        title="Ajustar stock">
+                                    <i class="material-icons">edit</i>
+                                </button>
+                                <form method="POST" action="{% url 'eliminar_producto' p.id_producto %}"
+                                      id="form-eliminar-{{ p.id_producto }}" style="display:inline">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn-accion btn-accion-danger btn-eliminar-trigger"
+                                            data-form-id="form-eliminar-{{ p.id_producto }}"
                                             data-nombre="{{ p.nombre }}"
-                                            data-stock="{{ p.stock }}">
-                                                <i class="material-icons">edit</i>
-                                            </a>
-                                            <form method="POST" action="{% url 'eliminar_producto' p.id_producto %}" style="display:inline"
-                                                  onsubmit="return confirm('¿Desactivar el producto \'{{ p.nombre|escapejs }}\'? No aparecerá más en inventario ni en el punto de venta.');">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn-small red white-text tooltipped" data-tooltip="Eliminar producto">
-                                                    <i class="material-icons">delete</i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr><td colspan="9" class="center grey-text">No hay productos registrados</td></tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                                            title="Eliminar producto">
+                                        <i class="material-icons">delete</i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="9">
+                                <div class="table-empty">
+                                    <i class="material-icons">inbox</i>
+                                    <span>No hay productos registrados</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-    </div><!-- /page-body -->
+    </div><!-- /container -->
 </div><!-- /main-content -->
 
-    <!-- MODAL NUEVO ITEM -->
-    <div id="modal-nuevo-item" class="modal modal-fixed-footer">
+
+<!-- ═══════════════ MODAL NUEVO ITEM ═══════════════ -->
+<div id="modal-nuevo-item" class="modal-overlay">
+    <div class="modal-backdrop" id="modal-backdrop-nuevo"></div>
+    <div class="modal-panel">
         <form method="POST" action="{% url 'inventario' %}">
             {% csrf_token %}
-            <div class="modal-content">
-                <h4><i class="material-icons left">inventory_2</i>Nuevo Item</h4>
-                <div class="row">
-                    <div class="input-field col s12 m6">
-                        <i class="material-icons prefix">label</i>
-                        <input id="nombre_item" name="nombre_item" type="text" class="validate" required>
-                        <label for="nombre_item">Nombre del Producto *</label>
+            <div class="modal-header">
+                <h3><i class="material-icons">inventory_2</i> Nuevo Item</h3>
+                <button type="button" class="modal-close-btn" id="modal-cerrar-nuevo" aria-label="Cerrar">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="field-group span2">
+                        <label class="field-label" for="nombre_item">Nombre del Producto *</label>
+                        <input id="nombre_item" name="nombre_item" type="text" class="field-input" required>
                     </div>
-                    <div class="input-field col s12 m6">
-                        <select id="cat_item" name="cat_item" required>
+                    <div class="field-group span2">
+                        <label class="field-label">Categoría *</label>
+                        <select id="cat_item" name="cat_item" class="select-dark" style="width:100%" required>
                             <option value="" disabled selected>Seleccione</option>
                             {% for cat in categorias %}
                             <option value="{{ cat.id_categoria }}">{{ cat.nombre }}</option>
                             {% endfor %}
                         </select>
-                        <label>Categoría *</label>
                     </div>
-                    <div class="input-field col s12 m4">
-                        <input id="stock_actual" name="stock_actual" type="number" min="0" class="validate" required>
-                        <label for="stock_actual">Stock Actual *</label>
+                    <div class="field-group">
+                        <label class="field-label" for="stock_actual">Stock Actual *</label>
+                        <input id="stock_actual" name="stock_actual" type="number" min="0" class="field-input" required>
                     </div>
-                    <div class="input-field col s12 m4">
-                        <input id="stock_min" name="stock_min" type="number" min="0" class="validate" required>
-                        <label for="stock_min">Stock Mínimo *</label>
+                    <div class="field-group">
+                        <label class="field-label" for="stock_min">Stock Mínimo *</label>
+                        <input id="stock_min" name="stock_min" type="number" min="0" class="field-input" required>
                     </div>
-                    <div class="input-field col s12 m4">
-                        <input id="precio" name="precio" type="number" min="0" step="0.01" class="validate" required>
-                        <label for="precio">Precio *</label>
+                    <div class="field-group">
+                        <label class="field-label" for="precio">Precio *</label>
+                        <input id="precio" name="precio" type="number" min="0" step="0.01" class="field-input" required>
                     </div>
-                    <div class="input-field col s12 m4">
-                        <select id="unidad" name="unidad">
+                    <div class="field-group">
+                        <label class="field-label">Unidad *</label>
+                        <select id="unidad" name="unidad" class="select-dark" style="width:100%">
                             <option value="" disabled selected>Seleccione</option>
                             <option value="Kg">Kg</option>
                             <option value="g">g</option>
@@ -542,53 +480,232 @@
                             <option value="mL">mL</option>
                             <option value="Unidades">Unidades</option>
                         </select>
-                        <label>Unidad *</label>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <a href="#!" class="modal-close btn-flat">Cancelar</a>
-                <button type="submit" class="btn teal white-text">
-                    <i class="material-icons left">save</i>Guardar
-                </button>
+                <button type="button" class="btn-accion-ghost" id="btn-cancelar-nuevo">Cancelar</button>
+                <button type="submit" class="btn-accion"><i class="material-icons">save</i> Guardar</button>
             </div>
         </form>
     </div>
+</div>
 
-    <!-- MODAL AJUSTAR STOCK -->
-    <div id="modal-ajustar-stock" class="modal">
-    <form method="POST" id="form-ajustar-stock" action="/inventario/ajustar-stock/0/">
-        {% csrf_token %}
-        <div class="modal-content">
-            <h4>Ajustar Stock</h4>
-            <p><strong>Producto:</strong> <span id="modal-nombre-producto">-</span> &nbsp; <strong>Stock actual:</strong> <span id="modal-stock-actual">-</span></p>
-            <div class="row">
-                <div class="input-field col s12 m6">
-                    <select id="tipo_mov" name="tipo_mov" required>
-                        <option value="" disabled selected>Tipo de movimiento</option>
+<!-- ═══════════════ MODAL AJUSTAR STOCK ═══════════════ -->
+<div id="modal-ajustar-stock" class="modal-overlay">
+    <div class="modal-backdrop" id="modal-backdrop-ajustar"></div>
+    <div class="modal-panel" style="width: min(420px, 95vw)">
+        <form method="POST" id="form-ajustar-stock" action="/inventario/ajustar-stock/0/">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h3><i class="material-icons">tune</i> Ajustar Stock</h3>
+                <button type="button" class="modal-close-btn" id="modal-cerrar-ajustar" aria-label="Cerrar">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0">
+                    <strong style="color: var(--text-primary)" id="modal-nombre-producto">-</strong>
+                    &nbsp;·&nbsp; Stock actual:
+                    <strong style="color: var(--text-primary)" id="modal-stock-actual">-</strong>
+                </p>
+                <div class="field-group">
+                    <label class="field-label">Tipo de movimiento *</label>
+                    <select id="tipo_mov" name="tipo_mov" class="select-dark" style="width:100%" required>
+                        <option value="" disabled selected>Seleccione</option>
                         <option value="entrada">Entrada (Agregar)</option>
                         <option value="salida">Salida (Restar)</option>
                         <option value="ajuste">Ajuste Manual</option>
                     </select>
-                    <label>Tipo *</label>
                 </div>
-                <div class="input-field col s12 m6">
-                    <input id="cant_mov" name="cant_mov" type="number" min="0" class="validate" required>
-                    <label for="cant_mov">Cantidad *</label>
+                <div class="field-group">
+                    <label class="field-label" for="cant_mov">Cantidad *</label>
+                    <input id="cant_mov" name="cant_mov" type="number" min="0" class="field-input" required>
                 </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <a href="#!" class="modal-close btn-flat">Cancelar</a>
-            <button type="submit" class="btn teal white-text">
-                <i class="material-icons left">done</i>Confirmar
-            </button>
-        </div>
-    </form>
+            <div class="modal-footer">
+                <button type="button" class="btn-accion-ghost" id="btn-cancelar-ajustar">Cancelar</button>
+                <button type="submit" class="btn-accion"><i class="material-icons">done</i> Confirmar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="{% static 'js/app.js' %}"></script>
+<!-- ═══════════════ MODAL CONFIRMAR ELIMINAR (reemplaza confirm() nativo) ═══════════════ -->
+<div id="modal-confirmar-eliminar" class="modal-overlay danger">
+    <div class="modal-backdrop" id="modal-backdrop-eliminar"></div>
+    <div class="modal-panel" style="width: min(400px, 95vw)">
+        <div class="modal-header">
+            <h3><i class="material-icons">warning</i> Eliminar producto</h3>
+            <button type="button" class="modal-close-btn" id="modal-cerrar-eliminar" aria-label="Cerrar">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0">
+                ¿Desactivar <strong style="color: var(--text-primary)" id="eliminar-nombre-producto"></strong>?
+                No aparecerá más en inventario ni en el punto de venta.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-accion-ghost" id="btn-cancelar-eliminar">Cancelar</button>
+            <button type="button" class="btn-accion btn-accion-danger" id="btn-confirmar-eliminar">Eliminar</button>
+        </div>
+    </div>
+</div>
 
-</body>
-</html>
+
+<script>
+    /* ──────────────────────────────────────────────────────────────
+       TEMA OSCURO / CLARO — idéntico a index.html (misma clave de
+       localStorage, para que la preferencia sea global a toda la app).
+    ────────────────────────────────────────────────────────────── */
+    (function () {
+        const temaGuardado = localStorage.getItem('chefcontrol-tema') || 'dark';
+        document.documentElement.setAttribute('data-theme', temaGuardado);
+        const icono = document.getElementById('theme-icon');
+        if (icono) icono.textContent = temaGuardado === 'dark' ? 'light_mode' : 'dark_mode';
+    })();
+
+    function toggleTema() {
+        const actual = document.documentElement.getAttribute('data-theme');
+        const nuevo  = actual === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', nuevo);
+        localStorage.setItem('chefcontrol-tema', nuevo);
+        document.getElementById('theme-icon').textContent =
+            nuevo === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+
+    /* ── Accesibilidad: tamaño de fuente (idéntico a index.html) ── */
+    const TAMANOS = ['0.875rem', '1rem', '1.1rem', '1.2rem'];
+    let nivelFuente = parseInt(localStorage.getItem('chefcontrol-fuente') || '1', 10);
+    document.documentElement.style.setProperty('--font-size-base', TAMANOS[nivelFuente]);
+
+    function aumentarFuente() {
+        if (nivelFuente < TAMANOS.length - 1) { nivelFuente++; aplicarFuente(); }
+    }
+    function reducirFuente() {
+        if (nivelFuente > 0) { nivelFuente--; aplicarFuente(); }
+    }
+    function aplicarFuente() {
+        document.documentElement.style.setProperty('--font-size-base', TAMANOS[nivelFuente]);
+        localStorage.setItem('chefcontrol-fuente', nivelFuente);
+    }
+
+    /* ── Reloj en vivo (idéntico a index.html) ── */
+    function actualizarFechaHora() {
+        const ahora   = new Date();
+        const opFecha = { weekday: 'long', day: 'numeric', month: 'long' };
+        const fecha   = ahora.toLocaleDateString('es-CO', opFecha);
+        const hora    = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('fecha-actual').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1) + ' —';
+        document.getElementById('hora-actual').textContent  = hora;
+    }
+    actualizarFechaHora();
+    setInterval(actualizarFechaHora, 1000);
+
+    /* ── Toggle sidebar ── */
+    const sidebar     = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    document.getElementById('sidebar-toggle').addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+    });
+
+    /* ──────────────────────────────────────────────────────────────
+       FILTROS DE INVENTARIO
+       100% client-side sobre el DOM ya renderizado (igual que antes),
+       ahora filtrando por data-categoria/data-estado del <tr> en vez
+       de comparar texto de celdas — más robusto ante cambios de columna.
+    ────────────────────────────────────────────────────────────── */
+    const TOTAL_PRODUCTOS = {{ total }};
+
+    function filtrarInventario() {
+        const texto     = document.getElementById('buscar').value.toLowerCase();
+        const categoria = document.getElementById('filtro-categoria').value.toLowerCase();
+        const estado    = document.getElementById('filtro-estado').value.toLowerCase();
+        const filas     = document.querySelectorAll('#tabla-productos tr[data-categoria]');
+        let visibles = 0;
+
+        filas.forEach(fila => {
+            const nombre      = fila.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+            const catFila     = (fila.dataset.categoria || '').toLowerCase();
+            const estadoFila  = (fila.dataset.estado || '').toLowerCase();
+
+            const coincide = nombre.includes(texto)
+                && (categoria === '' || catFila === categoria)
+                && (estado === '' || estadoFila === estado);
+
+            fila.classList.toggle('fila-oculta', !coincide);
+            if (coincide) visibles++;
+        });
+
+        document.getElementById('filtro-count').textContent = `${visibles} de ${TOTAL_PRODUCTOS} productos`;
+    }
+
+    document.getElementById('buscar').addEventListener('input', filtrarInventario);
+    document.getElementById('filtro-categoria').addEventListener('change', filtrarInventario);
+    document.getElementById('filtro-estado').addEventListener('change', filtrarInventario);
+    filtrarInventario();
+
+    /* ──────────────────────────────────────────────────────────────
+       MODALES — overlay + backdrop + panel, JS vanilla
+       (mismo patrón que #modal-ver-pedido de index.html)
+    ────────────────────────────────────────────────────────────── */
+    function abrirModal(modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function cerrarModal(modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.querySelector('.modal-backdrop').addEventListener('click', () => cerrarModal(overlay));
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            if (m.style.display === 'flex') cerrarModal(m);
+        });
+    });
+
+    /* Nuevo item */
+    const modalNuevo = document.getElementById('modal-nuevo-item');
+    document.getElementById('btn-nuevo-item').addEventListener('click', () => abrirModal(modalNuevo));
+    document.getElementById('modal-cerrar-nuevo').addEventListener('click', () => cerrarModal(modalNuevo));
+    document.getElementById('btn-cancelar-nuevo').addEventListener('click', () => cerrarModal(modalNuevo));
+
+    /* Ajustar stock */
+    const modalAjustar = document.getElementById('modal-ajustar-stock');
+    document.querySelectorAll('.btn-ajustar-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('modal-nombre-producto').textContent = btn.dataset.nombre;
+            document.getElementById('modal-stock-actual').textContent    = btn.dataset.stock;
+            document.getElementById('form-ajustar-stock').action = `/inventario/ajustar-stock/${btn.dataset.id}/`;
+            abrirModal(modalAjustar);
+        });
+    });
+    document.getElementById('modal-cerrar-ajustar').addEventListener('click', () => cerrarModal(modalAjustar));
+    document.getElementById('btn-cancelar-ajustar').addEventListener('click', () => cerrarModal(modalAjustar));
+
+    /* Confirmar eliminar — reemplaza el confirm() nativo.
+       El submit del form solo ocurre si se confirma en el modal. */
+    const modalEliminar = document.getElementById('modal-confirmar-eliminar');
+    let formPendienteEliminar = null;
+
+    document.querySelectorAll('.btn-eliminar-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            formPendienteEliminar = document.getElementById(btn.dataset.formId);
+            document.getElementById('eliminar-nombre-producto').textContent = btn.dataset.nombre;
+            abrirModal(modalEliminar);
+        });
+    });
+    document.getElementById('modal-cerrar-eliminar').addEventListener('click', () => cerrarModal(modalEliminar));
+    document.getElementById('btn-cancelar-eliminar').addEventListener('click', () => cerrarModal(modalEliminar));
+    document.getElementById('btn-confirmar-eliminar').addEventListener('click', () => {
+        if (formPendienteEliminar) formPendienteEliminar.submit();
+    });
+</script>
+{% endblock %}

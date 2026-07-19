@@ -529,6 +529,7 @@ table tbody tr td:last-child  { white-space: nowrap; }
    ======================================== */
 .input-field input,
 .input-field textarea {
+    background-color: var(--bg-elevated) !important;
     color: var(--text-primary) !important;
     border-bottom: 1px solid var(--border-light) !important;
 }
@@ -543,6 +544,31 @@ table tbody tr td:last-child  { white-space: nowrap; }
 .input-field label.active { color: var(--accent) !important; }
 .input-field .prefix { color: var(--text-muted) !important; }
 .input-field .prefix.active { color: var(--accent) !important; }
+
+/* Select nativo (fallback antes de que M.FormSelect.init lo reemplace) */
+.input-field select {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Select generado por Materialize vía M.FormSelect.init() */
+.input-field .select-wrapper input.select-dropdown {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border-light) !important;
+}
+.select-wrapper .dropdown-content,
+ul.select-dropdown.dropdown-content {
+    background-color: var(--bg-elevated) !important;
+    border: 1px solid var(--border-light) !important;
+}
+.select-wrapper .dropdown-content li > span {
+    color: var(--text-primary) !important;
+}
+.select-wrapper .dropdown-content li.selected,
+.select-wrapper .dropdown-content li:hover {
+    background-color: var(--accent-dim) !important;
+}
 
 /* ========================================
    MODALES
