@@ -22,6 +22,13 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] Headers de producciÃ³n activados y verificados (`SECURE_SSL_REDIRECT`, HSTS)
 - [ ] Rate limiting en el endpoint de login (protecciÃ³n fuerza bruta)
 - [ ] PolÃ­tica de contraseÃ±as (longitud mÃ­nima, complejidad)
+- [ ] IsAuthenticated es piso, no rol — Mesero puede hacer CRUD completo
+  sobre EmpleadoViewSet y FacturaViewSet vía /api/ (llevar @requiere_rol
+  o permission_classes por ViewSet a los recursos sensibles)
+- [ ] settings.py: eliminar bloque DATABASES hardcodeado (líneas 88-92,
+  incluye password en texto plano) — sobrescrito por os.getenv pero
+  sigue commiteado en el repo; avisar a Sofía para rotar la contraseña
+  de MySQL expuesta en el historial de git
 
 ---
 

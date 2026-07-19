@@ -174,6 +174,21 @@ LOGGING = {
 }
 
 # ---------------------------------------------------------------
+# DJANGO REST FRAMEWORK — Por defecto, todo endpoint de la API
+# exige sesión autenticada (los ViewSets en api_views.py están
+# hoy sin ninguna restricción y quedan expuestos en /api/*)
+# ---------------------------------------------------------------
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
+
+# ---------------------------------------------------------------
 # HEADERS DE SEGURIDAD (solo en producción, cuando DEBUG=False)
 # ---------------------------------------------------------------
 
