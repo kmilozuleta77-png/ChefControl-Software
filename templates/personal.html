@@ -1,272 +1,639 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChefControl - Personal</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="../CSS/custom-styles.css" rel="stylesheet">
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ChefControl — Personal{% endblock %}
+
+{% block extra_head %}
     <style>
-        .emp-detail { font-size:0.85rem; color:#616161; margin-bottom:5px; display:flex; align-items:center; gap:6px; }
-        .emp-detail .material-icons { font-size:15px; color:#00897b; }
-        .emp-footer { display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:14px; border-top:1px solid #f0f0f0; }
+        /* ──────────────────────────────────────────────────────────────
+           ESTILOS ESPECÍFICOS DE PERSONAL
+           Todo lo compartido (sidebar, top-nav, card, table, status-badge,
+           btn-accion, stat-icon/val/label, modales) vive en design-system.css.
+           Aquí solo lo único de esta pantalla (mismo patrón que clientes.html).
+        ────────────────────────────────────────────────────────────── */
+
+        .container { padding: 24px; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 16px; margin-bottom: 20px;
+        }
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-card); padding: 20px;
+            animation: card-enter 0.35s ease both;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover { border-color: var(--border-light); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .stat-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+
+        /* ── Búsqueda (server-side vía GET ?q=) ── */
+        .filtros-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+        .filtro-group { display: flex; flex-direction: column; gap: 5px; }
+        .filtro-label { font-size: 0.65rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+
+        .search-input-wrapper { position: relative; display: flex; align-items: center; }
+        .search-input-wrapper .material-icons { position: absolute; left: 10px; color: var(--text-muted); font-size: 18px; pointer-events: none; }
+        .search-input {
+            width: 280px; background: var(--bg-elevated); border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn); padding: 8px 10px 8px 36px;
+            color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.82rem;
+            outline: none; transition: border-color 0.2s;
+        }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-input:focus { border-color: var(--accent); }
+
+        .filtro-count { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; align-self: center; white-space: nowrap; }
+
+        /* ── Modales (mismo patrón que clientes.html / inventario.html) ── */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 1000; display: none;
+            align-items: center; justify-content: center;
+        }
+        .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); }
+        .modal-panel {
+            position: relative; z-index: 1; background: #1a1a1a;
+            border: 1px solid var(--border-light); border-radius: 12px;
+            width: min(520px, 95vw); max-height: 88vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .modal-overlay.danger .modal-panel { border-color: var(--color-danger); }
+
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 22px; border-bottom: 1px solid var(--border-light);
+            background: rgba(249,115,22,0.06);
+        }
+        .modal-overlay.danger .modal-header { background: rgba(239,68,68,0.06); }
+        .modal-header h3 { margin: 0; font-size: 1.05rem; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        .modal-overlay.danger .modal-header h3 { color: var(--color-danger); }
+        .modal-header h3 .material-icons { font-size: 20px; }
+        .modal-close-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; padding: 4px; border-radius: 6px; transition: color 0.2s; }
+        .modal-close-btn:hover { color: var(--accent); }
+
+        .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--border-light); }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-grid .span2 { grid-column: span 2; }
+        .field-group { display: flex; flex-direction: column; gap: 5px; }
+        .field-label { font-size: 0.72rem; color: var(--text-secondary); font-weight: 500; }
+        .field-input {
+            background: var(--bg-elevated); border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn); color: var(--text-primary);
+            font-family: 'Inter', sans-serif; font-size: 0.85rem;
+            padding: 9px 10px; outline: none; transition: border-color 0.2s; width: 100%;
+        }
+        .field-input:focus { border-color: var(--accent); }
+        select.field-input { appearance: auto; }
     </style>
-</head>
-<body>
+{% endblock %}
 
-    <div class="sidebar">
-        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
-        <div class="sidebar-section">Principal</div>
-        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
-        <div class="sidebar-section">Operaciones</div>
-        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
-        <a href="inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
-        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
-        <div class="sidebar-section">Administración</div>
-        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
-        <a href="personal.html" class="active"><i class="material-icons">badge</i> Personal</a>
-        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
-        <a href="reportes.html"><i class="material-icons">bar_chart</i> Reportes</a>
-        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
-        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
+{% block content %}
+<!--
+    El tema se aplica via data-theme en <html>.
+    El script al final lee localStorage para restaurar la preferencia del usuario.
+-->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SIDEBAR — mismo patrón que clientes.html, "Personal" activo
+════════════════════════════════════════════════════════════════ -->
+<div class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+        <div class="brand-icon-sidebar">
+            <i class="material-icons">restaurant</i>
+        </div>
+        <div class="brand-text">
+            <div class="brand-name">ChefControl</div>
+            <div class="brand-sub">Gestión de restaurante</div>
+        </div>
     </div>
 
-    <div class="main-content">
-        <div class="top-nav">
+    <div class="sidebar-section sidebar-label">Principal</div>
+    <a href="{% url 'dashboard' %}">
+        <i class="material-icons">dashboard</i>
+        <span class="sidebar-label">Dashboard</span>
+    </a>
+
+    <div class="sidebar-section sidebar-label">Operaciones</div>
+    <a href="#">
+        <i class="material-icons">shopping_cart</i>
+        <span class="sidebar-label">Pedidos</span>
+        <span class="sidebar-badge">4</span>
+    </a>
+    <a href="{% url 'inventario' %}">
+        <i class="material-icons">inventory_2</i>
+        <span class="sidebar-label">Inventario</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">restaurant_menu</i>
+        <span class="sidebar-label">Menús</span>
+    </a>
+    <a href="{% url 'crear_pedido' %}">
+        <i class="material-icons">add_circle_outline</i>
+        <span class="sidebar-label">Nuevo Pedido</span>
+    </a>
+    <a href="{% url 'cocina' %}">
+        <i class="material-icons">soup_kitchen</i>
+        <span class="sidebar-label">Cocina (KDS)</span>
+    </a>
+
+    <div class="sidebar-section sidebar-label">Administración</div>
+    <a href="{% url 'clientes' %}">
+        <i class="material-icons">people</i>
+        <span class="sidebar-label">Clientes</span>
+    </a>
+    <a href="{% url 'personal' %}" class="active">
+        <i class="material-icons">badge</i>
+        <span class="sidebar-label">Personal</span>
+    </a>
+    <a href="{% url 'facturacion' %}">
+        <i class="material-icons">receipt_long</i>
+        <span class="sidebar-label">Facturación</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">bar_chart</i>
+        <span class="sidebar-label">Reportes</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">settings</i>
+        <span class="sidebar-label">Configuración</span>
+    </a>
+
+    <a href="{% url 'logout' %}" class="logout-link" style="margin-top: 8px;">
+        <i class="material-icons">exit_to_app</i>
+        <span class="sidebar-label">Cerrar Sesión</span>
+    </a>
+
+    <div class="sidebar-footer">
+        <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+        <span class="user-email">{{ request.user.email|default:"" }}</span>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CONTENIDO PRINCIPAL
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content" id="main-content">
+
+    <!-- ── Topbar — mismo patrón que clientes.html ── -->
+    <div class="top-nav">
+        <div class="top-nav-left">
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Colapsar menú">
+                <i class="material-icons">menu</i>
+            </button>
             <h5>Gestión de Personal</h5>
-            <div class="top-nav-right">
-                <a href="#modal-nuevo-empleado" class="btn teal white-text modal-trigger">
-                    <i class="material-icons left">person_add</i>Nuevo Empleado
-                </a>
-            </div>
         </div>
 
-        <div class="container">
-            <!-- STATS -->
-            <div class="row" style="margin-top:24px">
-                <div class="col s12 m3"><div class="card-panel teal lighten-5 center"><h5 class="teal-text text-darken-2">15</h5><p class="grey-text">Total Empleados</p></div></div>
-                <div class="col s12 m3"><div class="card-panel green lighten-5 center"><h5 class="green-text">12</h5><p class="grey-text">Activos Hoy</p></div></div>
-                <div class="col s12 m3"><div class="card-panel orange lighten-5 center"><h5 class="orange-text">3</h5><p class="grey-text">De Descanso</p></div></div>
-                <div class="col s12 m3"><div class="card-panel blue lighten-5 center"><h5 class="blue-text">8.3h</h5><p class="grey-text">Promedio Horas</p></div></div>
+        <div class="top-nav-right">
+            <div class="datetime-badge">
+                <span id="fecha-actual"></span>
+                <span class="time-part" id="hora-actual"></span>
             </div>
 
-            <!-- FILTROS -->
-            <div class="row">
-                <div class="col s12 m5">
-                    <div class="input-field">
-                        <i class="material-icons prefix">search</i>
-                        <input id="buscar_emp" type="text">
-                        <label for="buscar_emp">Buscar empleado...</label>
-                    </div>
-                </div>
-                <div class="col s12 m4">
-                    <div class="input-field">
-                        <select><option value="">Todos los cargos</option><option>Mesero</option><option>Cocinero</option><option>Cajero</option><option>Gerente</option></select>
-                        <label>Cargo</label>
-                    </div>
-                </div>
-                <div class="col s12 m3">
-                    <div class="input-field">
-                        <select><option value="">Todos los estados</option><option>Activo</option><option>Descanso</option><option>Vacaciones</option></select>
-                        <label>Estado</label>
-                    </div>
-                </div>
+            <button class="btn-quick-action" id="btn-nuevo-empleado">
+                <i class="material-icons">person_add</i> Nuevo Empleado
+            </button>
+
+            <button class="icon-btn theme-toggle" id="theme-toggle-btn"
+                    onclick="toggleTema()" aria-label="Cambiar tema">
+                <i class="material-icons" id="theme-icon">light_mode</i>
+            </button>
+
+            <div class="font-size-ctrl" title="Tamaño de texto">
+                <button class="icon-btn" onclick="reducirFuente()" aria-label="Reducir fuente">A-</button>
+                <button class="icon-btn" onclick="aumentarFuente()" aria-label="Aumentar fuente">A+</button>
             </div>
 
-            <!-- TARJETAS EMPLEADOS -->
-            <div class="row">
-                <div class="col s12 m6 l4">
-                    <div class="card">
-                        <div class="card-content">
-                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-                                <img src="https://via.placeholder.com/56/00695c/ffffff?text=JP" class="circle" style="width:56px;height:56px" alt="JP">
-                                <div><span class="card-title" style="margin:0">Juan Pérez</span><p class="grey-text" style="margin:0;font-size:0.85rem">Mesero</p></div>
-                            </div>
-                            <div class="emp-detail"><i class="material-icons">email</i> juan.perez@restaurant.com</div>
-                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 123 4567</div>
-                            <div class="emp-detail"><i class="material-icons">schedule</i> 8:00 AM — 4:00 PM</div>
-                            <div class="emp-footer">
-                                <span class="chip green white-text">Activo</span>
-                                <div>
-                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
-                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #1','info')">Editar</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <button class="icon-btn" aria-label="Notificaciones">
+                <i class="material-icons">notifications</i>
+                <span class="notif-dot"></span>
+            </button>
 
-                <div class="col s12 m6 l4">
-                    <div class="card">
-                        <div class="card-content">
-                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-                                <img src="https://via.placeholder.com/56/e91e63/ffffff?text=ML" class="circle" style="width:56px;height:56px" alt="ML">
-                                <div><span class="card-title" style="margin:0">María López</span><p class="grey-text" style="margin:0;font-size:0.85rem">Mesera</p></div>
-                            </div>
-                            <div class="emp-detail"><i class="material-icons">email</i> maria.lopez@restaurant.com</div>
-                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 234 5678</div>
-                            <div class="emp-detail"><i class="material-icons">schedule</i> 12:00 PM — 8:00 PM</div>
-                            <div class="emp-footer">
-                                <span class="chip green white-text">Activo</span>
-                                <div>
-                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
-                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #2','info')">Editar</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col s12 m6 l4">
-                    <div class="card">
-                        <div class="card-content">
-                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-                                <img src="https://via.placeholder.com/56/ff6f00/ffffff?text=CR" class="circle" style="width:56px;height:56px" alt="CR">
-                                <div><span class="card-title" style="margin:0">Carlos Ruiz</span><p class="grey-text" style="margin:0;font-size:0.85rem">Cocinero</p></div>
-                            </div>
-                            <div class="emp-detail"><i class="material-icons">email</i> carlos.ruiz@restaurant.com</div>
-                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 345 6789</div>
-                            <div class="emp-detail"><i class="material-icons">schedule</i> 10:00 AM — 6:00 PM</div>
-                            <div class="emp-footer">
-                                <span class="chip green white-text">Activo</span>
-                                <div>
-                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
-                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #3','info')">Editar</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col s12 m6 l4">
-                    <div class="card">
-                        <div class="card-content">
-                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-                                <img src="https://via.placeholder.com/56/9c27b0/ffffff?text=AM" class="circle" style="width:56px;height:56px" alt="AM">
-                                <div><span class="card-title" style="margin:0">Ana Martínez</span><p class="grey-text" style="margin:0;font-size:0.85rem">Cajera</p></div>
-                            </div>
-                            <div class="emp-detail"><i class="material-icons">email</i> ana.martinez@restaurant.com</div>
-                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 456 7890</div>
-                            <div class="emp-detail"><i class="material-icons">schedule</i> 9:00 AM — 5:00 PM</div>
-                            <div class="emp-footer">
-                                <span class="chip green white-text">Activo</span>
-                                <div>
-                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
-                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #4','info')">Editar</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col s12 m6 l4">
-                    <div class="card">
-                        <div class="card-content">
-                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-                                <img src="https://via.placeholder.com/56/2196f3/ffffff?text=LG" class="circle" style="width:56px;height:56px" alt="LG">
-                                <div><span class="card-title" style="margin:0">Luis García</span><p class="grey-text" style="margin:0;font-size:0.85rem">Cocinero</p></div>
-                            </div>
-                            <div class="emp-detail"><i class="material-icons">email</i> luis.garcia@restaurant.com</div>
-                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 567 8901</div>
-                            <div class="emp-detail"><i class="material-icons">schedule</i> 11:00 AM — 7:00 PM</div>
-                            <div class="emp-footer">
-                                <span class="chip orange white-text">Descanso</span>
-                                <div>
-                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
-                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #5','info')">Editar</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col s12 m6 l4">
-                    <div class="card">
-                        <div class="card-content">
-                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-                                <img src="https://via.placeholder.com/56/43a047/ffffff?text=SR" class="circle" style="width:56px;height:56px" alt="SR">
-                                <div><span class="card-title" style="margin:0">Sofía Rodríguez</span><p class="grey-text" style="margin:0;font-size:0.85rem">Gerente</p></div>
-                            </div>
-                            <div class="emp-detail"><i class="material-icons">email</i> sofia.rodriguez@restaurant.com</div>
-                            <div class="emp-detail"><i class="material-icons">phone</i> +57 300 678 9012</div>
-                            <div class="emp-detail"><i class="material-icons">schedule</i> 7:00 AM — 3:00 PM</div>
-                            <div class="emp-footer">
-                                <span class="chip green white-text">Activo</span>
-                                <div>
-                                    <a href="#modal-detalle-empleado" class="btn-small teal white-text modal-trigger">Ver</a>
-                                    <a href="#" class="btn-small orange white-text" onclick="mostrarNotificacion('Editando empleado #6','info')">Editar</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="user-avatar" title="{{ request.user.get_full_name|default:request.user.username }}">
+                {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
             </div>
         </div>
     </div>
 
-    <!-- MODAL NUEVO EMPLEADO -->
-    <div id="modal-nuevo-empleado" class="modal modal-fixed-footer">
-        <div class="modal-content">
-            <h4><i class="material-icons left">person_add</i>Nuevo Empleado</h4>
-            <div class="row">
-                <div class="input-field col s12 m6"><i class="material-icons prefix">person</i><input type="text" id="nombres"><label for="nombres">Nombres *</label></div>
-                <div class="input-field col s12 m6"><i class="material-icons prefix">person</i><input type="text" id="apellidos"><label for="apellidos">Apellidos *</label></div>
-                <div class="input-field col s12 m6"><i class="material-icons prefix">badge</i><input type="text" id="cedula"><label for="cedula">Cédula *</label></div>
-                <div class="input-field col s12 m6"><i class="material-icons prefix">email</i><input type="email" id="email_emp"><label for="email_emp">Email *</label></div>
-                <div class="input-field col s12 m6"><i class="material-icons prefix">phone</i><input type="tel" id="telefono"><label for="telefono">Teléfono</label></div>
-                <div class="input-field col s12 m6"><select id="cargo"><option value="" disabled selected>Seleccione cargo</option><option>Mesero</option><option>Cocinero</option><option>Cajero</option><option>Gerente</option><option>Administrador</option></select><label>Cargo *</label></div>
-                <div class="input-field col s12 m6"><i class="material-icons prefix">event</i><input type="date" id="fecha_ing"><label for="fecha_ing" class="active">Fecha de Ingreso</label></div>
-                <div class="input-field col s12 m6"><i class="material-icons prefix">attach_money</i><input type="number" id="salario"><label for="salario">Salario</label></div>
-                <div class="input-field col s12 m6"><i class="material-icons prefix">schedule</i><input type="time" id="hora_ent"><label for="hora_ent" class="active">Hora Entrada</label></div>
-                <div class="input-field col s12 m6"><i class="material-icons prefix">schedule</i><input type="time" id="hora_sal"><label for="hora_sal" class="active">Hora Salida</label></div>
-                <div class="input-field col s12"><i class="material-icons prefix">home</i><textarea id="direccion" class="materialize-textarea"></textarea><label for="direccion">Dirección</label></div>
+    <!-- ── Cuerpo ── -->
+    <div class="container">
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ total }}</div>
+                        <div class="stat-label">Total Empleados</div>
+                    </div>
+                    <div class="stat-icon"><i class="material-icons" style="color: var(--accent)">badge</i></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ activos }}</div>
+                        <div class="stat-label">Empleados Activos</div>
+                    </div>
+                    <div class="stat-icon"><i class="material-icons" style="color: var(--color-success)">check_circle</i></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-val">{{ nuevos_mes }}</div>
+                        <div class="stat-label">Nuevos Este Mes</div>
+                    </div>
+                    <div class="stat-icon"><i class="material-icons" style="color: var(--color-warning)">person_add</i></div>
+                </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <a href="#!" class="modal-close btn-flat">Cancelar</a>
-            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Empleado registrado exitosamente','success')">
-                <i class="material-icons left">save</i>Guardar
+
+        <!-- Búsqueda (server-side, vía GET ?q=) -->
+        <form method="GET" action="{% url 'personal' %}" class="filtros-row">
+            <div class="filtro-group">
+                <label class="filtro-label" for="buscar">Buscar</label>
+                <div class="search-input-wrapper">
+                    <i class="material-icons">search</i>
+                    <input id="buscar" name="q" type="text" class="search-input"
+                           placeholder="Nombre, cédula o email..." value="{{ busqueda }}">
+                </div>
+            </div>
+            <button type="submit" class="btn-accion-ghost">
+                <i class="material-icons">search</i> Buscar
+            </button>
+            {% if busqueda %}
+            <a href="{% url 'personal' %}" class="btn-accion-ghost">
+                <i class="material-icons">close</i> Limpiar
             </a>
-        </div>
-    </div>
+            {% endif %}
+            <span class="filtro-count">{{ empleados|length }} empleado{{ empleados|length|pluralize }}</span>
+        </form>
 
-    <!-- MODAL DETALLE EMPLEADO -->
-    <div id="modal-detalle-empleado" class="modal modal-fixed-footer">
-        <div class="modal-content">
-            <h4>Perfil del Empleado</h4>
-            <div class="row">
-                <div class="col s12 m4 center">
-                    <img src="https://via.placeholder.com/120/00695c/ffffff?text=JP" class="circle" style="width:120px;height:120px" alt="perfil">
-                    <h5>Juan Pérez</h5>
-                    <p class="grey-text">Mesero</p>
-                    <span class="chip green white-text">Activo</span>
+        <!-- Tabla -->
+        <div class="card">
+            <div class="card-content">
+                <div class="section-header">
+                    <h6><i class="material-icons">badge</i> Lista de Empleados</h6>
                 </div>
-                <div class="col s12 m8">
-                    <h6><strong>Información Personal</strong></h6>
-                    <p><i class="material-icons tiny">badge</i> <strong>Cédula:</strong> 1234567890</p>
-                    <p><i class="material-icons tiny">email</i> <strong>Email:</strong> juan.perez@restaurant.com</p>
-                    <p><i class="material-icons tiny">phone</i> <strong>Teléfono:</strong> +57 300 123 4567</p>
-                    <p><i class="material-icons tiny">home</i> <strong>Dirección:</strong> Calle 123 #45-67</p>
-                    <div class="divider" style="margin:12px 0"></div>
-                    <h6><strong>Información Laboral</strong></h6>
-                    <p><i class="material-icons tiny">event</i> <strong>Ingreso:</strong> 01/01/2024</p>
-                    <p><i class="material-icons tiny">schedule</i> <strong>Horario:</strong> 8:00 AM — 4:00 PM</p>
-                    <p><i class="material-icons tiny">attach_money</i> <strong>Salario:</strong> $1.200.000</p>
-                    <div class="divider" style="margin:12px 0"></div>
-                    <h6><strong>Estadísticas del Mes</strong></h6>
-                    <p><i class="material-icons tiny">assessment</i> <strong>Pedidos atendidos:</strong> 243</p>
-                    <p><i class="material-icons tiny">star</i> <strong>Calificación:</strong> 4.8 / 5.0</p>
-                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre completo</th>
+                            <th>Cédula</th>
+                            <th>Cargo</th>
+                            <th>Teléfono</th>
+                            <th>Email</th>
+                            <th>Pedidos atendidos</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in empleados %}
+                        <tr>
+                            <td>EMP-{{ e.id_empleado|stringformat:"03d" }}</td>
+                            <td><strong>{{ e.nombres }} {{ e.apellidos }}</strong></td>
+                            <td>{{ e.cedula }}</td>
+                            <td>{{ e.id_cargo.nombre }}</td>
+                            <td>{{ e.telefono|default:"—" }}</td>
+                            <td>{{ e.email|default:"—" }}</td>
+                            <td>{{ e.pedidos_atendidos }}</td>
+                            <td>
+                                {% if e.estado == 'Activo' %}
+                                    <span class="status-badge badge-green">Activo</span>
+                                {% else %}
+                                    <span class="status-badge badge-red">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td style="display: flex; gap: 6px">
+                                <button type="button" class="btn-accion btn-editar-trigger"
+                                        data-id="{{ e.id_empleado }}"
+                                        data-nombres="{{ e.nombres }}"
+                                        data-apellidos="{{ e.apellidos }}"
+                                        data-cedula="{{ e.cedula }}"
+                                        data-telefono="{{ e.telefono|default:'' }}"
+                                        data-email="{{ e.email|default:'' }}"
+                                        data-direccion="{{ e.direccion|default:'' }}"
+                                        data-id-cargo="{{ e.id_cargo.id_cargo }}"
+                                        data-fecha-ingreso="{{ e.fecha_ingreso|date:'Y-m-d' }}"
+                                        title="Editar empleado">
+                                    <i class="material-icons">edit</i>
+                                </button>
+                                <form method="POST" action="{% url 'eliminar_empleado' e.id_empleado %}"
+                                      id="form-eliminar-{{ e.id_empleado }}" style="display:inline">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn-accion btn-accion-danger btn-eliminar-trigger"
+                                            data-form-id="form-eliminar-{{ e.id_empleado }}"
+                                            data-nombre="{{ e.nombres }} {{ e.apellidos }}"
+                                            title="Eliminar empleado">
+                                        <i class="material-icons">delete</i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9">
+                                <div class="table-empty">
+                                    <i class="material-icons">inbox</i>
+                                    <span>
+                                        {% if busqueda %}
+                                            No se encontraron empleados que coincidan con "{{ busqueda }}"
+                                        {% else %}
+                                            No hay empleados registrados
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+
+    </div><!-- /container -->
+</div><!-- /main-content -->
+
+
+<!-- ═══════════════ MODAL NUEVO EMPLEADO ═══════════════ -->
+<div id="modal-nuevo-empleado" class="modal-overlay">
+    <div class="modal-backdrop" id="modal-backdrop-nuevo"></div>
+    <div class="modal-panel">
+        <form method="POST" action="{% url 'personal' %}">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h3><i class="material-icons">person_add</i> Nuevo Empleado</h3>
+                <button type="button" class="modal-close-btn" id="modal-cerrar-nuevo" aria-label="Cerrar">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="field-group">
+                        <label class="field-label" for="nombres">Nombres *</label>
+                        <input id="nombres" name="nombres" type="text" class="field-input" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="apellidos">Apellidos *</label>
+                        <input id="apellidos" name="apellidos" type="text" class="field-input" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="cedula">Cédula *</label>
+                        <input id="cedula" name="cedula" type="text" class="field-input" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="id_cargo">Cargo *</label>
+                        <select id="id_cargo" name="id_cargo" class="field-input" required>
+                            <option value="" disabled selected>Seleccione cargo</option>
+                            {% for c in cargos %}
+                            <option value="{{ c.id_cargo }}">{{ c.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="fecha_ingreso">Fecha de ingreso *</label>
+                        <input id="fecha_ingreso" name="fecha_ingreso" type="date" class="field-input" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="telefono">Teléfono</label>
+                        <input id="telefono" name="telefono" type="tel" class="field-input">
+                    </div>
+                    <div class="field-group span2">
+                        <label class="field-label" for="email">Email</label>
+                        <input id="email" name="email" type="email" class="field-input">
+                    </div>
+                    <div class="field-group span2">
+                        <label class="field-label" for="direccion">Dirección</label>
+                        <input id="direccion" name="direccion" type="text" class="field-input">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-accion-ghost" id="btn-cancelar-nuevo">Cancelar</button>
+                <button type="submit" class="btn-accion"><i class="material-icons">save</i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════ MODAL EDITAR EMPLEADO ═══════════════ -->
+<div id="modal-editar-empleado" class="modal-overlay">
+    <div class="modal-backdrop" id="modal-backdrop-editar"></div>
+    <div class="modal-panel">
+        <form method="POST" id="form-editar-empleado" action="/personal/editar/0/">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h3><i class="material-icons">edit</i> Editar Empleado</h3>
+                <button type="button" class="modal-close-btn" id="modal-cerrar-editar" aria-label="Cerrar">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="field-group">
+                        <label class="field-label" for="edit_nombres">Nombres *</label>
+                        <input id="edit_nombres" name="nombres" type="text" class="field-input" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="edit_apellidos">Apellidos *</label>
+                        <input id="edit_apellidos" name="apellidos" type="text" class="field-input" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="edit_cedula">Cédula *</label>
+                        <input id="edit_cedula" name="cedula" type="text" class="field-input" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="edit_id_cargo">Cargo *</label>
+                        <select id="edit_id_cargo" name="id_cargo" class="field-input" required>
+                            <option value="" disabled>Seleccione cargo</option>
+                            {% for c in cargos %}
+                            <option value="{{ c.id_cargo }}">{{ c.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="edit_fecha_ingreso">Fecha de ingreso *</label>
+                        <input id="edit_fecha_ingreso" name="fecha_ingreso" type="date" class="field-input" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="edit_telefono">Teléfono</label>
+                        <input id="edit_telefono" name="telefono" type="tel" class="field-input">
+                    </div>
+                    <div class="field-group span2">
+                        <label class="field-label" for="edit_email">Email</label>
+                        <input id="edit_email" name="email" type="email" class="field-input">
+                    </div>
+                    <div class="field-group span2">
+                        <label class="field-label" for="edit_direccion">Dirección</label>
+                        <input id="edit_direccion" name="direccion" type="text" class="field-input">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-accion-ghost" id="btn-cancelar-editar">Cancelar</button>
+                <button type="submit" class="btn-accion"><i class="material-icons">save</i> Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════ MODAL CONFIRMAR ELIMINAR (reemplaza confirm() nativo) ═══════════════ -->
+<div id="modal-confirmar-eliminar" class="modal-overlay danger">
+    <div class="modal-backdrop" id="modal-backdrop-eliminar"></div>
+    <div class="modal-panel" style="width: min(400px, 95vw)">
+        <div class="modal-header">
+            <h3><i class="material-icons">warning</i> Eliminar empleado</h3>
+            <button type="button" class="modal-close-btn" id="modal-cerrar-eliminar" aria-label="Cerrar">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0">
+                ¿Desactivar a <strong style="color: var(--text-primary)" id="eliminar-nombre-empleado"></strong>?
+                No aparecerá más en el listado de personal ni podrá asignarse a nuevos pedidos.
+            </p>
+        </div>
         <div class="modal-footer">
-            <a href="#!" class="modal-close btn-flat">Cerrar</a>
-            <a href="#!" class="btn orange white-text"><i class="material-icons left">edit</i>Editar</a>
+            <button type="button" class="btn-accion-ghost" id="btn-cancelar-eliminar">Cancelar</button>
+            <button type="button" class="btn-accion btn-accion-danger" id="btn-confirmar-eliminar">Eliminar</button>
         </div>
     </div>
+</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="../JS/app.js"></script>
-</body>
-</html>
+
+<script>
+    /* ──────────────────────────────────────────────────────────────
+       TEMA OSCURO / CLARO — idéntico a clientes.html (misma clave de
+       localStorage, para que la preferencia sea global a toda la app).
+    ────────────────────────────────────────────────────────────── */
+    (function () {
+        const temaGuardado = localStorage.getItem('chefcontrol-tema') || 'dark';
+        document.documentElement.setAttribute('data-theme', temaGuardado);
+        const icono = document.getElementById('theme-icon');
+        if (icono) icono.textContent = temaGuardado === 'dark' ? 'light_mode' : 'dark_mode';
+    })();
+
+    function toggleTema() {
+        const actual = document.documentElement.getAttribute('data-theme');
+        const nuevo  = actual === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', nuevo);
+        localStorage.setItem('chefcontrol-tema', nuevo);
+        document.getElementById('theme-icon').textContent =
+            nuevo === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+
+    /* ── Accesibilidad: tamaño de fuente (idéntico a clientes.html) ── */
+    const TAMANOS = ['0.875rem', '1rem', '1.1rem', '1.2rem'];
+    let nivelFuente = parseInt(localStorage.getItem('chefcontrol-fuente') || '1', 10);
+    document.documentElement.style.setProperty('--font-size-base', TAMANOS[nivelFuente]);
+
+    function aumentarFuente() {
+        if (nivelFuente < TAMANOS.length - 1) { nivelFuente++; aplicarFuente(); }
+    }
+    function reducirFuente() {
+        if (nivelFuente > 0) { nivelFuente--; aplicarFuente(); }
+    }
+    function aplicarFuente() {
+        document.documentElement.style.setProperty('--font-size-base', TAMANOS[nivelFuente]);
+        localStorage.setItem('chefcontrol-fuente', nivelFuente);
+    }
+
+    /* ── Reloj en vivo (idéntico a clientes.html) ── */
+    function actualizarFechaHora() {
+        const ahora   = new Date();
+        const opFecha = { weekday: 'long', day: 'numeric', month: 'long' };
+        const fecha   = ahora.toLocaleDateString('es-CO', opFecha);
+        const hora    = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('fecha-actual').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1) + ' —';
+        document.getElementById('hora-actual').textContent  = hora;
+    }
+    actualizarFechaHora();
+    setInterval(actualizarFechaHora, 1000);
+
+    /* ── Toggle sidebar ── */
+    const sidebar     = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    document.getElementById('sidebar-toggle').addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+    });
+
+    /* ──────────────────────────────────────────────────────────────
+       MODALES — overlay + backdrop + panel, JS vanilla
+       (mismo patrón que clientes.html)
+    ────────────────────────────────────────────────────────────── */
+    function abrirModal(modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function cerrarModal(modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.querySelector('.modal-backdrop').addEventListener('click', () => cerrarModal(overlay));
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            if (m.style.display === 'flex') cerrarModal(m);
+        });
+    });
+
+    /* Nuevo empleado */
+    const modalNuevo = document.getElementById('modal-nuevo-empleado');
+    document.getElementById('btn-nuevo-empleado').addEventListener('click', () => abrirModal(modalNuevo));
+    document.getElementById('modal-cerrar-nuevo').addEventListener('click', () => cerrarModal(modalNuevo));
+    document.getElementById('btn-cancelar-nuevo').addEventListener('click', () => cerrarModal(modalNuevo));
+
+    /* Editar empleado — precarga el form con los data-* del botón de la fila */
+    const modalEditar = document.getElementById('modal-editar-empleado');
+    document.querySelectorAll('.btn-editar-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('edit_nombres').value       = btn.dataset.nombres;
+            document.getElementById('edit_apellidos').value     = btn.dataset.apellidos;
+            document.getElementById('edit_cedula').value        = btn.dataset.cedula;
+            document.getElementById('edit_telefono').value      = btn.dataset.telefono;
+            document.getElementById('edit_email').value         = btn.dataset.email;
+            document.getElementById('edit_direccion').value     = btn.dataset.direccion;
+            document.getElementById('edit_id_cargo').value      = btn.dataset.idCargo;
+            document.getElementById('edit_fecha_ingreso').value = btn.dataset.fechaIngreso;
+            document.getElementById('form-editar-empleado').action = `/personal/editar/${btn.dataset.id}/`;
+            abrirModal(modalEditar);
+        });
+    });
+    document.getElementById('modal-cerrar-editar').addEventListener('click', () => cerrarModal(modalEditar));
+    document.getElementById('btn-cancelar-editar').addEventListener('click', () => cerrarModal(modalEditar));
+
+    /* Confirmar eliminar — reemplaza el confirm() nativo.
+       El submit del form solo ocurre si se confirma en el modal. */
+    const modalEliminar = document.getElementById('modal-confirmar-eliminar');
+    let formPendienteEliminar = null;
+
+    document.querySelectorAll('.btn-eliminar-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            formPendienteEliminar = document.getElementById(btn.dataset.formId);
+            document.getElementById('eliminar-nombre-empleado').textContent = btn.dataset.nombre;
+            abrirModal(modalEliminar);
+        });
+    });
+    document.getElementById('modal-cerrar-eliminar').addEventListener('click', () => cerrarModal(modalEliminar));
+    document.getElementById('btn-cancelar-eliminar').addEventListener('click', () => cerrarModal(modalEliminar));
+    document.getElementById('btn-confirmar-eliminar').addEventListener('click', () => {
+        if (formPendienteEliminar) formPendienteEliminar.submit();
+    });
+</script>
+{% endblock %}

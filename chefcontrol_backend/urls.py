@@ -49,5 +49,9 @@ urlpatterns = [
     path('clientes/editar/<int:id_cliente>/', views.editar_cliente_view, name='editar_cliente'),
     path('clientes/eliminar/<int:id_cliente>/', views.eliminar_cliente_view, name='eliminar_cliente'),
 
+    path('personal/', views.personal_view, name='personal'), # Ruta para listar y crear empleados
+    path('personal/editar/<int:id_empleado>/', views.editar_empleado_view, name='editar_empleado'),
+    path('personal/eliminar/<int:id_empleado>/', views.eliminar_empleado_view, name='eliminar_empleado'),
+
     path('api/', include(router.urls)),
 ]    

@@ -50,7 +50,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] `pedidos.html` — Diseño antiguo, requiere migración + crear URL `name='pedidos'` en urls.py (enlace “Ver todos” del dashboard apunta aquí)
 - [ ] `menus.html` â€” DiseÃ±o antiguo + sin conexiÃ³n a BD
 - [x] `clientes.html` â€” CRUD completo (listar/crear/editar/soft-delete), migrado a design-system.css sin Materialize (19/07/2026)
-- [ ] `personal.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
+- [x] `personal.html` â€” CRUD completo (listar/crear/editar/soft-delete), migrado a design-system.css sin Materialize; fix link sidebar "Personal" en index.html apuntaba a href="#" (19/07/2026)
 - [ ] `reportes.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
 - [ ] `configuracion.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
 
@@ -79,7 +79,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Inventario**: ajuste manual de stock (entradas y salidas)
 - [ ] **MenÃºs**: CRUD de CategorÃ­as y Productos del menÃº
 - [x] **Clientes**: CRUD completo con bÃºsqueda por cÃ©dula / email â€” soft-delete (estado='Inactivo', fk_pedido_cliente es ON DELETE SET NULL asÃ­ que no era obligatorio pero preserva trazabilidad) (19/07/2026)
-- [ ] **Personal**: CRUD de Empleados y Cargos
+- [~] **Personal**: CRUD completo de Empleados con soft-delete (estado='Inactivo', fk_pedido_empleado y fk_factura_empleado son ON DELETE RESTRICT) (19/07/2026); falta CRUD de Cargos
 - [ ] **Reportes**: vistas conectadas a BD usando `v_ventas_empleado`, `v_productos_inventario`
 - [ ] **ConfiguraciÃ³n**: ajustes globales del sistema (nombre del local, IVA, etc.)
 
@@ -99,6 +99,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Deuda tecnica (pendiente hasta terminar Clientes/Empleados)**: extraer a un JS compartido el bloque de tema oscuro/claro, tamaño de fuente, reloj en vivo y toggle de sidebar, duplicado igual en `index.html`, `inventario.html` y `clientes.html`
 - [x] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` — corregido en views.py; no requirió migración porque el estado nunca llegó a asignarse en BD (14/07/2026)
 - [x] index.html no mostraba {% for message in messages %} — creado templates/base.html con toast de mensajes Django (error/warning 8s, success/info 6s) e index.html migrado a extends; resto de templates queda pendiente de migrar (18/07/2026)
+- [ ] **Bug**: `dashboard_view` (views.py:107) filtra `Empleado.objects.filter(estado='Descanso')` pero el ENUM real en MySQL es `('Activo','Inactivo')` — "Descanso" no existe, el conteo `empleados_descanso` siempre da 0. Detectado durante diagnóstico de CRUD Empleado (19/07/2026), fuera de alcance de esa sesión (pantalla dashboard, no personal)
 
 ### Mejoras de lÃ³gica
 - [ ] Propina de monto libre en facturaciÃ³n (actualmente solo porcentaje)

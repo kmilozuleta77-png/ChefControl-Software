@@ -716,3 +716,169 @@ def eliminar_cliente_view(request, id_cliente):
             messages.error(request, 'Cliente no encontrado.')
 
     return redirect('clientes')
+
+
+# -------------------------------------------------------------------
+# VISTA 13: PERSONAL / EMPLEADOS (listar + crear)
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def personal_view(request):
+
+    # GUARDAR NUEVO EMPLEADO
+    if request.method == 'POST':
+        nombres       = request.POST.get('nombres', '').strip()
+        apellidos     = request.POST.get('apellidos', '').strip()
+        cedula        = request.POST.get('cedula', '').strip()
+        telefono      = request.POST.get('telefono', '').strip()
+        email         = request.POST.get('email', '').strip()
+        direccion     = request.POST.get('direccion', '').strip()
+        fecha_ingreso = request.POST.get('fecha_ingreso', '').strip()
+        id_cargo      = request.POST.get('id_cargo', '').strip()
+
+        # nombres, apellidos, cedula, fecha_ingreso e id_cargo son NOT NULL en la BD
+        if not nombres or not apellidos or not cedula or not fecha_ingreso or not id_cargo:
+            messages.error(request, 'Nombres, apellidos, cédula, cargo y fecha de ingreso son obligatorios.')
+            return redirect('personal')
+
+        try:
+            cargo = Cargo.objects.get(id_cargo=id_cargo)
+        except Cargo.DoesNotExist:
+            messages.error(request, 'El cargo seleccionado no existe.')
+            return redirect('personal')
+
+        if Empleado.objects.filter(cedula=cedula).exists():
+            messages.error(request, f'Ya existe un empleado con la cédula "{cedula}".')
+            return redirect('personal')
+
+        if email and Empleado.objects.filter(email=email).exists():
+            messages.error(request, f'Ya existe un empleado con el email "{email}".')
+            return redirect('personal')
+
+        Empleado.objects.create(
+            id_cargo       = cargo,
+            nombres        = nombres,
+            apellidos      = apellidos,
+            cedula         = cedula,
+            telefono       = telefono or None,
+            email          = email or None,
+            direccion      = direccion or None,
+            fecha_ingreso  = fecha_ingreso,
+            estado         = 'Activo',
+            fecha_creacion = timezone.now(),
+        )
+        messages.success(request, f'Empleado "{nombres} {apellidos}" registrado correctamente.')
+        return redirect('personal')
+
+    # TRAER DATOS (se excluyen los empleados desactivados vía soft-delete)
+    busqueda = request.GET.get('q', '').strip()
+
+    empleados = (
+        Empleado.objects
+        .exclude(estado='Inactivo')
+        .select_related('id_cargo')
+        .annotate(pedidos_atendidos=Count('pedido'))
+        .order_by('nombres', 'apellidos')
+    )
+
+    if busqueda:
+        empleados = empleados.filter(
+            Q(nombres__icontains=busqueda) |
+            Q(apellidos__icontains=busqueda) |
+            Q(cedula__icontains=busqueda) |
+            Q(email__icontains=busqueda)
+        )
+
+    inicio_mes = timezone.localdate().replace(day=1)
+    empleados_no_inactivos = Empleado.objects.exclude(estado='Inactivo')
+
+    context = {
+        'empleados':  empleados,
+        'cargos':     Cargo.objects.all().order_by('nombre'),
+        'total':      empleados_no_inactivos.count(),
+        'activos':    Empleado.objects.filter(estado='Activo').count(),
+        'nuevos_mes': empleados_no_inactivos.filter(fecha_creacion__date__gte=inicio_mes).count(),
+        'busqueda':   busqueda,
+    }
+    return render(request, 'personal.html', context)
+
+
+# -------------------------------------------------------------------
+# VISTA 14: EDITAR EMPLEADO
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def editar_empleado_view(request, id_empleado):
+    if request.method == 'POST':
+        try:
+            empleado = Empleado.objects.get(id_empleado=id_empleado)
+        except Empleado.DoesNotExist:
+            messages.error(request, 'Empleado no encontrado.')
+            return redirect('personal')
+
+        nombres       = request.POST.get('nombres', '').strip()
+        apellidos     = request.POST.get('apellidos', '').strip()
+        cedula        = request.POST.get('cedula', '').strip()
+        telefono      = request.POST.get('telefono', '').strip()
+        email         = request.POST.get('email', '').strip()
+        direccion     = request.POST.get('direccion', '').strip()
+        fecha_ingreso = request.POST.get('fecha_ingreso', '').strip()
+        id_cargo      = request.POST.get('id_cargo', '').strip()
+
+        if not nombres or not apellidos or not cedula or not fecha_ingreso or not id_cargo:
+            messages.error(request, 'Nombres, apellidos, cédula, cargo y fecha de ingreso son obligatorios.')
+            return redirect('personal')
+
+        try:
+            cargo = Cargo.objects.get(id_cargo=id_cargo)
+        except Cargo.DoesNotExist:
+            messages.error(request, 'El cargo seleccionado no existe.')
+            return redirect('personal')
+
+        if Empleado.objects.filter(cedula=cedula).exclude(id_empleado=id_empleado).exists():
+            messages.error(request, f'Ya existe otro empleado con la cédula "{cedula}".')
+            return redirect('personal')
+
+        if email and Empleado.objects.filter(email=email).exclude(id_empleado=id_empleado).exists():
+            messages.error(request, f'Ya existe otro empleado con el email "{email}".')
+            return redirect('personal')
+
+        empleado.id_cargo      = cargo
+        empleado.nombres       = nombres
+        empleado.apellidos     = apellidos
+        empleado.cedula        = cedula
+        empleado.telefono      = telefono or None
+        empleado.email         = email or None
+        empleado.direccion     = direccion or None
+        empleado.fecha_ingreso = fecha_ingreso
+        empleado.save()
+
+        messages.success(request, f'Empleado "{nombres} {apellidos}" actualizado correctamente.')
+
+    return redirect('personal')
+
+
+# -------------------------------------------------------------------
+# VISTA 15: ELIMINAR (DESACTIVAR) EMPLEADO
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def eliminar_empleado_view(request, id_empleado):
+    """Soft-delete: marca el empleado como 'Inactivo' en vez de borrarlo físicamente.
+
+    A diferencia de Cliente (fk_pedido_cliente con ON DELETE SET NULL), aquí
+    fk_pedido_empleado y fk_factura_empleado tienen ON DELETE RESTRICT: un
+    DELETE físico de un empleado con historial de pedidos o facturas fallaría
+    con IntegrityError. El soft-delete evita ese error y preserva la
+    trazabilidad, reutilizando el ENUM real de estado en MySQL: ('Activo', 'Inactivo').
+    """
+    if request.method == 'POST':
+        try:
+            empleado = Empleado.objects.get(id_empleado=id_empleado)
+            empleado.estado = 'Inactivo'
+            empleado.save()
+            messages.success(
+                request,
+                f'Empleado "{empleado.nombres} {empleado.apellidos}" eliminado correctamente.'
+            )
+        except Empleado.DoesNotExist:
+            messages.error(request, 'Empleado no encontrado.')
+
+    return redirect('personal')
