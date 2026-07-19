@@ -45,5 +45,9 @@ urlpatterns = [
     path('inventario/eliminar-producto/<int:id_producto>/', views.eliminar_producto_view, name='eliminar_producto'),
     path('api/pedidos-cocina/', views.api_pedidos_cocina, name='api_pedidos_cocina'),
 
+    path('clientes/', views.clientes_view, name='clientes'), # Ruta para listar y crear clientes
+    path('clientes/editar/<int:id_cliente>/', views.editar_cliente_view, name='editar_cliente'),
+    path('clientes/eliminar/<int:id_cliente>/', views.eliminar_cliente_view, name='eliminar_cliente'),
+
     path('api/', include(router.urls)),
 ]    

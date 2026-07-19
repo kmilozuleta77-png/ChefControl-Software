@@ -49,7 +49,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [x] `crear_pedido.html` â€” Revisar bug: menÃºs y meseros no cargan desde BD
 - [ ] `pedidos.html` — Diseño antiguo, requiere migración + crear URL `name='pedidos'` en urls.py (enlace “Ver todos” del dashboard apunta aquí)
 - [ ] `menus.html` â€” DiseÃ±o antiguo + sin conexiÃ³n a BD
-- [ ] `clientes.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
+- [x] `clientes.html` â€” CRUD completo (listar/crear/editar/soft-delete), migrado a design-system.css sin Materialize (19/07/2026)
 - [ ] `personal.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
 - [ ] `reportes.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
 - [ ] `configuracion.html` â€” Sin diseÃ±o Dark Premium ni conexiÃ³n a BD
@@ -78,7 +78,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Inventario**: CRUD completo de Productos (crear, editar, desactivar)
 - [ ] **Inventario**: ajuste manual de stock (entradas y salidas)
 - [ ] **MenÃºs**: CRUD de CategorÃ­as y Productos del menÃº
-- [ ] **Clientes**: CRUD completo con bÃºsqueda por cÃ©dula / email
+- [x] **Clientes**: CRUD completo con bÃºsqueda por cÃ©dula / email â€” soft-delete (estado='Inactivo', fk_pedido_cliente es ON DELETE SET NULL asÃ­ que no era obligatorio pero preserva trazabilidad) (19/07/2026)
 - [ ] **Personal**: CRUD de Empleados y Cargos
 - [ ] **Reportes**: vistas conectadas a BD usando `v_ventas_empleado`, `v_productos_inventario`
 - [ ] **ConfiguraciÃ³n**: ajustes globales del sistema (nombre del local, IVA, etc.)
@@ -95,6 +95,8 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Deuda tecnica**: ampliar `Factura.metodo_pago` a `max_length=30` con migracion — coordinar con Sofia; hoy `'Tarjeta Credito'` ocupa 14 chars, cabe justo; riesgo si se agregan metodos mas largos
 - [ ] **Deuda tecnica**: centralizar codigos de metodo de pago en constante JS compartida en `facturacion.html` — hoy el literal `'efectivo'` esta disperso en `calcularCambio()`, `abrirModal()` y `confirmarPago()`
 - [ ] **Deuda tecnica**: convertir `Factura.estado` a campo `choices` — hoy `CharField(9)` libre; `'Pagada'` cabe justo, cualquier estado mas largo (ej. `'Pendiente'`) agota el limite
+- [ ] **Deuda tecnica (pendiente hasta terminar Clientes/Empleados)**: extraer a `design-system.css` el bloque CSS de modales (`.modal-overlay`, `.modal-panel`, `.form-grid`, `.field-input`, etc.) duplicado igual en `index.html`, `inventario.html` y `clientes.html`
+- [ ] **Deuda tecnica (pendiente hasta terminar Clientes/Empleados)**: extraer a un JS compartido el bloque de tema oscuro/claro, tamaño de fuente, reloj en vivo y toggle de sidebar, duplicado igual en `index.html`, `inventario.html` y `clientes.html`
 - [x] **Deuda técnica**: normalizar estado `"En preparacion"` → `"En Preparación"` — corregido en views.py; no requirió migración porque el estado nunca llegó a asignarse en BD (14/07/2026)
 - [x] index.html no mostraba {% for message in messages %} — creado templates/base.html con toast de mensajes Django (error/warning 8s, success/info 6s) e index.html migrado a extends; resto de templates queda pendiente de migrar (18/07/2026)
 

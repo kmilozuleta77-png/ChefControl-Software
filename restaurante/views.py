@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Count, Q
 from functools import wraps
 
 from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, Cliente, Cargo, Factura
@@ -574,3 +574,145 @@ def eliminar_producto_view(request, id_producto):
             messages.error(request, 'Producto no encontrado.')
 
     return redirect('inventario')
+
+
+# -------------------------------------------------------------------
+# VISTA 10: CLIENTES (listar + crear)
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def clientes_view(request):
+
+    # GUARDAR NUEVO CLIENTE
+    if request.method == 'POST':
+        nombres   = request.POST.get('nombres', '').strip()
+        apellidos = request.POST.get('apellidos', '').strip()
+        cedula    = request.POST.get('cedula', '').strip()
+        telefono  = request.POST.get('telefono', '').strip()
+        email     = request.POST.get('email', '').strip()
+        direccion = request.POST.get('direccion', '').strip()
+
+        if not nombres or not apellidos:
+            messages.error(request, 'Nombres y apellidos son obligatorios.')
+            return redirect('clientes')
+
+        if cedula and Cliente.objects.filter(cedula=cedula).exists():
+            messages.error(request, f'Ya existe un cliente con la cédula "{cedula}".')
+            return redirect('clientes')
+
+        if email and Cliente.objects.filter(email=email).exists():
+            messages.error(request, f'Ya existe un cliente con el email "{email}".')
+            return redirect('clientes')
+
+        Cliente.objects.create(
+            nombres        = nombres,
+            apellidos      = apellidos,
+            cedula         = cedula or None,
+            telefono       = telefono or None,
+            email          = email or None,
+            direccion      = direccion or None,
+            estado         = 'Activo',
+            fecha_creacion = timezone.now(),
+        )
+        messages.success(request, f'Cliente "{nombres} {apellidos}" registrado correctamente.')
+        return redirect('clientes')
+
+    # TRAER DATOS (se excluyen los clientes desactivados vía soft-delete)
+    busqueda = request.GET.get('q', '').strip()
+
+    clientes = (
+        Cliente.objects
+        .exclude(estado='Inactivo')
+        .annotate(visitas=Count('pedido'))
+        .order_by('nombres', 'apellidos')
+    )
+
+    if busqueda:
+        clientes = clientes.filter(
+            Q(nombres__icontains=busqueda) |
+            Q(apellidos__icontains=busqueda) |
+            Q(cedula__icontains=busqueda) |
+            Q(email__icontains=busqueda)
+        )
+
+    inicio_mes = timezone.localdate().replace(day=1)
+    clientes_no_inactivos = Cliente.objects.exclude(estado='Inactivo')
+
+    context = {
+        'clientes':   clientes,
+        'total':      clientes_no_inactivos.count(),
+        'activos':    Cliente.objects.filter(estado='Activo').count(),
+        'nuevos_mes': clientes_no_inactivos.filter(fecha_creacion__date__gte=inicio_mes).count(),
+        'busqueda':   busqueda,
+    }
+    return render(request, 'clientes.html', context)
+
+
+# -------------------------------------------------------------------
+# VISTA 11: EDITAR CLIENTE
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def editar_cliente_view(request, id_cliente):
+    if request.method == 'POST':
+        try:
+            cliente = Cliente.objects.get(id_cliente=id_cliente)
+        except Cliente.DoesNotExist:
+            messages.error(request, 'Cliente no encontrado.')
+            return redirect('clientes')
+
+        nombres   = request.POST.get('nombres', '').strip()
+        apellidos = request.POST.get('apellidos', '').strip()
+        cedula    = request.POST.get('cedula', '').strip()
+        telefono  = request.POST.get('telefono', '').strip()
+        email     = request.POST.get('email', '').strip()
+        direccion = request.POST.get('direccion', '').strip()
+
+        if not nombres or not apellidos:
+            messages.error(request, 'Nombres y apellidos son obligatorios.')
+            return redirect('clientes')
+
+        if cedula and Cliente.objects.filter(cedula=cedula).exclude(id_cliente=id_cliente).exists():
+            messages.error(request, f'Ya existe otro cliente con la cédula "{cedula}".')
+            return redirect('clientes')
+
+        if email and Cliente.objects.filter(email=email).exclude(id_cliente=id_cliente).exists():
+            messages.error(request, f'Ya existe otro cliente con el email "{email}".')
+            return redirect('clientes')
+
+        cliente.nombres   = nombres
+        cliente.apellidos = apellidos
+        cliente.cedula    = cedula or None
+        cliente.telefono  = telefono or None
+        cliente.email     = email or None
+        cliente.direccion = direccion or None
+        cliente.save()
+
+        messages.success(request, f'Cliente "{nombres} {apellidos}" actualizado correctamente.')
+
+    return redirect('clientes')
+
+
+# -------------------------------------------------------------------
+# VISTA 12: ELIMINAR (DESACTIVAR) CLIENTE
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def eliminar_cliente_view(request, id_cliente):
+    """Soft-delete: marca el cliente como 'Inactivo' en vez de borrarlo físicamente.
+
+    fk_pedido_cliente tiene ON DELETE SET NULL (no PROTECT como en Producto), así
+    que un DELETE físico no fallaría — pero dejaría los pedidos históricos de este
+    cliente sin dueño, perdiendo esa trazabilidad en reportes. El soft-delete
+    reutiliza el ENUM real de estado en MySQL: ('Activo', 'Inactivo').
+    """
+    if request.method == 'POST':
+        try:
+            cliente = Cliente.objects.get(id_cliente=id_cliente)
+            cliente.estado = 'Inactivo'
+            cliente.save()
+            messages.success(
+                request,
+                f'Cliente "{cliente.nombres} {cliente.apellidos}" eliminado correctamente.'
+            )
+        except Cliente.DoesNotExist:
+            messages.error(request, 'Cliente no encontrado.')
+
+    return redirect('clientes')
