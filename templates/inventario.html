@@ -351,42 +351,6 @@
 
     <div class="page-body">
 
-        <!-- Stats cards (Sugerencia C: contadores animados) -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon total"><i class="material-icons">inventory_2</i></div>
-                <div>
-                    <div class="stat-num js-counter" data-target="48">0</div>
-                    <div class="stat-label">Total Productos</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon critico"><i class="material-icons">warning</i></div>
-                <div>
-                    <div class="stat-num js-counter" data-target="8">0</div>
-                    <div class="stat-label">Stock Crítico</div>
-                    <div class="stat-pct js-pct" data-val="8" data-total="48"></div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon bajo"><i class="material-icons">trending_down</i></div>
-                <div>
-                    <div class="stat-num js-counter" data-target="5">0</div>
-                    <div class="stat-label">Stock Bajo</div>
-                    <div class="stat-pct js-pct" data-val="5" data-total="48"></div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon normal"><i class="material-icons">check_circle</i></div>
-                <div>
-                    <div class="stat-num js-counter" data-target="35">0</div>
-                    <div class="stat-label">Stock Normal</div>
-                    <div class="stat-pct js-pct" data-val="35" data-total="48"></div>
-                </div>
-            </div>
-        </div>
-
-
         <div class="container">
             <!-- ESTADÍSTICAS -->
             <div class="row" style="margin-top:24px">
@@ -415,20 +379,6 @@
                     </div>
                 </div>
 
-        <!-- Alerta dismissible (Sugerencia D: ícono animado + cerrable) -->
-        <div class="alert-banner" id="alerta-critica">
-            <div class="alert-icon"><i class="material-icons">warning</i></div>
-            <div class="alert-text">
-                <strong>8 productos con stock crítico</strong>
-                <span>Tomates, Lechuga Romana y Pan Hamburguesa necesitan reabastecimiento urgente.</span>
-
-            </div>
-            <button class="alert-close" id="btn-cerrar-alerta" title="Cerrar alerta">
-                <i class="material-icons">close</i>
-            </button>
-        </div>
-
-
             <!-- ALERTA -->
             <div class="row">
                 <div class="col s12">
@@ -441,31 +391,6 @@
                     </div>
                     {% endif %}
                 </div>
-
-        <!-- Filtros en tiempo real (Sugerencia B) -->
-        <div class="filters-bar">
-            <div class="search-field">
-                <i class="material-icons">search</i>
-                <input type="text" id="filtro-buscar" placeholder="Buscar producto..." autocomplete="off">
-
-            </div>
-            <select class="custom-select" id="filtro-categoria">
-                <option value="">Todas las categorías</option>
-                <option value="Verduras">Verduras</option>
-                <option value="Carnes">Carnes</option>
-                <option value="Lácteos">Lácteos</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Otros">Otros</option>
-            </select>
-            <select class="custom-select" id="filtro-estado">
-                <option value="">Todos los estados</option>
-                <option value="critical">Crítico</option>
-                <option value="low">Bajo</option>
-                <option value="normal">Normal</option>
-            </select>
-            <span class="filter-count" id="filtro-conteo">6 de 6 productos</span>
-        </div>
-
 
             <!-- FILTROS -->
             <div class="row">
@@ -498,152 +423,6 @@
                         <label>Estado</label>
                     </div>
                 </div>
-
-        <!-- Tabla con barras de progreso y highlight por estado -->
-        <div class="table-card">
-            <div class="table-header">
-                <h6><i class="material-icons">inventory_2</i> Productos en Stock</h6>
-                <span id="tabla-total">6 productos registrados</span>
-
-            </div>
-            <div class="table-wrap">
-                <table id="tabla-inventario">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Producto</th>
-                            <th>Categoría</th>
-                            <th>Stock Actual</th>
-                            <th>Unidad</th>
-                            <th>Mínimo</th>
-                            <th>Estado</th>
-                            <th>Actualización</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="row-critical"
-                            data-nombre="tomates" data-categoria="Verduras" data-estado="critical"
-                            data-id="INV-001" data-stock-actual="5" data-stock-min="20" data-unidad="Kg">
-                            <td class="code">INV-001</td>
-                            <td><strong>Tomates</strong></td>
-                            <td class="cat">Verduras</td>
-                            <td>
-                                <div class="stock-cell">
-                                    <span class="stock-num critical">5</span>
-                                    <div class="stock-bar-wrap"><div class="stock-bar critical" style="width:25%"></div></div>
-                                </div>
-                            </td>
-                            <td>Kg</td><td>20</td>
-                            <td><span class="chip critical">Crítico</span></td>
-                            <td class="date">16/03/2026</td>
-                            <td class="actions">
-                                <button class="btn-icon edit" data-action="ajustar" title="Ajustar stock"><i class="material-icons">edit</i></button>
-                                <button class="btn-icon buy"  data-action="compra"  title="Solicitar compra"><i class="material-icons">add_shopping_cart</i></button>
-                            </td>
-                        </tr>
-                        <tr class="row-low"
-                            data-nombre="lechuga romana" data-categoria="Verduras" data-estado="low"
-                            data-id="INV-002" data-stock-actual="15" data-stock-min="30" data-unidad="Uds">
-                            <td class="code">INV-002</td>
-                            <td><strong>Lechuga Romana</strong></td>
-                            <td class="cat">Verduras</td>
-                            <td>
-                                <div class="stock-cell">
-                                    <span class="stock-num low">15</span>
-                                    <div class="stock-bar-wrap"><div class="stock-bar low" style="width:50%"></div></div>
-                                </div>
-                            </td>
-                            <td>Uds</td><td>30</td>
-                            <td><span class="chip low">Bajo</span></td>
-                            <td class="date">16/03/2026</td>
-                            <td class="actions">
-                                <button class="btn-icon edit" data-action="ajustar" title="Ajustar stock"><i class="material-icons">edit</i></button>
-                                <button class="btn-icon buy"  data-action="compra"  title="Solicitar compra"><i class="material-icons">add_shopping_cart</i></button>
-                            </td>
-                        </tr>
-                        <tr data-nombre="queso mozzarella" data-categoria="Lácteos" data-estado="normal"
-                            data-id="INV-003" data-stock-actual="45" data-stock-min="15" data-unidad="Kg">
-                            <td class="code">INV-003</td>
-                            <td><strong>Queso Mozzarella</strong></td>
-                            <td class="cat">Lácteos</td>
-                            <td>
-                                <div class="stock-cell">
-                                    <span class="stock-num normal">45</span>
-                                    <div class="stock-bar-wrap"><div class="stock-bar normal" style="width:100%"></div></div>
-                                </div>
-                            </td>
-                            <td>Kg</td><td>15</td>
-                            <td><span class="chip normal">Normal</span></td>
-                            <td class="date">15/03/2026</td>
-                            <td class="actions">
-                                <button class="btn-icon edit"    data-action="ajustar"   title="Ajustar stock"><i class="material-icons">edit</i></button>
-                                <button class="btn-icon history" data-action="historial" title="Ver movimientos"><i class="material-icons">history</i></button>
-                            </td>
-                        </tr>
-                        <tr data-nombre="carne molida" data-categoria="Carnes" data-estado="normal"
-                            data-id="INV-004" data-stock-actual="30" data-stock-min="10" data-unidad="Kg">
-                            <td class="code">INV-004</td>
-                            <td><strong>Carne Molida</strong></td>
-                            <td class="cat">Carnes</td>
-                            <td>
-                                <div class="stock-cell">
-                                    <span class="stock-num normal">30</span>
-                                    <div class="stock-bar-wrap"><div class="stock-bar normal" style="width:100%"></div></div>
-                                </div>
-                            </td>
-                            <td>Kg</td><td>10</td>
-                            <td><span class="chip normal">Normal</span></td>
-                            <td class="date">15/03/2026</td>
-                            <td class="actions">
-                                <button class="btn-icon edit"    data-action="ajustar"   title="Ajustar stock"><i class="material-icons">edit</i></button>
-                                <button class="btn-icon history" data-action="historial" title="Ver movimientos"><i class="material-icons">history</i></button>
-                            </td>
-                        </tr>
-                        <tr class="row-low"
-                            data-nombre="pan hamburguesa" data-categoria="Otros" data-estado="low"
-                            data-id="INV-005" data-stock-actual="25" data-stock-min="50" data-unidad="Uds">
-                            <td class="code">INV-005</td>
-                            <td><strong>Pan Hamburguesa</strong></td>
-                            <td class="cat">Otros</td>
-                            <td>
-                                <div class="stock-cell">
-                                    <span class="stock-num low">25</span>
-                                    <div class="stock-bar-wrap"><div class="stock-bar low" style="width:50%"></div></div>
-                                </div>
-                            </td>
-                            <td>Uds</td><td>50</td>
-                            <td><span class="chip low">Bajo</span></td>
-                            <td class="date">16/03/2026</td>
-                            <td class="actions">
-                                <button class="btn-icon edit" data-action="ajustar" title="Ajustar stock"><i class="material-icons">edit</i></button>
-                                <button class="btn-icon buy"  data-action="compra"  title="Solicitar compra"><i class="material-icons">add_shopping_cart</i></button>
-                            </td>
-                        </tr>
-                        <tr data-nombre="refresco cola" data-categoria="Bebidas" data-estado="normal"
-                            data-id="INV-006" data-stock-actual="120" data-stock-min="50" data-unidad="Uds">
-                            <td class="code">INV-006</td>
-                            <td><strong>Refresco Cola</strong></td>
-                            <td class="cat">Bebidas</td>
-                            <td>
-                                <div class="stock-cell">
-                                    <span class="stock-num normal">120</span>
-                                    <div class="stock-bar-wrap"><div class="stock-bar normal" style="width:100%"></div></div>
-                                </div>
-                            </td>
-                            <td>Uds</td><td>50</td>
-                            <td><span class="chip normal">Normal</span></td>
-                            <td class="date">14/03/2026</td>
-                            <td class="actions">
-                                <button class="btn-icon edit"    data-action="ajustar"   title="Ajustar stock"><i class="material-icons">edit</i></button>
-                                <button class="btn-icon history" data-action="historial" title="Ver movimientos"><i class="material-icons">history</i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
 
             <!-- TABLA -->
             <div class="row">
@@ -692,14 +471,21 @@
                                         {% endif %}
                                         <td>{{ p.fecha_creacion|date:"d/m/Y"|default:"-" }}</td>
                                         <td>
-                                            <a href="#modal-ajustar-stock" 
-                                            class="btn-small teal white-text modal-trigger tooltipped" 
+                                            <a href="#modal-ajustar-stock"
+                                            class="btn-small teal white-text modal-trigger tooltipped"
                                             data-tooltip="Ajustar stock"
                                             data-id="{{ p.id_producto }}"
                                             data-nombre="{{ p.nombre }}"
                                             data-stock="{{ p.stock }}">
                                                 <i class="material-icons">edit</i>
                                             </a>
+                                            <form method="POST" action="{% url 'eliminar_producto' p.id_producto %}" style="display:inline"
+                                                  onsubmit="return confirm('¿Desactivar el producto \'{{ p.nombre|escapejs }}\'? No aparecerá más en inventario ni en el punto de venta.');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn-small red white-text tooltipped" data-tooltip="Eliminar producto">
+                                                    <i class="material-icons">delete</i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                     {% empty %}
@@ -713,51 +499,6 @@
 
     </div><!-- /page-body -->
 </div><!-- /main-content -->
-
-<!-- ═══════════════ MODAL NUEVO ITEM ═════════════════════════════ -->
-<div class="modal-overlay" id="modal-nuevo">
-    <div class="modal-panel">
-        <h3><i class="material-icons">inventory_2</i> Nuevo Item</h3>
-        <div class="form-grid">
-            <div class="form-field span2">
-                <label>Nombre del Producto *</label>
-                <input type="text" id="nuevo-nombre" placeholder="Ej: Papas Frescas">
-
-            </div>
-            <div class="form-field">
-                <label>Categoría *</label>
-                <select id="nuevo-categoria">
-                    <option value="" disabled selected>Seleccione</option>
-                    <option>Verduras</option><option>Carnes</option>
-                    <option>Lácteos</option><option>Bebidas</option><option>Otros</option>
-                </select>
-            </div>
-            <div class="form-field">
-                <label>Unidad *</label>
-                <select id="nuevo-unidad">
-                    <option value="" disabled selected>Seleccione</option>
-                    <option>Kg</option><option>g</option>
-                    <option>L</option><option>mL</option><option>Unidades</option>
-                </select>
-            </div>
-            <div class="form-field">
-                <label>Stock Actual *</label>
-                <input type="number" id="nuevo-stock-actual" min="0" placeholder="0">
-            </div>
-            <div class="form-field">
-                <label>Stock Mínimo *</label>
-                <input type="number" id="nuevo-stock-min" min="0" placeholder="0">
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button class="btn-ghost" id="btn-cerrar-nuevo">Cancelar</button>
-            <button class="btn-primary" id="btn-guardar-nuevo">
-                <i class="material-icons">save</i> Guardar
-            </button>
-        </div>
-    </div>
-</div>
-
 
     <!-- MODAL NUEVO ITEM -->
     <div id="modal-nuevo-item" class="modal modal-fixed-footer">
@@ -813,13 +554,6 @@
             </div>
         </form>
     </div>
-        <div class="modal-footer">
-            <a href="#!" class="modal-close btn-flat">Cancelar</a>
-            <a href="#!" class="btn teal white-text modal-close" onclick="mostrarNotificacion('Item agregado al inventario', 'success')">
-                <i class="material-icons left">save</i>Guardar
-            </a>
-        </div>
-    </div>
 
     <!-- MODAL AJUSTAR STOCK -->
     <div id="modal-ajustar-stock" class="modal">
@@ -855,283 +589,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="{% static 'js/app.js' %}"></script>
-
-<!-- ═══════════════ MODAL AJUSTAR STOCK ══════════════════════════ -->
-<div class="modal-overlay" id="modal-ajustar">
-    <div class="modal-panel">
-        <h3><i class="material-icons">tune</i> Ajustar Stock</h3>
-        <p class="modal-meta">
-            <strong id="ajustar-nombre">—</strong>
-            &nbsp;·&nbsp; Stock actual: <strong id="ajustar-stock-actual">—</strong>
-        </p>
-        <div class="form-grid">
-            <div class="form-field">
-                <label>Tipo de movimiento *</label>
-                <select id="ajustar-tipo">
-                    <option value="" disabled selected>Seleccione</option>
-                    <option value="entrada">Entrada (Agregar)</option>
-                    <option value="salida">Salida (Restar)</option>
-                    <option value="ajuste">Ajuste Manual</option>
-                </select>
-            </div>
-            <div class="form-field">
-                <label>Cantidad *</label>
-                <input type="number" id="ajustar-cantidad" min="0" placeholder="0">
-            </div>
-            <div class="form-field span2">
-                <label>Motivo del ajuste *</label>
-                <textarea id="ajustar-motivo" placeholder="Ej: Compra de proveedor, merma por caducidad..."></textarea>
-            </div>
-        </div>
-        <!-- Sugerencia E: preview resultado en tiempo real -->
-        <div class="stock-preview" id="stock-preview">
-            <div class="preview-item">
-                <div class="preview-label">Stock actual</div>
-                <div class="preview-val" id="preview-actual">—</div>
-            </div>
-            <div class="preview-arrow"><i class="material-icons">arrow_forward</i></div>
-            <div class="preview-item">
-                <div class="preview-label">Nuevo stock</div>
-                <div class="preview-val" id="preview-nuevo">—</div>
-            </div>
-            <div class="preview-item">
-                <div class="preview-label">Estado resultante</div>
-                <div class="preview-val" id="preview-estado">—</div>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button class="btn-ghost" id="btn-cerrar-ajustar">Cancelar</button>
-            <button class="btn-primary" id="btn-confirmar-ajustar">
-                <i class="material-icons">done</i> Confirmar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ═══════════════ TOAST CONTAINER ══════════════════════════════ -->
-<div class="toast-container" id="toast-container"></div>
-
-<script>
-/* ─── ESTADO DEL MODAL DE AJUSTE ─── */
-let filaActiva = null;
-
-document.addEventListener('DOMContentLoaded', () => {
-    animarContadores();
-    initFiltros();
-    initAlertas();
-    initModales();
-    initTabla();
-    initPreviewAjuste();
-});
-
-/* ══════════ SUGERENCIA C: Contadores animados ═════════════════ */
-function animarContadores() {
-    const DURACION = 800;
-    document.querySelectorAll('.js-counter').forEach(el => {
-        const destino = parseInt(el.dataset.target, 10);
-        const inicio  = performance.now();
-        (function paso(ahora) {
-            const t    = Math.min((ahora - inicio) / DURACION, 1);
-            const ease = 1 - (1 - t) * (1 - t); /* easeOutQuad */
-            el.textContent = Math.floor(ease * destino);
-            if (t < 1) requestAnimationFrame(paso);
-        })(inicio);
-    });
-    document.querySelectorAll('.js-pct').forEach(el => {
-        const pct = ((parseInt(el.dataset.val) / parseInt(el.dataset.total)) * 100).toFixed(1);
-        el.textContent = `${pct}% del total`;
-    });
-}
-
-/* ══════════ SUGERENCIA B: Filtrado en tiempo real ════════════ */
-function initFiltros() {
-    const inputBuscar  = document.getElementById('filtro-buscar');
-    const selectCat    = document.getElementById('filtro-categoria');
-    const selectEstado = document.getElementById('filtro-estado');
-    const lblConteo    = document.getElementById('filtro-conteo');
-    const filas        = Array.from(document.querySelectorAll('#tabla-inventario tbody tr'));
-
-    function aplicarFiltros() {
-        const busca  = inputBuscar.value.toLowerCase().trim();
-        const cat    = selectCat.value;
-        const estado = selectEstado.value;
-        let visibles = 0;
-
-        filas.forEach(fila => {
-            const ok = (!busca  || (fila.dataset.nombre    || '').includes(busca))
-                    && (!cat    || fila.dataset.categoria  === cat)
-                    && (!estado || fila.dataset.estado     === estado);
-            fila.classList.toggle('hidden-row', !ok);
-            if (ok) visibles++;
-        });
-
-        lblConteo.textContent = `${visibles} de ${filas.length} productos`;
-    }
-
-    inputBuscar.addEventListener('input', aplicarFiltros);
-    selectCat.addEventListener('change', aplicarFiltros);
-    selectEstado.addEventListener('change', aplicarFiltros);
-}
-
-/* ══════════ ALERTA DISMISSIBLE ═══════════════════════════════ */
-function initAlertas() {
-    document.getElementById('btn-cerrar-alerta')
-        .addEventListener('click', () => {
-            document.getElementById('alerta-critica').classList.add('hidden');
-        });
-}
-
-/* ══════════ MODALES ══════════════════════════════════════════ */
-function initModales() {
-    const overlayNuevo   = document.getElementById('modal-nuevo');
-    const overlayAjustar = document.getElementById('modal-ajustar');
-
-    document.getElementById('btn-nuevo-item')
-        .addEventListener('click', () => abrirModal(overlayNuevo));
-    document.getElementById('btn-cerrar-nuevo')
-        .addEventListener('click', () => cerrarModal(overlayNuevo));
-    overlayNuevo.addEventListener('click', e => { if (e.target === overlayNuevo) cerrarModal(overlayNuevo); });
-    document.getElementById('btn-guardar-nuevo')
-        .addEventListener('click', guardarNuevoItem);
-
-    document.getElementById('btn-cerrar-ajustar')
-        .addEventListener('click', () => { filaActiva = null; cerrarModal(overlayAjustar); });
-    overlayAjustar.addEventListener('click', e => { if (e.target === overlayAjustar) { filaActiva = null; cerrarModal(overlayAjustar); } });
-    document.getElementById('btn-confirmar-ajustar')
-        .addEventListener('click', confirmarAjuste);
-}
-
-function abrirModal(overlay) { overlay.classList.add('visible'); }
-function cerrarModal(overlay) { overlay.classList.remove('visible'); }
-
-/* ══════════ TABLA: event delegation ═════════════════════════ */
-function initTabla() {
-    document.querySelector('#tabla-inventario tbody')
-        .addEventListener('click', e => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-            const fila   = btn.closest('tr');
-            const accion = btn.dataset.action;
-            const nombre = fila.querySelector('strong').textContent;
-
-            if (accion === 'ajustar') {
-                abrirAjusteStock(fila);
-            } else if (accion === 'compra') {
-                mostrarToast(`Solicitud de compra generada para "${nombre}"`, 'success');
-            } else if (accion === 'historial') {
-                mostrarToast(`Historial de movimientos: "${nombre}"`, 'info');
-            }
-        });
-}
-
-/* ══════════ MODAL AJUSTAR: poblar datos ═════════════════════ */
-function abrirAjusteStock(fila) {
-    filaActiva = fila;
-    document.getElementById('ajustar-nombre').textContent       = fila.querySelector('strong').textContent;
-    document.getElementById('ajustar-stock-actual').textContent = `${fila.dataset.stockActual} ${fila.dataset.unidad}`;
-    document.getElementById('ajustar-tipo').value     = '';
-    document.getElementById('ajustar-cantidad').value = '';
-    document.getElementById('ajustar-motivo').value   = '';
-    document.getElementById('stock-preview').classList.remove('visible');
-    abrirModal(document.getElementById('modal-ajustar'));
-}
-
-/* ══════════ SUGERENCIA E: Preview resultado ajuste ══════════ */
-function initPreviewAjuste() {
-    const tipo     = document.getElementById('ajustar-tipo');
-    const cantidad = document.getElementById('ajustar-cantidad');
-
-    function actualizarPreview() {
-        if (!filaActiva) return;
-        const actual  = parseInt(filaActiva.dataset.stockActual, 10);
-        const minimo  = parseInt(filaActiva.dataset.stockMin,    10);
-        const unidad  = filaActiva.dataset.unidad;
-        const cant    = parseInt(cantidad.value, 10) || 0;
-        const tipoVal = tipo.value;
-
-        if (!tipoVal || cant <= 0) {
-            document.getElementById('stock-preview').classList.remove('visible');
-            return;
-        }
-
-        let nuevo;
-        if      (tipoVal === 'entrada') nuevo = actual + cant;
-        else if (tipoVal === 'salida')  nuevo = Math.max(0, actual - cant);
-        else                            nuevo = cant; /* ajuste manual */
-
-        const ratio = nuevo / minimo;
-        const [estadoTexto, estadoColor] =
-            ratio < 0.5 ? ['Crítico', 'var(--red)']   :
-            ratio < 1.0 ? ['Bajo',    'var(--amber)']  :
-                          ['Normal',  'var(--green)'];
-
-        document.getElementById('preview-actual').textContent = `${actual} ${unidad}`;
-        document.getElementById('preview-nuevo').textContent  = `${nuevo} ${unidad}`;
-        const elEstado = document.getElementById('preview-estado');
-        elEstado.textContent = estadoTexto;
-        elEstado.style.color = estadoColor;
-        document.getElementById('stock-preview').classList.add('visible');
-    }
-
-    tipo.addEventListener('change', actualizarPreview);
-    cantidad.addEventListener('input', actualizarPreview);
-}
-
-/* ══════════ GUARDAR NUEVO ITEM ══════════════════════════════ */
-function guardarNuevoItem() {
-    const nombre = document.getElementById('nuevo-nombre').value.trim();
-    const cat    = document.getElementById('nuevo-categoria').value;
-    const unidad = document.getElementById('nuevo-unidad').value;
-    const stockA = document.getElementById('nuevo-stock-actual').value;
-    const stockM = document.getElementById('nuevo-stock-min').value;
-
-    if (!nombre || !cat || !unidad || stockA === '' || stockM === '') {
-        mostrarToast('Completa todos los campos obligatorios', 'error');
-        return;
-    }
-
-    cerrarModal(document.getElementById('modal-nuevo'));
-    mostrarToast(`"${nombre}" agregado al inventario`, 'success');
-    ['nuevo-nombre', 'nuevo-stock-actual', 'nuevo-stock-min'].forEach(id => {
-        document.getElementById(id).value = '';
-    });
-    document.getElementById('nuevo-categoria').value = '';
-    document.getElementById('nuevo-unidad').value    = '';
-}
-
-/* ══════════ CONFIRMAR AJUSTE ════════════════════════════════ */
-function confirmarAjuste() {
-    const tipo     = document.getElementById('ajustar-tipo').value;
-    const cantidad = document.getElementById('ajustar-cantidad').value;
-    const motivo   = document.getElementById('ajustar-motivo').value.trim();
-
-    if (!tipo || !cantidad || !motivo) {
-        mostrarToast('Completa todos los campos del ajuste', 'error');
-        return;
-    }
-
-    const nombre = filaActiva ? filaActiva.querySelector('strong').textContent : 'producto';
-    cerrarModal(document.getElementById('modal-ajustar'));
-    mostrarToast(`Stock de "${nombre}" ajustado correctamente`, 'success');
-    filaActiva = null;
-}
-
-/* ══════════ SISTEMA DE TOASTS ═══════════════════════════════ */
-const ICONOS_TOAST = { success: 'check_circle', error: 'error', info: 'info' };
-
-function mostrarToast(mensaje, tipo = 'info') {
-    const contenedor = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${tipo}`;
-    toast.innerHTML = `<i class="material-icons">${ICONOS_TOAST[tipo]}</i><span>${mensaje}</span>`;
-    contenedor.appendChild(toast);
-    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('visible')));
-    setTimeout(() => {
-        toast.classList.remove('visible');
-        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
-    }, 3200);
-}
-</script>
 
 </body>
 </html>

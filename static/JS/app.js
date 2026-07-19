@@ -81,3 +81,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// ========================================
+// MODAL NUEVO ITEM (botón de la topbar de inventario)
+// ========================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('btn-nuevo-item')?.addEventListener('click', () => {
+        const modal = document.getElementById('modal-nuevo-item');
+        if (modal) M.Modal.getInstance(modal).open();
+    });
+});

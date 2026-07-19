@@ -39,6 +39,11 @@ Actualiza este archivo al completar o agregar tareas.
 - [x] `cocina.html` â€” KDS Dark Premium con polling
 - [x] `facturacion.html` â€” Terminal de caja Dark Premium
 - [~] `inventario.html` â€” DiseÃ±o parcial (estructura lista, falta CRUD)
+- [ ] inventario.html sin estilo real: Materialize CSS nunca se cargó
+  (falta el <link>), custom-styles.css solo cubre .input-field
+  parcialmente (falta select, falta background, posible falta de
+  .container/.row/.col). Migrar a design-system.css como el resto
+  de pantallas Dark Premium, no parchear Materialize.
 
 ### Pantallas pendientes de rediseÃ±o
 - [x] `index.html` â€” Dashboard Dark Premium âœ… â€” migrado a design-system.css, tema toggle, fuente A-/A+

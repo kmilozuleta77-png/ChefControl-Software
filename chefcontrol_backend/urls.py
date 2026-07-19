@@ -42,6 +42,7 @@ urlpatterns = [
     path('pedido/<int:id_pedido>/completar/', views.completar_pedido_api, name='completar_pedido_api'),
 
     path('inventario/ajustar-stock/<int:id_producto>/', views.ajustar_stock_view, name='ajustar_stock'),
+    path('inventario/eliminar-producto/<int:id_producto>/', views.eliminar_producto_view, name='eliminar_producto'),
     path('api/pedidos-cocina/', views.api_pedidos_cocina, name='api_pedidos_cocina'),
 
     path('api/', include(router.urls)),

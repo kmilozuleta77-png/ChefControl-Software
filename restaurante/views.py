@@ -190,8 +190,8 @@ def inventario_view(request):
 
         return redirect('inventario')
 
-    # TRAER DATOS
-    productos       = Producto.objects.select_related('id_categoria').all()
+    # TRAER DATOS (se excluyen los productos desactivados vía soft-delete)
+    productos       = Producto.objects.select_related('id_categoria').exclude(estado='No Disponible')
     total           = productos.count()
     criticos        = productos.filter(stock__lte=F('stock_minimo') / 2).count()
     bajos           = productos.filter(stock__gt=F('stock_minimo') / 2, stock__lte=F('stock_minimo')).count()
@@ -510,22 +510,66 @@ def ajustar_stock_view(request, id_producto):
     if request.method == 'POST':
         try:
             producto = Producto.objects.get(id_producto=id_producto)
-            tipo_mov = request.POST.get('tipo_mov')
-            cantidad = int(request.POST.get('cant_mov', 0))
+        except Producto.DoesNotExist:
+            messages.error(request, 'Producto no encontrado.')
+            return redirect('inventario')
 
-            if tipo_mov == 'entrada':
-                producto.stock += cantidad
-            elif tipo_mov == 'salida':
-                producto.stock = max(0, producto.stock - cantidad)
-            elif tipo_mov == 'ajuste':
-                producto.stock = cantidad
+        tipo_mov = request.POST.get('tipo_mov')
 
+        # Validación numérica explícita: cant_mov puede llegar vacío o no numérico
+        # si el POST se fuerza fuera del form (el <input type="number"> del HTML no lo garantiza).
+        try:
+            cantidad = int(request.POST.get('cant_mov', ''))
+        except (ValueError, TypeError):
+            messages.error(request, 'La cantidad debe ser un número entero.')
+            return redirect('inventario')
+
+        if cantidad <= 0:
+            messages.error(request, 'La cantidad debe ser mayor que cero.')
+            return redirect('inventario')
+
+        if tipo_mov == 'entrada':
+            producto.stock = (producto.stock or 0) + cantidad
+        elif tipo_mov == 'salida':
+            producto.stock = max(0, (producto.stock or 0) - cantidad)
+        elif tipo_mov == 'ajuste':
+            producto.stock = cantidad
+        else:
+            messages.error(request, 'Tipo de movimiento no válido.')
+            return redirect('inventario')
+
+        producto.save()
+        messages.success(
+            request,
+            f'Stock de "{producto.nombre}" actualizado correctamente.'
+        )
+
+    return redirect('inventario')
+
+
+# -------------------------------------------------------------------
+# VISTA 9: ELIMINAR (DESACTIVAR) PRODUCTO
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def eliminar_producto_view(request, id_producto):
+    """Soft-delete: marca el producto como 'No Disponible' en vez de borrarlo físicamente.
+
+    Detallepedido.id_producto usa PROTECT (ver models.py) para preservar el historial
+    de ventas, así que un DELETE físico fallaría con ProtectedError en cualquier
+    producto que ya se haya vendido. El ENUM real de estado en MySQL es
+    ('Disponible', 'No Disponible', 'Agotado') — 'Inactivo' no es un valor válido
+    y trunca el campo. 'No Disponible' oculta el producto de inventario y del POS
+    (que ya filtra por estado='Disponible') sin tocar ese historial.
+    """
+    if request.method == 'POST':
+        try:
+            producto = Producto.objects.get(id_producto=id_producto)
+            producto.estado = 'No Disponible'
             producto.save()
             messages.success(
                 request,
-                f'Stock de "{producto.nombre}" actualizado correctamente.'
+                f'Producto "{producto.nombre}" eliminado del inventario.'
             )
-
         except Producto.DoesNotExist:
             messages.error(request, 'Producto no encontrado.')
 
