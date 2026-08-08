@@ -85,12 +85,6 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
 
-        'NAME': 'chefcontrol_db',
-        'USER': 'root', 
-        'PASSWORD': '8902',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-
         'NAME': os.getenv('DB_NAME', 'chefcontrol_db'),
         'USER': os.getenv('DB_USER', 'root'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
