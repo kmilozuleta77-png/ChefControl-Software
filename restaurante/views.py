@@ -428,7 +428,7 @@ def completar_pedido_api(request, id_pedido):
 # -----------------------------------------------------------------------
 
 @login_required(login_url='login')
-@requiere_rol('Cajero', 'Administrador')
+@requiere_rol('Cajero', 'Administrador', 'Gerente', 'Mesero')
 def facturacion_view(request):
     pedidos_listos = (
         Pedido.objects
@@ -444,6 +444,7 @@ def facturacion_view(request):
 # -----------------------------------------------------------------------
 
 @login_required(login_url='login')
+@requiere_rol('Cajero', 'Administrador', 'Gerente', 'Mesero')
 def pagar_pedido_api(request, id_pedido):
     """Cierra un pedido: lo marca Pagado y emite el registro Factura correspondiente."""
     if request.method != 'POST':

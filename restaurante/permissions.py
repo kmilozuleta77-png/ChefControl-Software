@@ -36,8 +36,8 @@ class EsAdministrador(TieneRolPermitido):
 
 
 class EsAdministradorOCajero(TieneRolPermitido):
-    """Administradores, Gerentes y Cajeros (y superusers) pueden acceder."""
-    cargos_permitidos = ('Administrador', 'Gerente', 'Cajero')
+    """Administradores, Gerentes, Cajeros y Meseros (y superusers) pueden acceder."""
+    cargos_permitidos = ('Administrador', 'Gerente', 'Cajero', 'Mesero')
 
 
 class EscrituraSoloRolPermitido(TieneRolPermitido):
