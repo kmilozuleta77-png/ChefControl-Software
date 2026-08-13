@@ -5,7 +5,7 @@ from django.utils import timezone
 from decimal import Decimal, InvalidOperation
 
 from django.http import JsonResponse
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, F, Count, Q
 from functools import wraps
 
-from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, Cliente, Cargo, Factura
+from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, Cliente, Cargo, Factura, VProductosInventario
 
 logger = logging.getLogger('restaurante')
 
@@ -95,6 +95,23 @@ def rango_dia(fecha):
     tz = timezone.get_current_timezone()
     inicio = timezone.make_aware(datetime.combine(fecha, datetime.min.time()), tz)
     return inicio, inicio + timedelta(days=1)
+
+
+def rango_periodo(periodo):
+    """Devuelve (inicio_aware, fin_aware) según 'hoy'|'semana'|'mes'|'anio', reutilizando rango_dia."""
+    hoy = timezone.localdate()
+    if periodo == 'semana':
+        inicio_fecha = hoy - timedelta(days=hoy.weekday())
+    elif periodo == 'mes':
+        inicio_fecha = hoy.replace(day=1)
+    elif periodo == 'anio':
+        inicio_fecha = hoy.replace(month=1, day=1)
+    else:
+        periodo = 'hoy'
+        inicio_fecha = hoy
+    inicio, _ = rango_dia(inicio_fecha)
+    _, fin = rango_dia(hoy)
+    return inicio, fin
 
 
 @login_required(login_url='login')
@@ -578,6 +595,96 @@ def eliminar_producto_view(request, id_producto):
 
 
 # -------------------------------------------------------------------
+# VISTA 9b: CATEGORÍAS (crear, editar, eliminar) — se gestionan desde
+# un modal dentro de inventario.html, no tienen pantalla propia.
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def crear_categoria_view(request):
+    """Crea una categoría nueva. 'nombre' es UNIQUE en la BD, así que se
+    valida el duplicado antes de insertar para dar un mensaje claro en
+    vez de dejar que MySQL lance el error de restricción."""
+    if request.method == 'POST':
+        nombre      = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+
+        if not nombre:
+            messages.error(request, 'El nombre de la categoría es obligatorio.')
+            return redirect('inventario')
+
+        if Categoria.objects.filter(nombre=nombre).exists():
+            messages.error(request, f'Ya existe una categoría con el nombre "{nombre}".')
+            return redirect('inventario')
+
+        Categoria.objects.create(
+            nombre         = nombre,
+            descripcion    = descripcion or None,
+            fecha_creacion = timezone.now(),
+        )
+        messages.success(request, f'Categoría "{nombre}" creada correctamente.')
+
+    return redirect('inventario')
+
+
+# -------------------------------------------------------------------
+# VISTA 9c: EDITAR CATEGORÍA
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def editar_categoria_view(request, id_categoria):
+    if request.method == 'POST':
+        try:
+            categoria = Categoria.objects.get(id_categoria=id_categoria)
+        except Categoria.DoesNotExist:
+            messages.error(request, 'Categoría no encontrada.')
+            return redirect('inventario')
+
+        nombre      = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+
+        if not nombre:
+            messages.error(request, 'El nombre de la categoría es obligatorio.')
+            return redirect('inventario')
+
+        if Categoria.objects.filter(nombre=nombre).exclude(id_categoria=id_categoria).exists():
+            messages.error(request, f'Ya existe otra categoría con el nombre "{nombre}".')
+            return redirect('inventario')
+
+        categoria.nombre      = nombre
+        categoria.descripcion = descripcion or None
+        categoria.save()
+
+        messages.success(request, f'Categoría "{nombre}" actualizada correctamente.')
+
+    return redirect('inventario')
+
+
+# -------------------------------------------------------------------
+# VISTA 9d: ELIMINAR CATEGORÍA
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def eliminar_categoria_view(request, id_categoria):
+    """Borrado físico: categoria no tiene columna de estado para soft-delete.
+    producto.id_categoria es ON DELETE RESTRICT, así que MySQL rechaza el
+    DELETE si hay productos asignados — se captura como IntegrityError y se
+    le pide al usuario reasignarlos o eliminarlos primero."""
+    if request.method == 'POST':
+        try:
+            categoria = Categoria.objects.get(id_categoria=id_categoria)
+            nombre = categoria.nombre
+            categoria.delete()
+            messages.success(request, f'Categoría "{nombre}" eliminada correctamente.')
+        except Categoria.DoesNotExist:
+            messages.error(request, 'Categoría no encontrada.')
+        except IntegrityError:
+            messages.error(
+                request,
+                'No se puede eliminar: hay productos asignados a esta categoría. '
+                'Reasígnalos o elimínalos primero.'
+            )
+
+    return redirect('inventario')
+
+
+# -------------------------------------------------------------------
 # VISTA 10: CLIENTES (listar + crear)
 # -------------------------------------------------------------------
 @login_required(login_url='login')
@@ -883,3 +990,65 @@ def eliminar_empleado_view(request, id_empleado):
             messages.error(request, 'Empleado no encontrado.')
 
     return redirect('personal')
+
+
+# -------------------------------------------------------------------
+# VISTA 16: REPORTES Y ANÁLISIS
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def reportes_view(request):
+    """Ventas por día, top productos, rendimiento por empleado e inventario,
+    filtrados por período (hoy/semana/mes/año) vía querystring ?periodo=."""
+    periodo = request.GET.get('periodo', 'mes')
+    if periodo not in ('hoy', 'semana', 'mes', 'anio'):
+        periodo = 'mes'
+    inicio, fin = rango_periodo(periodo)
+
+    # Agrupamos por día en Python (no con TruncDate/SQL): el servidor MySQL de
+    # este entorno no tiene cargadas las tablas de zona horaria con nombre
+    # (mysql_tzinfo_to_sql), así que CONVERT_TZ —que Django genera para
+    # TruncDate con USE_TZ=True— devuelve NULL en vez de fallar, y todas las
+    # facturas caían agrupadas bajo una única fecha nula.
+    ventas_agrupadas = {}
+    for f in Factura.objects.filter(fecha_factura__gte=inicio, fecha_factura__lt=fin).values('fecha_factura', 'total'):
+        dia = timezone.localtime(f['fecha_factura']).date()
+        ventas_agrupadas[dia] = ventas_agrupadas.get(dia, 0) + f['total']
+    ventas_por_dia = [{'dia': dia, 'total': total} for dia, total in sorted(ventas_agrupadas.items())]
+
+    total_periodo = sum(v['total'] for v in ventas_por_dia) if ventas_por_dia else 0
+    max_venta = max((v['total'] for v in ventas_por_dia), default=0)
+    for v in ventas_por_dia:
+        v['pct'] = int((v['total'] / max_venta) * 100) if max_venta else 0
+        v['dia_label'] = v['dia'].strftime('%d %b')
+
+    # Detallepedido -> Pedido -> Factura (OneToOne, related_name por defecto 'factura')
+    top_productos = (
+        Detallepedido.objects
+        .filter(id_pedido__factura__fecha_factura__gte=inicio,
+                id_pedido__factura__fecha_factura__lt=fin)
+        .values('id_producto__nombre')
+        .annotate(unidades=Sum('cantidad'),
+                  total=Sum(F('cantidad') * F('precio_unitario')))
+        .order_by('-unidades')[:5]
+    )
+
+    rendimiento_empleados = (
+        Factura.objects
+        .filter(fecha_factura__gte=inicio, fecha_factura__lt=fin)
+        .values('id_empleado__nombres', 'id_empleado__apellidos')
+        .annotate(total_facturas=Count('id_pedido'), total_ventas=Sum('total'))
+        .order_by('-total_ventas')
+    )
+
+    inventario_reporte = VProductosInventario.objects.all().order_by('producto')
+
+    context = {
+        'periodo': periodo,
+        'ventas_por_dia': ventas_por_dia,
+        'total_periodo': total_periodo,
+        'max_venta': max_venta,
+        'top_productos': top_productos,
+        'rendimiento_empleados': rendimiento_empleados,
+        'inventario_reporte': inventario_reporte,
+    }
+    return render(request, 'reportes.html', context)

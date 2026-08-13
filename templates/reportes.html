@@ -1,120 +1,405 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChefControl - Reportes</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="../CSS/custom-styles.css" rel="stylesheet">
+{% extends 'base.html' %}
+{% load static %}
+{% load filtros_custom %}
+
+{% block title %}ChefControl — Reportes{% endblock %}
+
+{% block extra_head %}
     <style>
-        .bar-chart { display:flex; align-items:flex-end; gap:8px; height:160px; padding:0 8px; margin-top:16px; }
-        .bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
-        .bar { width:100%; background:#00897b; border-radius:6px 6px 0 0; transition:opacity 0.2s; }
-        .bar:hover { opacity:0.8; }
-        .bar-label { font-size:0.75rem; color:#757575; }
-        .bar-val { font-size:0.72rem; font-weight:700; color:#00695c; }
-        .period-btns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
-        .period-btn { padding:6px 16px; border-radius:20px; border:2px solid #e0e0e0; background:white; cursor:pointer; font-size:0.82rem; font-weight:500; transition:all 0.2s; }
-        .period-btn.active { border-color:#00897b; background:#00897b; color:white; }
-        .rank { width:28px; height:28px; border-radius:8px; background:#00897b; color:white; font-weight:700; font-size:0.82rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .rank.gold { background:#f9a825; color:#1a1a1a; }
-        .rank.silver { background:#90a4ae; }
-        .rank.bronze { background:#a1887f; }
-        .top-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f5f5f5; }
-        .top-item:last-child { border-bottom:none; }
+        /* ──────────────────────────────────────────────────────────────
+           ESTILOS ESPECÍFICOS DE REPORTES
+           Todo lo compartido (sidebar, top-nav, card, table, status-badge,
+           stat-icon/val/label) vive en design-system.css. Aquí solo lo
+           único de esta pantalla.
+        ────────────────────────────────────────────────────────────── */
+
+        .container { padding: 24px; }
+
+        /* ── Botones de período ── */
+        .period-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .period-btn {
+            padding: 7px 18px; border-radius: 20px; border: 1px solid var(--border-light);
+            background: var(--bg-elevated); color: var(--text-secondary);
+            font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .period-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .period-btn.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+        /* ── Gráfico de barras ── */
+        .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 180px; padding: 0 8px; margin-top: 16px; }
+        .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; }
+        .bar { width: 100%; min-height: 2px; background: var(--accent); border-radius: 6px 6px 0 0; transition: opacity 0.2s; }
+        .bar:hover { opacity: 0.8; }
+        .bar-label { font-size: 0.72rem; color: var(--text-muted); }
+        .bar-val { font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); }
+        .bar-chart-vacio { padding: 40px 0; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+        /* ── Top productos ── */
+        .rank {
+            width: 28px; height: 28px; border-radius: 8px; background: var(--bg-elevated);
+            color: var(--text-secondary); font-weight: 700; font-size: 0.82rem;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .rank.gold   { background: rgba(249, 115, 22, 0.18); color: var(--accent); }
+        .rank.silver { background: rgba(148, 163, 184, 0.18); color: #cbd5e1; }
+        .rank.bronze { background: rgba(180, 121, 78, 0.18); color: #d4a373; }
+        .top-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .top-item:last-child { border-bottom: none; }
+        .top-item-info { flex: 1; min-width: 0; }
+        .top-item-info strong { display: block; font-size: 0.85rem; color: var(--text-primary); }
+        .top-item-info span { font-size: 0.75rem; color: var(--text-muted); }
+        .top-item-total { color: var(--accent); font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
+
+        /* ── Grid de reportes (top productos / rendimiento empleados) ── */
+        .reportes-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+        @media (max-width: 1000px) { .reportes-row { grid-template-columns: 1fr; } }
+
+        .table-vacia { padding: 20px 0; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+        /* ── Botones PDF/Excel deshabilitados (pendientes) ── */
+        .btn-proximamente { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
     </style>
-</head>
-<body>
-    <div class="sidebar">
-        <div class="sidebar-brand"><h5>🍽️ ChefControl</h5><p>Gestión de Restaurante</p></div>
-        <div class="sidebar-section">Principal</div>
-        <a href="../index.html"><i class="material-icons">dashboard</i> Dashboard</a>
-        <div class="sidebar-section">Operaciones</div>
-        <a href="pedidos.html"><i class="material-icons">shopping_cart</i> Pedidos <span class="sidebar-badge">4</span></a>
-        <a href="inventario.html"><i class="material-icons">inventory_2</i> Inventario <span class="sidebar-badge">!</span></a>
-        <a href="menus.html"><i class="material-icons">restaurant_menu</i> Menús</a>
-        <div class="sidebar-section">Administración</div>
-        <a href="clientes.html"><i class="material-icons">people</i> Clientes</a>
-        <a href="personal.html"><i class="material-icons">badge</i> Personal</a>
-        <a href="facturacion.html"><i class="material-icons">receipt_long</i> Facturación</a>
-        <a href="reportes.html" class="active"><i class="material-icons">bar_chart</i> Reportes</a>
-        <a href="configuracion.html"><i class="material-icons">settings</i> Configuración</a>
-        <div class="sidebar-footer"><span>Administrador</span><p>admin@chefcontrol.com</p></div>
-    </div>
-    <div class="main-content">
-        <div class="top-nav">
-            <h5>Reportes</h5>
-            <div class="top-nav-right">
-                <a href="#" class="btn grey white-text" onclick="mostrarNotificacion('Exportando PDF...','info')"><i class="material-icons left">picture_as_pdf</i>PDF</a>
-                <a href="#" class="btn teal white-text" onclick="mostrarNotificacion('Exportando Excel...','info')"><i class="material-icons left">table_chart</i>Excel</a>
-            </div>
+{% endblock %}
+
+{% block content %}
+<!--
+    El tema se aplica via data-theme en <html>.
+    El script al final lee localStorage para restaurar la preferencia del usuario.
+-->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SIDEBAR — mismo patrón que index.html/inventario.html, "Reportes" activo
+════════════════════════════════════════════════════════════════ -->
+<div class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+        <div class="brand-icon-sidebar">
+            <i class="material-icons">restaurant</i>
         </div>
-        <div class="container">
-            <div class="period-btns" style="margin-top:24px">
-                <button class="period-btn">Hoy</button>
-                <button class="period-btn">Esta semana</button>
-                <button class="period-btn active">Este mes</button>
-                <button class="period-btn">Este año</button>
-            </div>
-            <div class="row">
-                <div class="col s12">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="section-header"><h6>📈 Ventas por Día — Marzo 2026</h6><span class="grey-text" style="font-size:0.82rem">Total: $4.2M</span></div>
-                            <div class="bar-chart">
-                                <div class="bar-wrap"><div class="bar-val">$1.1M</div><div class="bar" style="height:70%"></div><div class="bar-label">Lun</div></div>
-                                <div class="bar-wrap"><div class="bar-val">$0.9M</div><div class="bar" style="height:57%"></div><div class="bar-label">Mar</div></div>
-                                <div class="bar-wrap"><div class="bar-val">$1.3M</div><div class="bar" style="height:82%"></div><div class="bar-label">Mié</div></div>
-                                <div class="bar-wrap"><div class="bar-val">$0.8M</div><div class="bar" style="height:50%"></div><div class="bar-label">Jue</div></div>
-                                <div class="bar-wrap"><div class="bar-val">$1.5M</div><div class="bar" style="height:95%"></div><div class="bar-label">Vie</div></div>
-                                <div class="bar-wrap"><div class="bar-val">$1.8M</div><div class="bar" style="height:100%;background:#f9a825"></div><div class="bar-label">Sáb</div></div>
-                                <div class="bar-wrap"><div class="bar-val">$1.6M</div><div class="bar" style="height:89%"></div><div class="bar-label">Dom</div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col s12 m6">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="section-header"><h6>🏆 Productos más vendidos</h6></div>
-                            <div class="top-item"><div class="rank gold">1</div><div style="flex:1"><strong>Hamburguesa Clásica</strong><br><span class="grey-text" style="font-size:0.82rem">243 unidades</span></div><strong class="teal-text">$3.1M</strong></div>
-                            <div class="top-item"><div class="rank silver">2</div><div style="flex:1"><strong>Pizza Margherita</strong><br><span class="grey-text" style="font-size:0.82rem">198 unidades</span></div><strong class="teal-text">$3.1M</strong></div>
-                            <div class="top-item"><div class="rank bronze">3</div><div style="flex:1"><strong>Limonada Natural</strong><br><span class="grey-text" style="font-size:0.82rem">412 unidades</span></div><strong class="teal-text">$1.4M</strong></div>
-                            <div class="top-item"><div class="rank">4</div><div style="flex:1"><strong>Pasta Carbonara</strong><br><span class="grey-text" style="font-size:0.82rem">156 unidades</span></div><strong class="teal-text">$2.1M</strong></div>
-                            <div class="top-item"><div class="rank">5</div><div style="flex:1"><strong>Ensalada César</strong><br><span class="grey-text" style="font-size:0.82rem">134 unidades</span></div><strong class="teal-text">$1.3M</strong></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col s12 m6">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="section-header"><h6>👥 Rendimiento por Empleado</h6></div>
-                            <table class="striped">
-                                <thead><tr><th>Empleado</th><th>Pedidos</th><th>Ventas</th></tr></thead>
-                                <tbody>
-                                    <tr><td>Juan Pérez</td><td>243</td><td>$3.1M</td></tr>
-                                    <tr><td>María López</td><td>198</td><td>$2.8M</td></tr>
-                                    <tr><td>Carlos Ruiz</td><td>176</td><td>$2.4M</td></tr>
-                                    <tr><td>Ana Martínez</td><td>312</td><td>$4.2M</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="brand-text">
+            <div class="brand-name">ChefControl</div>
+            <div class="brand-sub">Gestión de restaurante</div>
         </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="../JS/app.js"></script>
-    <script>
-        document.querySelectorAll('.period-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-    </script>
-</body>
-</html>
+
+    <div class="sidebar-section sidebar-label">Principal</div>
+    <a href="{% url 'dashboard' %}">
+        <i class="material-icons">dashboard</i>
+        <span class="sidebar-label">Dashboard</span>
+    </a>
+
+    <div class="sidebar-section sidebar-label">Operaciones</div>
+    <a href="#">
+        <i class="material-icons">shopping_cart</i>
+        <span class="sidebar-label">Pedidos</span>
+        <span class="sidebar-badge">4</span>
+    </a>
+    <a href="{% url 'inventario' %}">
+        <i class="material-icons">inventory_2</i>
+        <span class="sidebar-label">Inventario</span>
+        <span class="sidebar-badge">!</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">restaurant_menu</i>
+        <span class="sidebar-label">Menús</span>
+    </a>
+    <a href="{% url 'crear_pedido' %}">
+        <i class="material-icons">add_circle_outline</i>
+        <span class="sidebar-label">Nuevo Pedido</span>
+    </a>
+    <a href="{% url 'cocina' %}">
+        <i class="material-icons">soup_kitchen</i>
+        <span class="sidebar-label">Cocina (KDS)</span>
+    </a>
+
+    <div class="sidebar-section sidebar-label">Administración</div>
+    <a href="{% url 'clientes' %}">
+        <i class="material-icons">people</i>
+        <span class="sidebar-label">Clientes</span>
+    </a>
+    <a href="{% url 'personal' %}">
+        <i class="material-icons">badge</i>
+        <span class="sidebar-label">Personal</span>
+    </a>
+    <a href="{% url 'facturacion' %}">
+        <i class="material-icons">receipt_long</i>
+        <span class="sidebar-label">Facturación</span>
+    </a>
+    <a href="{% url 'reportes' %}" class="active">
+        <i class="material-icons">bar_chart</i>
+        <span class="sidebar-label">Reportes</span>
+    </a>
+    <a href="#">
+        <i class="material-icons">settings</i>
+        <span class="sidebar-label">Configuración</span>
+    </a>
+
+    <a href="{% url 'logout' %}" class="logout-link" style="margin-top: 8px;">
+        <i class="material-icons">exit_to_app</i>
+        <span class="sidebar-label">Cerrar Sesión</span>
+    </a>
+
+    <div class="sidebar-footer">
+        <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+        <span class="user-email">{{ request.user.email|default:"" }}</span>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CONTENIDO PRINCIPAL
+════════════════════════════════════════════════════════════════ -->
+<div class="main-content" id="main-content">
+
+    <!-- ── Topbar — mismo patrón que index.html/inventario.html ── -->
+    <div class="top-nav">
+        <div class="top-nav-left">
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Colapsar menú">
+                <i class="material-icons">menu</i>
+            </button>
+            <h5>Reportes y Análisis</h5>
+        </div>
+
+        <div class="top-nav-right">
+            <div class="datetime-badge">
+                <span id="fecha-actual"></span>
+                <span class="time-part" id="hora-actual"></span>
+            </div>
+
+            <button type="button" class="btn-accion-ghost btn-proximamente" title="Próximamente" disabled>
+                <i class="material-icons">picture_as_pdf</i> PDF
+            </button>
+            <button type="button" class="btn-accion-ghost btn-proximamente" title="Próximamente" disabled>
+                <i class="material-icons">table_chart</i> Excel
+            </button>
+
+            <button class="icon-btn theme-toggle" id="theme-toggle-btn"
+                    onclick="toggleTema()" aria-label="Cambiar tema">
+                <i class="material-icons" id="theme-icon">light_mode</i>
+            </button>
+
+            <div class="font-size-ctrl" title="Tamaño de texto">
+                <button class="icon-btn" onclick="reducirFuente()" aria-label="Reducir fuente">A-</button>
+                <button class="icon-btn" onclick="aumentarFuente()" aria-label="Aumentar fuente">A+</button>
+            </div>
+
+            <button class="icon-btn" aria-label="Notificaciones">
+                <i class="material-icons">notifications</i>
+                <span class="notif-dot"></span>
+            </button>
+
+            <div class="user-avatar" title="{{ request.user.get_full_name|default:request.user.username }}">
+                {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Cuerpo ── -->
+    <div class="container">
+
+        <!-- Botones de período: <a> con querystring real, sin JS de toggle falso -->
+        <div class="period-btns">
+            <a href="?periodo=hoy" class="period-btn{% if periodo == 'hoy' %} active{% endif %}">Hoy</a>
+            <a href="?periodo=semana" class="period-btn{% if periodo == 'semana' %} active{% endif %}">Esta semana</a>
+            <a href="?periodo=mes" class="period-btn{% if periodo == 'mes' %} active{% endif %}">Este mes</a>
+            <a href="?periodo=anio" class="period-btn{% if periodo == 'anio' %} active{% endif %}">Este año</a>
+        </div>
+
+        <!-- Ventas por día -->
+        <div class="card">
+            <div class="card-content">
+                <div class="section-header">
+                    <h6><i class="material-icons">show_chart</i> Ventas por Día</h6>
+                    <span style="font-size: 0.82rem; color: var(--text-muted)">Total: {{ total_periodo|formato_cop }}</span>
+                </div>
+                {% if ventas_por_dia %}
+                <div class="bar-chart">
+                    {% for v in ventas_por_dia %}
+                    <div class="bar-wrap">
+                        <div class="bar-val">{{ v.total|formato_cop }}</div>
+                        <div class="bar" style="height:{{ v.pct }}%;{% if v.total == max_venta %}background:var(--color-warning){% endif %}"></div>
+                        <div class="bar-label">{{ v.dia_label }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="bar-chart-vacio">
+                    <i class="material-icons" style="font-size: 32px; opacity: 0.5">bar_chart</i>
+                    <p>No hay ventas registradas en este período.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="reportes-row">
+            <!-- Top productos -->
+            <div class="card">
+                <div class="card-content">
+                    <div class="section-header">
+                        <h6><i class="material-icons">emoji_events</i> Productos más vendidos</h6>
+                    </div>
+                    {% for p in top_productos %}
+                    <div class="top-item">
+                        <div class="rank{% if forloop.counter == 1 %} gold{% elif forloop.counter == 2 %} silver{% elif forloop.counter == 3 %} bronze{% endif %}">{{ forloop.counter }}</div>
+                        <div class="top-item-info">
+                            <strong>{{ p.id_producto__nombre }}</strong>
+                            <span>{{ p.unidades }} unidades</span>
+                        </div>
+                        <div class="top-item-total">{{ p.total|formato_cop }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="table-vacia">Sin ventas de productos en este período.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Rendimiento por empleado -->
+            <div class="card">
+                <div class="card-content">
+                    <div class="section-header">
+                        <h6><i class="material-icons">groups</i> Rendimiento por Empleado</h6>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Empleado</th><th>Facturas</th><th>Ventas</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for e in rendimiento_empleados %}
+                            <tr>
+                                <td>{{ e.id_empleado__nombres }} {{ e.id_empleado__apellidos }}</td>
+                                <td>{{ e.total_facturas }}</td>
+                                <td>{{ e.total_ventas|formato_cop }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3">
+                                    <div class="table-empty">
+                                        <i class="material-icons">inbox</i>
+                                        <span>Sin facturación en este período</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de inventario -->
+        <div class="card" style="margin-top: 16px">
+            <div class="card-content">
+                <div class="section-header">
+                    <h6><i class="material-icons">inventory_2</i> Estado de Inventario</h6>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Stock</th>
+                            <th>Estado</th>
+                            <th>Alerta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in inventario_reporte %}
+                        <tr>
+                            <td><strong>{{ i.producto }}</strong></td>
+                            <td>{{ i.categoria }}</td>
+                            <td>{{ i.stock }}</td>
+                            <td>
+                                {% if i.estado == 'Disponible' %}
+                                    <span class="status-badge badge-green">Disponible</span>
+                                {% else %}
+                                    <span class="status-badge badge-red">{{ i.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if i.alerta_inventario == 'Agotado' %}
+                                    <span class="status-badge badge-red">Agotado</span>
+                                {% elif i.alerta_inventario == 'Stock Bajo' %}
+                                    <span class="status-badge badge-orange">Stock Bajo</span>
+                                {% else %}
+                                    <span class="status-badge badge-green">Stock Normal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="table-empty">
+                                    <i class="material-icons">inbox</i>
+                                    <span>No hay productos registrados</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+</div><!-- /main-content -->
+
+
+<script>
+    /* ──────────────────────────────────────────────────────────────
+       TEMA OSCURO / CLARO — idéntico a index.html/inventario.html (misma
+       clave de localStorage, para que la preferencia sea global a toda la app).
+    ────────────────────────────────────────────────────────────── */
+    (function () {
+        const temaGuardado = localStorage.getItem('chefcontrol-tema') || 'dark';
+        document.documentElement.setAttribute('data-theme', temaGuardado);
+        const icono = document.getElementById('theme-icon');
+        if (icono) icono.textContent = temaGuardado === 'dark' ? 'light_mode' : 'dark_mode';
+    })();
+
+    function toggleTema() {
+        const actual = document.documentElement.getAttribute('data-theme');
+        const nuevo  = actual === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', nuevo);
+        localStorage.setItem('chefcontrol-tema', nuevo);
+        document.getElementById('theme-icon').textContent =
+            nuevo === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+
+    /* ── Accesibilidad: tamaño de fuente (idéntico a index.html/inventario.html) ── */
+    const TAMANOS = ['0.875rem', '1rem', '1.1rem', '1.2rem'];
+    let nivelFuente = parseInt(localStorage.getItem('chefcontrol-fuente') || '1', 10);
+    document.documentElement.style.setProperty('--font-size-base', TAMANOS[nivelFuente]);
+
+    function aumentarFuente() {
+        if (nivelFuente < TAMANOS.length - 1) { nivelFuente++; aplicarFuente(); }
+    }
+    function reducirFuente() {
+        if (nivelFuente > 0) { nivelFuente--; aplicarFuente(); }
+    }
+    function aplicarFuente() {
+        document.documentElement.style.setProperty('--font-size-base', TAMANOS[nivelFuente]);
+        localStorage.setItem('chefcontrol-fuente', nivelFuente);
+    }
+
+    /* ── Reloj en vivo (idéntico a index.html/inventario.html) ── */
+    function actualizarFechaHora() {
+        const ahora   = new Date();
+        const opFecha = { weekday: 'long', day: 'numeric', month: 'long' };
+        const fecha   = ahora.toLocaleDateString('es-CO', opFecha);
+        const hora    = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('fecha-actual').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1) + ' —';
+        document.getElementById('hora-actual').textContent  = hora;
+    }
+    actualizarFechaHora();
+    setInterval(actualizarFechaHora, 1000);
+
+    /* ── Toggle sidebar ── */
+    const sidebar     = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    document.getElementById('sidebar-toggle').addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+    });
+</script>
+{% endblock %}

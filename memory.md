@@ -23,3 +23,18 @@ Django + MySQL + Materialize CSS → migrando a CSS custom dark premium
 - Bug encontrado y corregido: `stock_minimo|divisibleby:2` nunca calculaba "la mitad" (comparaba contra True/False) — reemplazado por `{% widthratio %}`, ahora coincide con la regla real de `views.py`.
 - Filtros siguen siendo 100% client-side (confirmado en `inventario_view`, no hay querystring GET); ahora filtran por `data-estado`/`data-categoria` en vez de texto de celdas. `materialize.min.css/js` y `app.js` ya no se cargan en esta pantalla.
 
+## Sesión 08/08/2026 — permisos por rol en API REST (permissions.py)
+- Nuevo `restaurante/permissions.py`: `TieneRolPermitido`/`EscrituraSoloRolPermitido` (base) + 4 subclases, replican patrón Empleado+email+estado='Activo' de `requiere_rol`.
+- `api_views.py`: permission_classes en 8 de 9 ViewSets (Cargo/Categoria/Mesa/Producto=escritura Admin+Gerente, Pedido/DetallePedido=solo Mesero/Cocinero/Cajero/Admin/Gerente, Empleado=Admin+Gerente, Factura=+Cajero); Cliente sin restricción por decisión explícita.
+- Cerraba hueco de seguridad de TASKS.md (Mesero con CRUD completo vía /api/); pendiente: tests automatizados por rol (sugerido, no hecho).
+
+## Sesión 09/08/2026 — Mesero puede facturar + cierre de hueco en pagar_pedido_api
+- `facturacion_view` y nuevo `@requiere_rol` en `pagar_pedido_api` (antes sin restricción de cargo, cualquier autenticado podía cobrar) ahora exigen ('Cajero','Administrador','Gerente','Mesero').
+- `permissions.py`: `EsAdministradorOCajero` (usada en `FacturaViewSet`) suma 'Mesero' para consistencia vista+API+endpoint de pago.
+- TASKS.md limpiado: eliminados todos los ítems `[x]` resueltos en todo el archivo, solo quedan `[ ]`/`[~]` pendientes.
+
+## Sesión 09/08/2026 (2) — Módulo Reportes completo (modelo, vista, ruta, template)
+- `VProductosInventario` (managed=False), `rango_periodo()` + `reportes_view` (ventas/día, top productos, rendimiento empleados, inventario), ruta `reportes/`, `reportes.html` reescrito a Dark Premium.
+- Bug real encontrado y corregido probando con test client: MySQL sin tablas de zona horaria cargadas → `TruncDate` con `USE_TZ=True` devolvía `dia=NULL` vía `CONVERT_TZ` silencioso; se agrupa por día en Python en su lugar (ver TASKS.md).
+- Corrección sobre el spec original: `alerta_inventario` real es `Agotado/Stock Bajo/Stock Normal` (no `Crítico/Bajo/Normal`), verificado con `SHOW CREATE VIEW`.
+
