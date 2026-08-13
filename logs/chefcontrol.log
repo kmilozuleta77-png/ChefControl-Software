@@ -198,3 +198,15 @@ Traceback (most recent call last):
     _mysql.connection.query(self, query)
     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
 django.db.utils.DataError: (1265, "Data truncated for column 'estado' at row 1")
+[ERROR] 2026-08-13 22:51:42,244 log — Internal Server Error: /reportes/
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\restaurante\views.py", line 1019, in reportes_view
+    v['dia_label'] = v['dia'].strftime('%d %b')
+                     ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strftime'

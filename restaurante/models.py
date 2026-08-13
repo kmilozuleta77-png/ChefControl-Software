@@ -293,3 +293,25 @@ class Factura(models.Model):
     class Meta:
         managed = False
         db_table = 'factura'
+
+
+class VProductosInventario(models.Model):
+    """
+    Vista SQL de solo lectura (v_productos_inventario) usada en el módulo
+    Reportes. alerta_inventario se calcula en la vista: 'Agotado' (stock=0),
+    'Stock Bajo' (stock <= stock_minimo) o 'Stock Normal' (resto) —
+    verificado con SHOW CREATE VIEW, no son los valores 'Crítico/Bajo/Normal'
+    que se suelen usar en el resto de la app.
+    """
+    id_producto = models.IntegerField(primary_key=True)
+    producto = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=50)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.IntegerField()
+    stock_minimo = models.IntegerField()
+    estado = models.CharField(max_length=13)
+    alerta_inventario = models.CharField(max_length=20)
+
+    class Meta:
+        managed = False
+        db_table = 'v_productos_inventario'

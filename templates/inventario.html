@@ -113,6 +113,20 @@
             padding: 9px 10px; outline: none; transition: border-color 0.2s; width: 100%;
         }
         .field-input:focus { border-color: var(--accent); }
+
+        /* ── Lista de categorías (modal gestión) ── */
+        .categoria-lista { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+        .categoria-item {
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            background: var(--bg-elevated); border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn); padding: 10px 12px;
+        }
+        .categoria-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .categoria-item-nombre { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+        .categoria-item-desc { font-size: 0.72rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .categoria-item-acciones { display: flex; gap: 6px; flex-shrink: 0; }
+        .modal-divider { border: none; border-top: 1px solid var(--border-light); margin: 4px 0; }
+        .modal-subtitle { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin: 0; }
     </style>
 {% endblock %}
 
@@ -180,7 +194,7 @@
         <i class="material-icons">receipt_long</i>
         <span class="sidebar-label">Facturación</span>
     </a>
-    <a href="#">
+    <a href="{% url 'reportes' %}">
         <i class="material-icons">bar_chart</i>
         <span class="sidebar-label">Reportes</span>
     </a>
@@ -329,6 +343,12 @@
                     <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="filtro-group">
+                <label class="filtro-label">&nbsp;</label>
+                <button type="button" class="btn-accion-ghost" id="btn-gestionar-categorias">
+                    <i class="material-icons">category</i> Gestionar categorías
+                </button>
             </div>
             <div class="filtro-group">
                 <label class="filtro-label" for="filtro-estado">Estado</label>
@@ -554,6 +574,129 @@
     </div>
 </div>
 
+<!-- ═══════════════ MODAL GESTIONAR CATEGORÍAS ═══════════════ -->
+<div id="modal-categorias" class="modal-overlay">
+    <div class="modal-backdrop" id="modal-backdrop-categorias"></div>
+    <div class="modal-panel">
+        <div class="modal-header">
+            <h3><i class="material-icons">category</i> Gestionar categorías</h3>
+            <button type="button" class="modal-close-btn" id="modal-cerrar-categorias" aria-label="Cerrar">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-subtitle">Nueva categoría</p>
+            <form method="POST" action="{% url 'crear_categoria' %}">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="field-group span2">
+                        <label class="field-label" for="cat_nombre">Nombre *</label>
+                        <input id="cat_nombre" name="nombre" type="text" maxlength="50" class="field-input" required>
+                    </div>
+                    <div class="field-group span2">
+                        <label class="field-label" for="cat_descripcion">Descripción</label>
+                        <input id="cat_descripcion" name="descripcion" type="text" maxlength="200" class="field-input">
+                    </div>
+                    <div class="field-group span2" style="align-items: flex-end; flex-direction: row; justify-content: flex-end">
+                        <button type="submit" class="btn-accion"><i class="material-icons">add</i> Crear categoría</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr class="modal-divider">
+
+            <p class="modal-subtitle">Categorías existentes</p>
+            <div class="categoria-lista">
+                {% for cat in categorias %}
+                <div class="categoria-item">
+                    <div class="categoria-item-info">
+                        <span class="categoria-item-nombre">{{ cat.nombre }}</span>
+                        <span class="categoria-item-desc">{{ cat.descripcion|default:"Sin descripción" }}</span>
+                    </div>
+                    <div class="categoria-item-acciones">
+                        <button type="button" class="btn-accion btn-editar-cat-trigger"
+                                data-id="{{ cat.id_categoria }}"
+                                data-nombre="{{ cat.nombre }}"
+                                data-descripcion="{{ cat.descripcion|default:'' }}"
+                                title="Editar categoría">
+                            <i class="material-icons">edit</i>
+                        </button>
+                        <form method="POST" action="{% url 'eliminar_categoria' cat.id_categoria %}"
+                              id="form-eliminar-cat-{{ cat.id_categoria }}" style="display:inline">
+                            {% csrf_token %}
+                            <button type="button" class="btn-accion btn-accion-danger btn-eliminar-cat-trigger"
+                                    data-form-id="form-eliminar-cat-{{ cat.id_categoria }}"
+                                    data-nombre="{{ cat.nombre }}"
+                                    title="Eliminar categoría">
+                                <i class="material-icons">delete</i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <span style="font-size: 0.82rem; color: var(--text-muted)">No hay categorías registradas.</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-accion-ghost" id="btn-cerrar-categorias-footer">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════ MODAL EDITAR CATEGORÍA ═══════════════ -->
+<div id="modal-editar-categoria" class="modal-overlay">
+    <div class="modal-backdrop" id="modal-backdrop-editar-cat"></div>
+    <div class="modal-panel" style="width: min(420px, 95vw)">
+        <form method="POST" id="form-editar-categoria" action="/categorias/editar/0/">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h3><i class="material-icons">edit</i> Editar categoría</h3>
+                <button type="button" class="modal-close-btn" id="modal-cerrar-editar-cat" aria-label="Cerrar">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label" for="edit_cat_nombre">Nombre *</label>
+                    <input id="edit_cat_nombre" name="nombre" type="text" maxlength="50" class="field-input" required>
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="edit_cat_descripcion">Descripción</label>
+                    <input id="edit_cat_descripcion" name="descripcion" type="text" maxlength="200" class="field-input">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-accion-ghost" id="btn-cancelar-editar-cat">Cancelar</button>
+                <button type="submit" class="btn-accion"><i class="material-icons">save</i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════ MODAL CONFIRMAR ELIMINAR CATEGORÍA ═══════════════ -->
+<div id="modal-confirmar-eliminar-cat" class="modal-overlay danger">
+    <div class="modal-backdrop" id="modal-backdrop-eliminar-cat"></div>
+    <div class="modal-panel" style="width: min(400px, 95vw)">
+        <div class="modal-header">
+            <h3><i class="material-icons">warning</i> Eliminar categoría</h3>
+            <button type="button" class="modal-close-btn" id="modal-cerrar-eliminar-cat" aria-label="Cerrar">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0">
+                ¿Eliminar <strong style="color: var(--text-primary)" id="eliminar-nombre-cat"></strong>?
+                Si tiene productos asignados no se podrá eliminar hasta reasignarlos.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-accion-ghost" id="btn-cancelar-eliminar-cat">Cancelar</button>
+            <button type="button" class="btn-accion btn-accion-danger" id="btn-confirmar-eliminar-cat">Eliminar</button>
+        </div>
+    </div>
+</div>
+
 
 <script>
     /* ──────────────────────────────────────────────────────────────
@@ -706,6 +849,44 @@
     document.getElementById('btn-cancelar-eliminar').addEventListener('click', () => cerrarModal(modalEliminar));
     document.getElementById('btn-confirmar-eliminar').addEventListener('click', () => {
         if (formPendienteEliminar) formPendienteEliminar.submit();
+    });
+
+    /* ── Gestionar categorías ── */
+    const modalCategorias = document.getElementById('modal-categorias');
+    document.getElementById('btn-gestionar-categorias').addEventListener('click', () => abrirModal(modalCategorias));
+    document.getElementById('modal-cerrar-categorias').addEventListener('click', () => cerrarModal(modalCategorias));
+    document.getElementById('btn-cerrar-categorias-footer').addEventListener('click', () => cerrarModal(modalCategorias));
+
+    /* Editar categoría — precarga nombre/descripción y apunta el form al id correcto */
+    const modalEditarCat = document.getElementById('modal-editar-categoria');
+    document.querySelectorAll('.btn-editar-cat-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('edit_cat_nombre').value      = btn.dataset.nombre;
+            document.getElementById('edit_cat_descripcion').value = btn.dataset.descripcion;
+            document.getElementById('form-editar-categoria').action = `/categorias/editar/${btn.dataset.id}/`;
+            cerrarModal(modalCategorias);
+            abrirModal(modalEditarCat);
+        });
+    });
+    document.getElementById('modal-cerrar-editar-cat').addEventListener('click', () => cerrarModal(modalEditarCat));
+    document.getElementById('btn-cancelar-editar-cat').addEventListener('click', () => cerrarModal(modalEditarCat));
+
+    /* Confirmar eliminar categoría — mismo patrón que eliminar producto */
+    const modalEliminarCat = document.getElementById('modal-confirmar-eliminar-cat');
+    let formPendienteEliminarCat = null;
+
+    document.querySelectorAll('.btn-eliminar-cat-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            formPendienteEliminarCat = document.getElementById(btn.dataset.formId);
+            document.getElementById('eliminar-nombre-cat').textContent = btn.dataset.nombre;
+            cerrarModal(modalCategorias);
+            abrirModal(modalEliminarCat);
+        });
+    });
+    document.getElementById('modal-cerrar-eliminar-cat').addEventListener('click', () => cerrarModal(modalEliminarCat));
+    document.getElementById('btn-cancelar-eliminar-cat').addEventListener('click', () => cerrarModal(modalEliminarCat));
+    document.getElementById('btn-confirmar-eliminar-cat').addEventListener('click', () => {
+        if (formPendienteEliminarCat) formPendienteEliminarCat.submit();
     });
 </script>
 {% endblock %}

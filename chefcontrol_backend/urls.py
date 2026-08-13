@@ -45,6 +45,10 @@ urlpatterns = [
     path('inventario/eliminar-producto/<int:id_producto>/', views.eliminar_producto_view, name='eliminar_producto'),
     path('api/pedidos-cocina/', views.api_pedidos_cocina, name='api_pedidos_cocina'),
 
+    path('categorias/crear/', views.crear_categoria_view, name='crear_categoria'),
+    path('categorias/editar/<int:id_categoria>/', views.editar_categoria_view, name='editar_categoria'),
+    path('categorias/eliminar/<int:id_categoria>/', views.eliminar_categoria_view, name='eliminar_categoria'),
+
     path('clientes/', views.clientes_view, name='clientes'), # Ruta para listar y crear clientes
     path('clientes/editar/<int:id_cliente>/', views.editar_cliente_view, name='editar_cliente'),
     path('clientes/eliminar/<int:id_cliente>/', views.eliminar_cliente_view, name='eliminar_cliente'),
@@ -52,6 +56,8 @@ urlpatterns = [
     path('personal/', views.personal_view, name='personal'), # Ruta para listar y crear empleados
     path('personal/editar/<int:id_empleado>/', views.editar_empleado_view, name='editar_empleado'),
     path('personal/eliminar/<int:id_empleado>/', views.eliminar_empleado_view, name='eliminar_empleado'),
+
+    path('reportes/', views.reportes_view, name='reportes'), # Ruta para reportes y análisis
 
     path('api/', include(router.urls)),
 ]    
