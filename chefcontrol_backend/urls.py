@@ -62,6 +62,7 @@ urlpatterns = [
     path('cargos/eliminar/<int:id_cargo>/', views.eliminar_cargo_view, name='eliminar_cargo'),
 
     path('reportes/', views.reportes_view, name='reportes'), # Ruta para reportes y análisis
+    path('pedidos/', views.pedidos_view, name='pedidos'), # Ruta para el historial de pedidos
 
     path('api/', include(router.urls)),
 ]    

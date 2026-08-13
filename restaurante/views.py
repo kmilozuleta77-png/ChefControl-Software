@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, F, Count, Q
+from django.core.paginator import Paginator
 from functools import wraps
 
 from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, Cliente, Cargo, Factura, VProductosInventario
@@ -1143,3 +1144,47 @@ def reportes_view(request):
         'inventario_reporte': inventario_reporte,
     }
     return render(request, 'reportes.html', context)
+
+
+# -------------------------------------------------------------------
+# VISTA 17: HISTORIAL DE PEDIDOS
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def pedidos_view(request):
+    """Historial completo de pedidos, filtrable por estado y por período
+    (reutilizando rango_periodo de reportes_view), con paginación."""
+    ESTADOS_PEDIDO = ['Pendiente', 'En Preparación', 'Listo', 'Entregado', 'Pagado', 'Cancelado']
+
+    estado_filtro = request.GET.get('estado', '')
+    periodo = request.GET.get('periodo', 'todos')
+
+    pedidos_qs = (
+        Pedido.objects
+        .select_related('id_mesa', 'id_empleado', 'id_cliente')
+        .order_by('-fecha_pedido')
+    )
+
+    if estado_filtro in ESTADOS_PEDIDO:
+        pedidos_qs = pedidos_qs.filter(estado=estado_filtro)
+
+    if periodo != 'todos' and periodo in ('hoy', 'semana', 'mes', 'anio'):
+        inicio, fin = rango_periodo(periodo)
+        pedidos_qs = pedidos_qs.filter(fecha_pedido__gte=inicio, fecha_pedido__lt=fin)
+
+    paginator = Paginator(pedidos_qs, 20)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    conteo_estados = {
+        estado: Pedido.objects.filter(estado=estado).count()
+        for estado in ESTADOS_PEDIDO
+    }
+
+    context = {
+        'page_obj': page_obj,
+        'estado_filtro': estado_filtro,
+        'periodo': periodo,
+        'total_pedidos': paginator.count,
+        'conteo_estados': conteo_estados,
+        'estados_pedido': ESTADOS_PEDIDO,
+    }
+    return render(request, 'pedidos.html', context)

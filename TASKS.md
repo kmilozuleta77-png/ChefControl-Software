@@ -21,7 +21,7 @@ Actualiza este archivo al completar o agregar tareas.
 
 
 ### Pantallas pendientes de rediseño
-- [ ] `pedidos.html` — Diseño antiguo, requiere migración + crear URL `name='pedidos'` en urls.py (enlace “Ver todos” del dashboard apunta aquí)
+- [x] `pedidos.html` — Migrado a Dark Premium + `pedidos_view` (filtro estado/período, paginación) + URL `name='pedidos'`; sidebar y "Ver todos" del dashboard ya enlazan aquí
 - [ ] `configuracion.html` — Sin diseño Dark Premium ni conexión a BD
 
 ### Sistema de diseÃ±o global
@@ -51,6 +51,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Deuda tecnica (pendiente hasta terminar Clientes/Empleados)**: extraer a `design-system.css` el bloque CSS de modales (`.modal-overlay`, `.modal-panel`, `.form-grid`, `.field-input`, etc.) duplicado igual en `index.html`, `inventario.html` y `clientes.html`
 - [ ] **Deuda tecnica (pendiente hasta terminar Clientes/Empleados)**: extraer a un JS compartido el bloque de tema oscuro/claro, tamaño de fuente, reloj en vivo y toggle de sidebar, duplicado igual en `index.html`, `inventario.html` y `clientes.html`
 - [ ] **Bug**: `dashboard_view` (views.py:107) filtra `Empleado.objects.filter(estado='Descanso')` pero el ENUM real en MySQL es `('Activo','Inactivo')` — "Descanso" no existe, el conteo `empleados_descanso` siempre da 0. Detectado durante diagnóstico de CRUD Empleado (19/07/2026), fuera de alcance de esa sesión (pantalla dashboard, no personal)
+- [ ] **Deuda técnica**: sidebar "Pedidos" (dashboard, reportes, pedidos, clientes, inventario, personal) quedó sin badge de conteo — antes mostraba un `4` hardcodeado sin fuente real de datos. Un badge de "pedidos pendientes" real requiere un context processor que calcule el conteo en cada request (no una query repetida por vista); pendiente para sesión futura
 
 ### Mejoras de lÃ³gica
 - [ ] Propina de monto libre en facturaciÃ³n (actualmente solo porcentaje)

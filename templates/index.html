@@ -142,10 +142,9 @@
     </a>
 
     <div class="sidebar-section sidebar-label">Operaciones</div>
-    <a href="#">
+    <a href="{% url 'pedidos' %}">
         <i class="material-icons">shopping_cart</i>
         <span class="sidebar-label">Pedidos</span>
-        <span class="sidebar-badge">4</span>
     </a>
     <a href="{% url 'inventario' %}">
         <i class="material-icons">inventory_2</i>
@@ -338,7 +337,7 @@
                             <i class="material-icons">shopping_cart</i>
                             Últimos 10 Pedidos
                         </h6>
-                        <a href="#">{# TODO: url 'pedidos' #}Ver todos →</a>
+                        <a href="{% url 'pedidos' %}">Ver todos →</a>
                     </div>
 
                     <table>
@@ -383,6 +382,7 @@
                                         data-tipo="{{ pedido.tipo_pedido|default:'No especificado' }}"
                                         data-obs="{{ pedido.observaciones|default:'Sin observaciones' }}"
                                         data-estado="{{ pedido.estado }}"
+                                        data-fecha="{{ pedido.fecha_pedido|date:'d/m/Y H:i' }}"
                                     >Ver</button>
                                 </td>
                             </tr>
@@ -621,6 +621,7 @@
             document.getElementById('mp-mesa').textContent   = btn.dataset.mesa;
             document.getElementById('mp-mesero').textContent = btn.dataset.mesero;
             document.getElementById('mp-tipo').textContent   = btn.dataset.tipo;
+            document.getElementById('mp-fecha').textContent  = btn.dataset.fecha;
             document.getElementById('mp-total').textContent  = btn.dataset.total;
             document.getElementById('mp-obs').textContent    = btn.dataset.obs;
             const cls = BADGE[btn.dataset.estado] || 'badge-gray';
@@ -667,6 +668,10 @@
                 <div class="modal-field">
                     <span class="modal-label">Tipo de pedido</span>
                     <span class="modal-value" id="mp-tipo"></span>
+                </div>
+                <div class="modal-field">
+                    <span class="modal-label">Fecha y hora</span>
+                    <span class="modal-value" id="mp-fecha"></span>
                 </div>
             </div>
             <hr class="modal-divider">
