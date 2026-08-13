@@ -993,6 +993,97 @@ def eliminar_empleado_view(request, id_empleado):
 
 
 # -------------------------------------------------------------------
+# VISTA 15b: CARGOS (crear, editar, eliminar) — se gestionan desde un
+# modal dentro de personal.html, no tienen pantalla propia. Mismo
+# patrón que las categorías de inventario.html.
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def crear_cargo_view(request):
+    """Crea un cargo nuevo. 'nombre' es UNIQUE en la BD, así que se
+    valida el duplicado antes de insertar para dar un mensaje claro en
+    vez de dejar que MySQL lance el error de restricción."""
+    if request.method == 'POST':
+        nombre      = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+
+        if not nombre:
+            messages.error(request, 'El nombre del cargo es obligatorio.')
+            return redirect('personal')
+
+        if Cargo.objects.filter(nombre=nombre).exists():
+            messages.error(request, f'Ya existe un cargo con el nombre "{nombre}".')
+            return redirect('personal')
+
+        Cargo.objects.create(
+            nombre         = nombre,
+            descripcion    = descripcion or None,
+            fecha_creacion = timezone.now(),
+        )
+        messages.success(request, f'Cargo "{nombre}" creado correctamente.')
+
+    return redirect('personal')
+
+
+# -------------------------------------------------------------------
+# VISTA 15c: EDITAR CARGO
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def editar_cargo_view(request, id_cargo):
+    if request.method == 'POST':
+        try:
+            cargo = Cargo.objects.get(id_cargo=id_cargo)
+        except Cargo.DoesNotExist:
+            messages.error(request, 'Cargo no encontrado.')
+            return redirect('personal')
+
+        nombre      = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+
+        if not nombre:
+            messages.error(request, 'El nombre del cargo es obligatorio.')
+            return redirect('personal')
+
+        if Cargo.objects.filter(nombre=nombre).exclude(id_cargo=id_cargo).exists():
+            messages.error(request, f'Ya existe otro cargo con el nombre "{nombre}".')
+            return redirect('personal')
+
+        cargo.nombre      = nombre
+        cargo.descripcion = descripcion or None
+        cargo.save()
+
+        messages.success(request, f'Cargo "{nombre}" actualizado correctamente.')
+
+    return redirect('personal')
+
+
+# -------------------------------------------------------------------
+# VISTA 15d: ELIMINAR CARGO
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+def eliminar_cargo_view(request, id_cargo):
+    """Borrado físico: cargo no tiene columna de estado para soft-delete.
+    empleado.id_cargo es ON DELETE RESTRICT, así que MySQL rechaza el
+    DELETE si hay empleados asignados — se captura como IntegrityError y se
+    le pide al usuario reasignarlos primero."""
+    if request.method == 'POST':
+        try:
+            cargo = Cargo.objects.get(id_cargo=id_cargo)
+            nombre = cargo.nombre
+            cargo.delete()
+            messages.success(request, f'Cargo "{nombre}" eliminado correctamente.')
+        except Cargo.DoesNotExist:
+            messages.error(request, 'Cargo no encontrado.')
+        except IntegrityError:
+            messages.error(
+                request,
+                'No se puede eliminar: hay empleados asignados a este cargo. '
+                'Reasígnalos primero.'
+            )
+
+    return redirect('personal')
+
+
+# -------------------------------------------------------------------
 # VISTA 16: REPORTES Y ANÁLISIS
 # -------------------------------------------------------------------
 @login_required(login_url='login')
