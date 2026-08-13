@@ -89,6 +89,20 @@
         }
         .field-input:focus { border-color: var(--accent); }
         select.field-input { appearance: auto; }
+
+        /* ── Lista de cargos (modal gestión) — mismo patrón que .categoria-lista de inventario.html ── */
+        .cargo-lista { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+        .cargo-item {
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            background: var(--bg-elevated); border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn); padding: 10px 12px;
+        }
+        .cargo-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .cargo-item-nombre { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+        .cargo-item-desc { font-size: 0.72rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cargo-item-acciones { display: flex; gap: 6px; flex-shrink: 0; }
+        .modal-divider { border: none; border-top: 1px solid var(--border-light); margin: 4px 0; }
+        .modal-subtitle { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin: 0; }
     </style>
 {% endblock %}
 
@@ -128,10 +142,6 @@
     <a href="{% url 'inventario' %}">
         <i class="material-icons">inventory_2</i>
         <span class="sidebar-label">Inventario</span>
-    </a>
-    <a href="#">
-        <i class="material-icons">restaurant_menu</i>
-        <span class="sidebar-label">Menús</span>
     </a>
     <a href="{% url 'crear_pedido' %}">
         <i class="material-icons">add_circle_outline</i>
@@ -195,6 +205,10 @@
                 <span id="fecha-actual"></span>
                 <span class="time-part" id="hora-actual"></span>
             </div>
+
+            <button class="btn-accion-ghost" id="btn-gestionar-cargos">
+                <i class="material-icons">work</i> Gestionar cargos
+            </button>
 
             <button class="btn-quick-action" id="btn-nuevo-empleado">
                 <i class="material-icons">person_add</i> Nuevo Empleado
@@ -512,6 +526,129 @@
     </div>
 </div>
 
+<!-- ═══════════════ MODAL GESTIONAR CARGOS ═══════════════ -->
+<div id="modal-cargos" class="modal-overlay">
+    <div class="modal-backdrop" id="modal-backdrop-cargos"></div>
+    <div class="modal-panel">
+        <div class="modal-header">
+            <h3><i class="material-icons">work</i> Gestionar cargos</h3>
+            <button type="button" class="modal-close-btn" id="modal-cerrar-cargos" aria-label="Cerrar">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-subtitle">Nuevo cargo</p>
+            <form method="POST" action="{% url 'crear_cargo' %}">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="field-group span2">
+                        <label class="field-label" for="cargo_nombre">Nombre *</label>
+                        <input id="cargo_nombre" name="nombre" type="text" maxlength="50" class="field-input" required>
+                    </div>
+                    <div class="field-group span2">
+                        <label class="field-label" for="cargo_descripcion">Descripción</label>
+                        <input id="cargo_descripcion" name="descripcion" type="text" maxlength="200" class="field-input">
+                    </div>
+                    <div class="field-group span2" style="align-items: flex-end; flex-direction: row; justify-content: flex-end">
+                        <button type="submit" class="btn-accion"><i class="material-icons">add</i> Crear cargo</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr class="modal-divider">
+
+            <p class="modal-subtitle">Cargos existentes</p>
+            <div class="cargo-lista">
+                {% for c in cargos %}
+                <div class="cargo-item">
+                    <div class="cargo-item-info">
+                        <span class="cargo-item-nombre">{{ c.nombre }}</span>
+                        <span class="cargo-item-desc">{{ c.descripcion|default:"Sin descripción" }}</span>
+                    </div>
+                    <div class="cargo-item-acciones">
+                        <button type="button" class="btn-accion btn-editar-cargo-trigger"
+                                data-id="{{ c.id_cargo }}"
+                                data-nombre="{{ c.nombre }}"
+                                data-descripcion="{{ c.descripcion|default:'' }}"
+                                title="Editar cargo">
+                            <i class="material-icons">edit</i>
+                        </button>
+                        <form method="POST" action="{% url 'eliminar_cargo' c.id_cargo %}"
+                              id="form-eliminar-cargo-{{ c.id_cargo }}" style="display:inline">
+                            {% csrf_token %}
+                            <button type="button" class="btn-accion btn-accion-danger btn-eliminar-cargo-trigger"
+                                    data-form-id="form-eliminar-cargo-{{ c.id_cargo }}"
+                                    data-nombre="{{ c.nombre }}"
+                                    title="Eliminar cargo">
+                                <i class="material-icons">delete</i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <span style="font-size: 0.82rem; color: var(--text-muted)">No hay cargos registrados.</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-accion-ghost" id="btn-cerrar-cargos-footer">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════ MODAL EDITAR CARGO ═══════════════ -->
+<div id="modal-editar-cargo" class="modal-overlay">
+    <div class="modal-backdrop" id="modal-backdrop-editar-cargo"></div>
+    <div class="modal-panel" style="width: min(420px, 95vw)">
+        <form method="POST" id="form-editar-cargo" action="/cargos/editar/0/">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h3><i class="material-icons">edit</i> Editar cargo</h3>
+                <button type="button" class="modal-close-btn" id="modal-cerrar-editar-cargo" aria-label="Cerrar">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label" for="edit_cargo_nombre">Nombre *</label>
+                    <input id="edit_cargo_nombre" name="nombre" type="text" maxlength="50" class="field-input" required>
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="edit_cargo_descripcion">Descripción</label>
+                    <input id="edit_cargo_descripcion" name="descripcion" type="text" maxlength="200" class="field-input">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-accion-ghost" id="btn-cancelar-editar-cargo">Cancelar</button>
+                <button type="submit" class="btn-accion"><i class="material-icons">save</i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════ MODAL CONFIRMAR ELIMINAR CARGO ═══════════════ -->
+<div id="modal-confirmar-eliminar-cargo" class="modal-overlay danger">
+    <div class="modal-backdrop" id="modal-backdrop-eliminar-cargo"></div>
+    <div class="modal-panel" style="width: min(400px, 95vw)">
+        <div class="modal-header">
+            <h3><i class="material-icons">warning</i> Eliminar cargo</h3>
+            <button type="button" class="modal-close-btn" id="modal-cerrar-eliminar-cargo" aria-label="Cerrar">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0">
+                ¿Eliminar <strong style="color: var(--text-primary)" id="eliminar-nombre-cargo"></strong>?
+                Si tiene empleados asignados no se podrá eliminar hasta reasignarlos.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-accion-ghost" id="btn-cancelar-eliminar-cargo">Cancelar</button>
+            <button type="button" class="btn-accion btn-accion-danger" id="btn-confirmar-eliminar-cargo">Eliminar</button>
+        </div>
+    </div>
+</div>
+
 
 <script>
     /* ──────────────────────────────────────────────────────────────
@@ -634,6 +771,44 @@
     document.getElementById('btn-cancelar-eliminar').addEventListener('click', () => cerrarModal(modalEliminar));
     document.getElementById('btn-confirmar-eliminar').addEventListener('click', () => {
         if (formPendienteEliminar) formPendienteEliminar.submit();
+    });
+
+    /* ── Gestionar cargos ── */
+    const modalCargos = document.getElementById('modal-cargos');
+    document.getElementById('btn-gestionar-cargos').addEventListener('click', () => abrirModal(modalCargos));
+    document.getElementById('modal-cerrar-cargos').addEventListener('click', () => cerrarModal(modalCargos));
+    document.getElementById('btn-cerrar-cargos-footer').addEventListener('click', () => cerrarModal(modalCargos));
+
+    /* Editar cargo — precarga nombre/descripción y apunta el form al id correcto */
+    const modalEditarCargo = document.getElementById('modal-editar-cargo');
+    document.querySelectorAll('.btn-editar-cargo-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('edit_cargo_nombre').value      = btn.dataset.nombre;
+            document.getElementById('edit_cargo_descripcion').value = btn.dataset.descripcion;
+            document.getElementById('form-editar-cargo').action = `/cargos/editar/${btn.dataset.id}/`;
+            cerrarModal(modalCargos);
+            abrirModal(modalEditarCargo);
+        });
+    });
+    document.getElementById('modal-cerrar-editar-cargo').addEventListener('click', () => cerrarModal(modalEditarCargo));
+    document.getElementById('btn-cancelar-editar-cargo').addEventListener('click', () => cerrarModal(modalEditarCargo));
+
+    /* Confirmar eliminar cargo — mismo patrón que eliminar empleado */
+    const modalEliminarCargo = document.getElementById('modal-confirmar-eliminar-cargo');
+    let formPendienteEliminarCargo = null;
+
+    document.querySelectorAll('.btn-eliminar-cargo-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+            formPendienteEliminarCargo = document.getElementById(btn.dataset.formId);
+            document.getElementById('eliminar-nombre-cargo').textContent = btn.dataset.nombre;
+            cerrarModal(modalCargos);
+            abrirModal(modalEliminarCargo);
+        });
+    });
+    document.getElementById('modal-cerrar-eliminar-cargo').addEventListener('click', () => cerrarModal(modalEliminarCargo));
+    document.getElementById('btn-cancelar-eliminar-cargo').addEventListener('click', () => cerrarModal(modalEliminarCargo));
+    document.getElementById('btn-confirmar-eliminar-cargo').addEventListener('click', () => {
+        if (formPendienteEliminarCargo) formPendienteEliminarCargo.submit();
     });
 </script>
 {% endblock %}
