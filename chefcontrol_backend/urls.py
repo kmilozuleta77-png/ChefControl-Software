@@ -64,5 +64,7 @@ urlpatterns = [
     path('reportes/', views.reportes_view, name='reportes'), # Ruta para reportes y análisis
     path('pedidos/', views.pedidos_view, name='pedidos'), # Ruta para el historial de pedidos
 
+    path('health/', views.health_check_view, name='health_check'), # Ping público para monitoreo externo (evita que Aiven apague el servicio)
+
     path('api/', include(router.urls)),
 ]    

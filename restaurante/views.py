@@ -5,7 +5,7 @@ from django.utils import timezone
 from decimal import Decimal, InvalidOperation
 
 from django.http import JsonResponse
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, connection
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -1188,3 +1188,20 @@ def pedidos_view(request):
         'estados_pedido': ESTADOS_PEDIDO,
     }
     return render(request, 'pedidos.html', context)
+
+
+# -------------------------------------------------------------------
+# VISTA 18: HEALTH CHECK
+# -------------------------------------------------------------------
+def health_check_view(request):
+    """Verifica que la app y la BD respondan; sin @login_required porque
+    el monitor externo (uptime ping) no tiene sesión. Se usa para evitar
+    que Aiven/Render apaguen el servicio por inactividad. Devuelve 503 si
+    la consulta falla, para que el monitor detecte una caída real."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        return JsonResponse({'status': 'ok'})
+    except Exception:
+        logger.exception("Health check falló: no se pudo conectar a la base de datos")
+        return JsonResponse({'status': 'error'}, status=503)
