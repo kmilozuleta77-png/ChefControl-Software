@@ -173,10 +173,10 @@ LOGGING = {
             'level': 'DEBUG' if DEBUG else 'WARNING',
             'propagate': False,
         },
-        'django.request': {
-            'handlers': ['archivo'],
-            'level': 'ERROR',
-            'propagate': False,
+       'django.request': {
+    'handlers': ['archivo', 'consola'],
+    'level': 'ERROR',
+    'propagate': False,
         },
     },
 }
