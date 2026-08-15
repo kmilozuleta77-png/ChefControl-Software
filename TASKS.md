@@ -1,6 +1,6 @@
-# TASKS â€” ChefControl
+# TASKS — ChefControl
 
-Lista de verificaciÃ³n de trabajo organizada por mÃ³dulo.
+Lista de verificación de trabajo organizada por módulo.
 Actualiza este archivo al completar o agregar tareas.
 
 - `[x]` Completado
@@ -9,56 +9,55 @@ Actualiza este archivo al completar o agregar tareas.
 
 ---
 
-## ðŸ” AutenticaciÃ³n y Seguridad
+## 🔐 Autenticación y Seguridad
 
-- [ ] Headers de producciÃ³n activados y verificados (`SECURE_SSL_REDIRECT`, HSTS)
-- [ ] Rate limiting en el endpoint de login (protecciÃ³n fuerza bruta)
-- [ ] PolÃ­tica de contraseÃ±as (longitud mÃ­nima, complejidad)
- 
+- [ ] Headers de producción activados y verificados (`SECURE_SSL_REDIRECT`, HSTS) — ya configurado en settings.py para producción (Render), verificar que estén realmente activos en el entorno desplegado
+- [ ] Rate limiting en el endpoint de login (protección fuerza bruta)
+- [ ] Política de contraseñas (longitud mínima, complejidad)
 
 ---
 
-
+## 🎨 UI Dark Premium
 
 ### Pantallas pendientes de rediseño
-- [x] `pedidos.html` — Migrado a Dark Premium + `pedidos_view` (filtro estado/período, paginación) + URL `name='pedidos'`; sidebar y "Ver todos" del dashboard ya enlazan aquí
-- [ ] `configuracion.html` — Sin diseño Dark Premium ni conexión a BD
+- [ ] `configuracion.html` — Sin diseño Dark Premium ni conexión a BD (fuera de alcance de la entrega EV02, próxima iteración)
 
-### Sistema de diseÃ±o global
-- [ ] Cambiar tipografÃ­a `Inter` por serif premium en toda la UI
+### Sistema de diseño global
+- [ ] Cambiar tipografía `Inter` por serif premium en toda la UI
 - [ ] Adaptar logo al estilo minimalista Dark Premium
-- [ ] Micro-interacciones y animaciones de transiciÃ³n entre vistas
-- [ ] Responsive design validado en tablet y mÃ³vil
+- [ ] Micro-interacciones y animaciones de transición entre vistas
+- [ ] Responsive design validado en tablet y móvil
 
 ---
 
-## ðŸ—ï¸ Backend / LÃ³gica de Negocio
+## 🏗️ Backend / Lógica de Negocio
 
-### CRUD de mÃ³dulos administrativos (pendiente)
-
-
-
-- [~] **Personal**: CRUD completo de Empleados con soft-delete (estado='Inactivo', fk_pedido_empleado y fk_factura_empleado son ON DELETE RESTRICT) (19/07/2026); falta CRUD de Cargos
+### CRUD de módulos administrativos (pendiente)
 - [ ] **Configuración**: ajustes globales del sistema (nombre del local, IVA, etc.)
 - [ ] `v_ventas_empleado` no tiene columna de fecha — no se usa en Reportes (que sí filtra por período); candidata a rediseño futuro si se quiere usar ahí
 
 ### Bugs conocidos
+- [ ] **Bug de arquitectura — duplicados al recrear registros desactivados**: al eliminar (soft-delete) un Producto, Cliente o Empleado y luego volver a crear uno con el mismo nombre/cédula/email:
+  - **Producto**: `producto.nombre` no tiene `UNIQUE` en la BD — se duplica literalmente sin ningún aviso (caso detectado: "Empanada" creada múltiples veces).
+  - **Cliente/Empleado/Categoría/Cargo**: sí tienen `UNIQUE` (cédula/email/nombre), pero la validación de "ya existe" en `crear_*_view` no filtra por estado — bloquea la recreación con error, sin ofrecer reactivar el registro inactivo existente.
+  - Fix correcto: patrón "buscar y reactivar" — antes de crear, buscar si ya existe el registro (activo o inactivo) por su identificador único; si existe inactivo, reactivarlo (poniendo estado='Activo' y actualizando campos) en vez de crear uno nuevo. Aplica a las 5 vistas de creación (producto, cliente, empleado, categoría, cargo).
 - [ ] Evaluar mover `<script>` de index.html al final de `</body>` o usar `defer` (evita el patrón de orden para todo el archivo, no urgente)
 - [ ] **Deuda técnica menor**: cambiar `fecha_pedido` a `auto_now_add=True` en modelo `Pedido` para garantizar que nunca quede NULL sin depender de la vista
-- [ ] **Deuda tecnica**: ampliar `Factura.metodo_pago` a `max_length=30` con migracion — coordinar con Sofia; hoy `'Tarjeta Credito'` ocupa 14 chars, cabe justo; riesgo si se agregan metodos mas largos
-- [ ] **Deuda tecnica**: centralizar codigos de metodo de pago en constante JS compartida en `facturacion.html` — hoy el literal `'efectivo'` esta disperso en `calcularCambio()`, `abrirModal()` y `confirmarPago()`
-- [ ] **Deuda tecnica**: convertir `Factura.estado` a campo `choices` — hoy `CharField(9)` libre; `'Pagada'` cabe justo, cualquier estado mas largo (ej. `'Pendiente'`) agota el limite
-- [ ] **Deuda tecnica (pendiente hasta terminar Clientes/Empleados)**: extraer a `design-system.css` el bloque CSS de modales (`.modal-overlay`, `.modal-panel`, `.form-grid`, `.field-input`, etc.) duplicado igual en `index.html`, `inventario.html` y `clientes.html`
-- [ ] **Deuda tecnica (pendiente hasta terminar Clientes/Empleados)**: extraer a un JS compartido el bloque de tema oscuro/claro, tamaño de fuente, reloj en vivo y toggle de sidebar, duplicado igual en `index.html`, `inventario.html` y `clientes.html`
-- [ ] **Bug**: `dashboard_view` (views.py:107) filtra `Empleado.objects.filter(estado='Descanso')` pero el ENUM real en MySQL es `('Activo','Inactivo')` — "Descanso" no existe, el conteo `empleados_descanso` siempre da 0. Detectado durante diagnóstico de CRUD Empleado (19/07/2026), fuera de alcance de esa sesión (pantalla dashboard, no personal)
-- [ ] **Deuda técnica**: sidebar "Pedidos" (dashboard, reportes, pedidos, clientes, inventario, personal) quedó sin badge de conteo — antes mostraba un `4` hardcodeado sin fuente real de datos. Un badge de "pedidos pendientes" real requiere un context processor que calcule el conteo en cada request (no una query repetida por vista); pendiente para sesión futura
+- [ ] **Deuda técnica**: ampliar `Factura.metodo_pago` a `max_length=30` con migración — coordinar con Sofía; hoy `'Tarjeta Crédito'` ocupa 14 chars, cabe justo; riesgo si se agregan métodos más largos
+- [ ] **Deuda técnica**: centralizar códigos de método de pago en constante JS compartida en `facturacion.html` — hoy el literal `'efectivo'` está disperso en `calcularCambio()`, `abrirModal()` y `confirmarPago()`
+- [ ] **Deuda técnica**: convertir `Factura.estado` a campo `choices` — hoy `CharField(9)` libre; `'Pagada'` cabe justo, cualquier estado más largo (ej. `'Pendiente'`) agota el límite
+- [ ] **Deuda técnica**: extraer a `design-system.css` el bloque CSS de modales (`.modal-overlay`, `.modal-panel`, `.form-grid`, `.field-input`, `.categoria-lista`, `.categoria-item`, etc.) duplicado en `index.html`, `inventario.html`, `personal.html` y `clientes.html`
+- [ ] **Deuda técnica**: extraer a un JS compartido el bloque de tema oscuro/claro, tamaño de fuente, reloj en vivo y toggle de sidebar, duplicado en todos los templates con sidebar
+- [ ] **Deuda técnica**: el bloque de sidebar completo se repite en 6+ templates — evaluar `{% include 'partials/sidebar.html' %}` para no tener que corregir un link roto en 6 archivos a la vez
+- [ ] **Bug**: `dashboard_view` filtra `Empleado.objects.filter(estado='Descanso')` pero el ENUM real en MySQL es `('Activo','Inactivo')` — "Descanso" no existe, el conteo `empleados_descanso` siempre da 0
+- [ ] **Deuda técnica**: sidebar "Pedidos" quedó sin badge de conteo real (antes mostraba un `4` hardcodeado). Un badge de "pedidos pendientes" real requiere un context processor que calcule el conteo en cada request
 
-### Mejoras de lÃ³gica
-- [ ] Propina de monto libre en facturaciÃ³n (actualmente solo porcentaje)
-- [ ] Tipos de pedido: implementar lÃ³gica para "Para llevar" y "Domicilio"
-- [ ] PaginaciÃ³n en historial de pedidos y reportes
-- [ ] BÃºsqueda y filtros en mÃ³dulo de inventario
+### Mejoras de lógica
+- [ ] Propina de monto libre en facturación (actualmente solo porcentaje)
+- [ ] Tipos de pedido: implementar lógica para "Para llevar" y "Domicilio"
+- [ ] Búsqueda y filtros en módulo de inventario
 - [ ] Exportar reportes a PDF / Excel
+- [ ] **Factura: formato de impresión** — implementar dos formatos de salida: tirilla (POS, ancho angosto) y tamaño carta (documento formal), según el tipo de comprobante (`tipo_comprobante` ya existe en `pagar_pedido_api`: 'pos' vs 'fe')
 - [ ] Rediseño de flujo de Factura: hoy la Factura se crea recién al
   pagar (pagar_pedido_api), sin estado intermedio. Idea propuesta:
   emitir la Factura como 'Pendiente' cuando se pide la cuenta (antes
@@ -70,67 +69,51 @@ Actualiza este archivo al completar o agregar tareas.
 
 ---
 
-## ðŸ’… UX / Accesibilidad
+## 💅 UX / Accesibilidad
 
-- [ ] Toggle modo oscuro / claro global con persistencia en `localStorage`
-- [ ] BotÃ³n de accesibilidad: incrementar / decrementar tamaÃ±o de fuente
-- [ ] TipografÃ­a: cambiar `Inter` por alternativa serif premium (ej. `Playfair Display`)
-- [ ] Logo: diseÃ±o minimalista adaptado al sistema Dark Premium
+- [ ] **Bug: tema oscuro/claro no persiste al navegar a "Nuevo Pedido" o "Cocina"** — el toggle sí guarda en localStorage y funciona en el resto de pantallas, pero `crear_pedido.html` y `cocina.html` no están aplicando el tema guardado al cargar (posible causa: son de los templates más viejos, capturado antes de que el bloque de tema se estandarizara en el resto de pantallas)
+- [ ] **Bug responsive: `crear_pedido.html` en móvil** — un `div` ocupa demasiado espacio vertical y tapa el campo de observaciones y el botón "Enviar Orden" en pantallas de celular
+- [ ] Botón de accesibilidad: incrementar / decrementar tamaño de fuente (verificar que funcione igual en todas las pantallas)
+- [ ] Tipografía: cambiar `Inter` por alternativa serif premium (ej. `Playfair Display`)
+- [ ] Logo: diseño minimalista adaptado al sistema Dark Premium
 - [ ] Animaciones de entrada para tarjetas y modales (CSS transitions)
-- [ ] Notificaciones toast para confirmaciones y errores
-- [ ] ConfirmaciÃ³n antes de acciones destructivas (cancelar pedido, etc.)
+- [ ] Confirmación antes de acciones destructivas (cancelar pedido, etc.)
 - [ ] Soporte para teclado en el POS (atajos para operaciones frecuentes)
-- [ ] ValidaciÃ³n de formularios con feedback visual en tiempo real
+- [ ] Validación de formularios con feedback visual en tiempo real
 
 ---
 
-## ðŸ—„ï¸ Base de Datos
+## 🗄️ Base de Datos
 
 - [ ] Evaluar migrar a `managed=True` en Django para usar migraciones nativas
-- [ ] Procedimientos almacenados para cÃ¡lculos de reportes complejos
-- [ ] PolÃ­tica de backups automÃ¡ticos (script o tarea programada)
-- [ ] Script de seed para datos de prueba en ambiente de desarrollo
-- [ ] Documentar el ER diagram (entidad-relaciÃ³n) en `ARCHITECTURE.md`
+- [ ] Procedimientos almacenados para cálculos de reportes complejos
+- [ ] Política de backups automáticos (script o tarea programada) — considerar el backup automático que ofrece Aiven en planes pagos
+- [ ] Documentar el ER diagram (entidad-relación) en `ARCHITECTURE.md`
 
 ---
 
-## ðŸ§ª Calidad y Tests
+## 🚀 DevOps / Producción
 
-- [ ] Tests unitarios para modelos (`restaurante/tests.py` â€” actualmente vacÃ­o)
-- [ ] Tests unitarios para el decorador `@requiere_rol`
-- [ ] Tests de integraciÃ³n para `crear_pedido_view` (flujo completo)
-- [ ] Tests de API: `api_pedidos_cocina`, `completar_pedido_api`, `pagar_pedido_api`
-- [ ] Configurar cobertura de cÃ³digo con `coverage.py` (meta: â‰¥ 80 %)
-- [ ] Linting con `flake8` o `ruff` integrado al flujo de desarrollo
-- [ ] Formateo automÃ¡tico con `black`
+- [ ] Documentación de despliegue paso a paso para la EV02 (arquitectura Render + Aiven, variables de entorno, Secret File del certificado SSL)
 
 ---
 
-## ðŸš€ DevOps / ProducciÃ³n
-
-- [ ] `Makefile` o script `.bat` / `.sh` para arrancar el proyecto en un comando
-- [ ] `Dockerfile` para contenedorizar la app Django
-- [ ] `docker-compose.yml` con servicios `web` (Django) + `db` (MySQL)
-- [ ] Archivo `.env.example` con todas las claves necesarias (sin valores reales)
-- [ ] ConfiguraciÃ³n de servidor de producciÃ³n: Gunicorn + Nginx
-- [ ] `collectstatic` integrado al proceso de despliegue
-- [ ] Pipeline CI/CD bÃ¡sico (GitHub Actions o similar)
-- [ ] Monitoreo y alertas de errores en producciÃ³n (ej. Sentry)
-- [ ] DocumentaciÃ³n de despliegue paso a paso
-
----
-
-## ðŸ“– DocumentaciÃ³n
+## 📖 Documentación
 
 - [ ] Docstrings en todas las vistas (`views.py`)
 - [ ] Docstrings en todos los modelos (`models.py`)
-- [ ] `CONTRIBUTING.md` â€” guÃ­a para colaboradores
-- [ ] `CHANGELOG.md` â€” historial de cambios por versiÃ³n
+- [ ] `CONTRIBUTING.md` — guía para colaboradores
+- [ ] `CHANGELOG.md` — historial de cambios por versión
 - [ ] Diagrama ER en `ARCHITECTURE.md` (generado con dbdiagram.io o similar)
+- [ ] Diagrama de despliegue (arquitectura física: Render + Aiven + navegador cliente) para la entrega EV02
+
+---
 
 ## Deuda de UI / Pulir después (no bloqueante)
+
 - [ ] Copy del KPI dashboard: "críticos" vs "bajo"
-- [ ] Reconciliar conteo de alertas dashboard (2) vs inventario (13)
+- [ ] Reconciliar conteo de alertas dashboard vs inventario
 - [ ] Verificar paleta completa de badges de estado
 - [ ] Migrar cocina.html a design-system.css
 - [ ] Logo jaguar en sidebar
+- [ ] Inconsistencia de `class="active"` en el link activo del sidebar — `clientes.html` lo usa en su propio ítem, pero `inventario.html`/`personal.html` no siguen el mismo patrón para el suyo
