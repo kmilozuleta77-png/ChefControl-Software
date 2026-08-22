@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load l10n %}
 
 {% block title %}ChefControl — Configuración{% endblock %}
 
@@ -24,6 +25,24 @@
             padding: 9px 10px; outline: none; transition: border-color 0.2s; width: 100%;
         }
         .field-input:focus { border-color: var(--accent); }
+
+        /* ── Layout 2 columnas: menú de secciones + contenido ── */
+        .config-layout { display: grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: start; }
+        .config-menu {
+            background: var(--bg-card); border: 1px solid var(--border-light);
+            border-radius: var(--radius-btn); overflow: hidden;
+        }
+        .config-menu-item {
+            display: flex; align-items: center; gap: 10px; width: 100%;
+            padding: 12px 16px; border: none; border-left: 3px solid transparent;
+            background: transparent; color: var(--text-secondary);
+            font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500;
+            cursor: pointer; text-align: left; transition: all 0.2s;
+        }
+        .config-menu-item .material-icons { font-size: 18px; }
+        .config-menu-item:hover { background: var(--bg-elevated); color: var(--text-primary); }
+        .config-menu-item.active { background: var(--accent-dim); color: var(--accent); border-left-color: var(--accent); }
+        .config-hint { font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px; line-height: 1.4; }
     </style>
 {% endblock %}
 
@@ -150,65 +169,155 @@
     <!-- ── Cuerpo ── -->
     <div class="container">
 
-        <div class="card">
-            <div class="card-content">
-                <div class="section-header">
-                    <h6><i class="material-icons">store</i> Información del Restaurante</h6>
-                </div>
-
-                <form method="POST" action="{% url 'configuracion' %}">
-                    {% csrf_token %}
-                    <div class="form-grid">
-                        <div class="field-group span2">
-                            <label class="field-label" for="nombre">Nombre del Restaurante *</label>
-                            <input id="nombre" name="nombre" type="text" class="field-input"
-                                   value="{{ config.nombre|default:'' }}" required>
-                        </div>
-                        <div class="field-group">
-                            <label class="field-label" for="nit">NIT</label>
-                            <input id="nit" name="nit" type="text" class="field-input"
-                                   value="{{ config.nit|default:'' }}">
-                        </div>
-                        <div class="field-group">
-                            <label class="field-label" for="telefono">Teléfono</label>
-                            <input id="telefono" name="telefono" type="tel" class="field-input"
-                                   value="{{ config.telefono|default:'' }}">
-                        </div>
-                        <div class="field-group">
-                            <label class="field-label" for="email">Email</label>
-                            <input id="email" name="email" type="email" class="field-input"
-                                   value="{{ config.email|default:'' }}">
-                        </div>
-                        <div class="field-group span2">
-                            <label class="field-label" for="direccion">Dirección</label>
-                            <input id="direccion" name="direccion" type="text" class="field-input"
-                                   value="{{ config.direccion|default:'' }}">
-                        </div>
-                        <div class="field-group">
-                            <label class="field-label" for="hora_apertura">Hora de Apertura</label>
-                            <input id="hora_apertura" name="hora_apertura" type="time" class="field-input"
-                                   value="{{ config.hora_apertura|default:'' }}">
-                        </div>
-                        <div class="field-group">
-                            <label class="field-label" for="hora_cierre">Hora de Cierre</label>
-                            <input id="hora_cierre" name="hora_cierre" type="time" class="field-input"
-                                   value="{{ config.hora_cierre|default:'' }}">
-                        </div>
-                        <div class="field-group">
-                            <label class="field-label" for="impuesto_pct">Impuesto (INC %)</label>
-                            <input id="impuesto_pct" name="impuesto_pct" type="number" class="field-input"
-                                   step="0.01" min="0" max="100" value="{{ config.impuesto_pct|default:'' }}">
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-                        <button type="submit" class="btn-accion">
-                            <i class="material-icons">save</i> Guardar Cambios
-                        </button>
-                    </div>
-                </form>
+        <div class="config-layout">
+            <!-- Menú de secciones -->
+            <div class="config-menu">
+                {% if es_admin %}
+                <button type="button" class="config-menu-item active" data-tab="restaurante" onclick="showSection('restaurante')">
+                    <i class="material-icons">store</i> Restaurante
+                </button>
+                {% endif %}
+                <button type="button" class="config-menu-item {% if not es_admin %}active{% endif %}" data-tab="seguridad" onclick="showSection('seguridad')">
+                    <i class="material-icons">security</i> Seguridad
+                </button>
             </div>
-        </div>
+
+            <!-- Contenido de la sección activa -->
+            <div class="config-content">
+
+                {% if es_admin %}
+                <div class="card" id="tab-restaurante">
+                    <div class="card-content">
+                        <div class="section-header">
+                            <h6><i class="material-icons">store</i> Información del Restaurante</h6>
+                        </div>
+
+                        <form method="POST" action="{% url 'configuracion' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="seccion" value="restaurante">
+                            <div class="form-grid">
+                                <div class="field-group span2">
+                                    <label class="field-label" for="nombre">Nombre del Restaurante *</label>
+                                    <input id="nombre" name="nombre" type="text" class="field-input"
+                                           value="{{ config.nombre|default:'' }}" required>
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="nit">NIT</label>
+                                    <input id="nit" name="nit" type="text" class="field-input"
+                                           value="{{ config.nit|default:'' }}">
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="telefono">Teléfono</label>
+                                    <input id="telefono" name="telefono" type="tel" class="field-input"
+                                           value="{{ config.telefono|default:'' }}">
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="email">Email</label>
+                                    <input id="email" name="email" type="email" class="field-input"
+                                           value="{{ config.email|default:'' }}">
+                                </div>
+                                <div class="field-group span2">
+                                    <label class="field-label" for="direccion">Dirección</label>
+                                    <input id="direccion" name="direccion" type="text" class="field-input"
+                                           value="{{ config.direccion|default:'' }}">
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="hora_apertura">Hora de Apertura</label>
+                                    <input id="hora_apertura" name="hora_apertura" type="time" class="field-input"
+                                           value="{{ config.hora_apertura|default:'' }}">
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="hora_cierre">Hora de Cierre</label>
+                                    <input id="hora_cierre" name="hora_cierre" type="time" class="field-input"
+                                           value="{{ config.hora_cierre|default:'' }}">
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="impuesto_pct">Impuesto (INC %)</label>
+                                    <input id="impuesto_pct" name="impuesto_pct" type="number" class="field-input"
+                                           step="0.01" min="0" max="100" value="{{ config.impuesto_pct|default:''|unlocalize }}">
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                                <button type="submit" class="btn-accion">
+                                    <i class="material-icons">save</i> Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div id="tab-seguridad" style="display: {% if es_admin %}none{% else %}flex{% endif %}; flex-direction: column; gap: 20px;">
+
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header">
+                                <h6><i class="material-icons">lock</i> Cambiar Contraseña</h6>
+                            </div>
+
+                            <form method="POST" action="{% url 'configuracion' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="seccion" value="password">
+                                <div class="form-grid">
+                                    <div class="field-group span2">
+                                        <label class="field-label" for="old_password">Contraseña actual</label>
+                                        <input id="old_password" name="old_password" type="password" class="field-input" required>
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label" for="new_password1">Nueva contraseña</label>
+                                        <input id="new_password1" name="new_password1" type="password" class="field-input" required>
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label" for="new_password2">Confirmar contraseña</label>
+                                        <input id="new_password2" name="new_password2" type="password" class="field-input" required>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                                    <button type="submit" class="btn-accion">
+                                        <i class="material-icons">lock_reset</i> Cambiar Contraseña
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="section-header">
+                                <h6><i class="material-icons">timer</i> Cierre de Sesión Automático</h6>
+                            </div>
+
+                            <form method="POST" action="{% url 'configuracion' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="seccion" value="sesion_timeout">
+                                <div class="form-grid">
+                                    <div class="field-group span2">
+                                        <label class="field-label" for="sesion_timeout_min">
+                                            Minutos de inactividad antes de cerrar sesión (vacío = desactivado)
+                                        </label>
+                                        <input id="sesion_timeout_min" name="sesion_timeout_min" type="number" class="field-input"
+                                               min="1" max="480" value="{{ empleado.sesion_timeout_min|default:'' }}">
+                                    </div>
+                                </div>
+                                <p class="config-hint">
+                                    Esta preferencia es solo tuya — actívala si quieres, nadie más puede activarla ni desactivarla por ti.
+                                </p>
+
+                                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                                    <button type="submit" class="btn-accion">
+                                        <i class="material-icons">save</i> Guardar Preferencia
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div><!-- /tab-seguridad -->
+
+            </div><!-- /config-content -->
+        </div><!-- /config-layout -->
 
     </div><!-- /container -->
 </div><!-- /main-content -->
@@ -262,6 +371,25 @@
     }
     actualizarFechaHora();
     setInterval(actualizarFechaHora, 1000);
+
+    /* ── Toggle entre secciones de Configuración (Restaurante / Seguridad) ── */
+    function showSection(tab) {
+        const restaurante = document.getElementById('tab-restaurante');
+        const seguridad    = document.getElementById('tab-seguridad');
+        if (restaurante) restaurante.style.display = (tab === 'restaurante') ? 'block' : 'none';
+        if (seguridad)   seguridad.style.display   = (tab === 'seguridad') ? 'flex' : 'none';
+
+        document.querySelectorAll('.config-menu-item').forEach(btn => btn.classList.remove('active'));
+        const activo = document.querySelector('.config-menu-item[data-tab="' + tab + '"]');
+        if (activo) activo.classList.add('active');
+    }
+
+    /* ── Si venimos de un redirect con ?tab=seguridad (tras guardar
+       contraseña o timeout), forzamos ese tab en vez del default ── */
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'seguridad') {
+        showSection('seguridad');
+    }
 
     /* ── Toggle sidebar ── */
     const sidebar     = document.getElementById('sidebar');

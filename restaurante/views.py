@@ -7,7 +7,9 @@ from decimal import Decimal, InvalidOperation
 from django.http import JsonResponse
 from django.db import transaction, IntegrityError, connection
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.urls import reverse
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, F, Count, Q
@@ -1271,45 +1273,104 @@ def health_check_view(request):
 
 
 # -------------------------------------------------------------------
-# VISTA 19: CONFIGURACIÓN (sección Restaurante)
+# VISTA 19: CONFIGURACIÓN (secciones Restaurante y Seguridad)
 # -------------------------------------------------------------------
 @login_required(login_url='login')
-@requiere_rol('Administrador')
 def configuracion_view(request):
-    """Configuración general del restaurante. Tabla de una sola fila:
-    siempre se edita el registro existente, nunca se crea uno nuevo aquí."""
+    """Página de Configuración con secciones condicionadas por rol:
+    - Restaurante: solo Administrador puede verla y editarla.
+    - Seguridad: cualquier usuario autenticado, siempre sobre sí mismo.
+    El campo oculto 'seccion' en cada <form> indica qué bloque procesar.
+    """
+    empleado = Empleado.objects.filter(
+        email=request.user.email, estado='Activo'
+    ).select_related('id_cargo').first()
+
+    es_admin = request.user.is_superuser or (
+        empleado and empleado.id_cargo.nombre == 'Administrador'
+    )
+
     config = Configuracion.objects.filter(id_configuracion=1).first()
 
     if request.method == 'POST':
-        if not config:
-            messages.error(request, 'No se encontró la configuración base. Contacta al desarrollador.')
+        seccion = request.POST.get('seccion')
+
+        # ── Sección Restaurante: doble candado, no solo la UI oculta el form ──
+        if seccion == 'restaurante':
+            if not es_admin:
+                messages.error(request, 'No tienes permisos para modificar esta sección.')
+                return redirect('configuracion')
+
+            if not config:
+                messages.error(request, 'No se encontró la configuración base. Contacta al desarrollador.')
+                return redirect('configuracion')
+
+            nombre = request.POST.get('nombre', '').strip()
+            if not nombre:
+                messages.error(request, 'El nombre del restaurante es obligatorio.')
+                return redirect('configuracion')
+
+            try:
+                impuesto_pct = Decimal(request.POST.get('impuesto_pct', '8'))
+                if impuesto_pct < 0 or impuesto_pct > 100:
+                    raise InvalidOperation
+            except InvalidOperation:
+                messages.error(request, 'El % de impuesto debe ser un número entre 0 y 100.')
+                return redirect('configuracion')
+
+            config.nombre              = nombre
+            config.nit                 = request.POST.get('nit', '').strip() or None
+            config.telefono            = request.POST.get('telefono', '').strip() or None
+            config.email               = request.POST.get('email', '').strip() or None
+            config.direccion           = request.POST.get('direccion', '').strip() or None
+            config.hora_apertura       = request.POST.get('hora_apertura') or None
+            config.hora_cierre         = request.POST.get('hora_cierre') or None
+            config.impuesto_pct        = impuesto_pct
+            config.fecha_actualizacion = timezone.now()
+            config.save()
+
+            messages.success(request, 'Configuración actualizada correctamente.')
             return redirect('configuracion')
 
-        nombre = request.POST.get('nombre', '').strip()
-        if not nombre:
-            messages.error(request, 'El nombre del restaurante es obligatorio.')
-            return redirect('configuracion')
+        # ── Sección Seguridad: cambio de contraseña, disponible para todos ──
+        elif seccion == 'password':
+            form = PasswordChangeForm(user=request.user, data=request.POST)
+            if form.is_valid():
+                user = form.save()
+                # Evita que Django cierre la sesión al cambiar el hash de la contraseña
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Contraseña actualizada correctamente.')
+            else:
+                for lista_errores in form.errors.values():
+                    for error in lista_errores:
+                        messages.error(request, error)
+            return redirect(reverse('configuracion') + '?tab=seguridad')
 
-        try:
-            impuesto_pct = Decimal(request.POST.get('impuesto_pct', '8'))
-            if impuesto_pct < 0 or impuesto_pct > 100:
-                raise InvalidOperation
-        except InvalidOperation:
-            messages.error(request, 'El % de impuesto debe ser un número entre 0 y 100.')
-            return redirect('configuracion')
+        # ── Sección Seguridad: timeout de sesión, opcional y por usuario ──
+        elif seccion == 'sesion_timeout':
+            if not empleado:
+                messages.error(request, 'No se encontró tu registro de empleado.')
+                return redirect(reverse('configuracion') + '?tab=seguridad')
 
-        config.nombre              = nombre
-        config.nit                 = request.POST.get('nit', '').strip() or None
-        config.telefono            = request.POST.get('telefono', '').strip() or None
-        config.email               = request.POST.get('email', '').strip() or None
-        config.direccion           = request.POST.get('direccion', '').strip() or None
-        config.hora_apertura       = request.POST.get('hora_apertura') or None
-        config.hora_cierre         = request.POST.get('hora_cierre') or None
-        config.impuesto_pct        = impuesto_pct
-        config.fecha_actualizacion = timezone.now()
-        config.save()
+            timeout_raw = request.POST.get('sesion_timeout_min', '').strip()
+            if timeout_raw:
+                try:
+                    valor = int(timeout_raw)
+                    if valor < 1 or valor > 480:
+                        raise ValueError
+                except ValueError:
+                    messages.error(request, 'El tiempo debe ser un número entre 1 y 480 minutos.')
+                    return redirect(reverse('configuracion') + '?tab=seguridad')
+                empleado.sesion_timeout_min = valor
+            else:
+                empleado.sesion_timeout_min = None  # campo vacío = desactivar
 
-        messages.success(request, 'Configuración actualizada correctamente.')
-        return redirect('configuracion')
+            empleado.save()
+            messages.success(request, 'Preferencia de sesión actualizada.')
+            return redirect(reverse('configuracion') + '?tab=seguridad')
 
-    return render(request, 'configuracion.html', {'config': config})
+    return render(request, 'configuracion.html', {
+        'config': config,
+        'es_admin': es_admin,
+        'empleado': empleado,
+    })

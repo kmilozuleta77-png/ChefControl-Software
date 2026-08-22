@@ -286,3 +286,225 @@ Traceback (most recent call last):
   File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\core\paginator.py", line 148, in _validate_number
     raise EmptyPage(self.error_messages["min_page"])
 django.core.paginator.EmptyPage: Este número de página es menor que 1
+[ERROR] 2026-08-22 18:33:24,861 log — Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 78, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1054, "Unknown column 'empleado.sesion_timeout_min' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\restaurante\middleware.py", line 21, in __call__
+    ).only('sesion_timeout_min').first()
+                                 ~~~~~^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 1145, in first
+    for obj in queryset[:1]:
+               ~~~~~~~~^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 390, in __iter__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 78, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.OperationalError: (1054, "Unknown column 'empleado.sesion_timeout_min' in 'field list'")
+[ERROR] 2026-08-22 18:33:34,050 log — Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 78, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1054, "Unknown column 'empleado.sesion_timeout_min' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\restaurante\middleware.py", line 21, in __call__
+    ).only('sesion_timeout_min').first()
+                                 ~~~~~^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 1145, in first
+    for obj in queryset[:1]:
+               ~~~~~~~~^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 390, in __iter__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 78, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.OperationalError: (1054, "Unknown column 'empleado.sesion_timeout_min' in 'field list'")
+[ERROR] 2026-08-22 18:33:43,255 log — Internal Server Error: /
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 78, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1054, "Unknown column 'empleado.sesion_timeout_min' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\restaurante\middleware.py", line 21, in __call__
+    ).only('sesion_timeout_min').first()
+                                 ~~~~~^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 1145, in first
+    for obj in queryset[:1]:
+               ~~~~~~~~^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 390, in __iter__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 78, in execute
+    return self.cursor.execute(query, args)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Juanmezu\Documents\ChefControl Software\venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.OperationalError: (1054, "Unknown column 'empleado.sesion_timeout_min' in 'field list'")

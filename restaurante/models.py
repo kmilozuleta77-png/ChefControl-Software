@@ -201,6 +201,10 @@ class Empleado(models.Model):
     fecha_ingreso = models.DateField()
     estado = models.CharField(max_length=8, blank=True, null=True)
     fecha_creacion = models.DateTimeField(blank=True, null=True)
+    # NULL = cierre de sesión automático desactivado (default). Un valor
+    # numérico = activo, minutos de inactividad antes de cerrar sesión.
+    # Cada usuario decide su propia preferencia, nadie más la controla.
+    sesion_timeout_min = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
