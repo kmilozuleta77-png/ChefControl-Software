@@ -66,5 +66,7 @@ urlpatterns = [
 
     path('health/', views.health_check_view, name='health_check'), # Ping público para monitoreo externo (evita que Aiven apague el servicio)
 
+    path('configuracion/', views.configuracion_view, name='configuracion'), # Ruta para la configuración general del restaurante
+
     path('api/', include(router.urls)),
 ]    

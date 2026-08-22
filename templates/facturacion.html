@@ -729,7 +729,7 @@
                     <!-- Resumen de montos -->
                     <div class="resumen">
                         <div class="resumen-row">
-                            <span>Subtotal (INC 8%)</span>
+                            <span>Subtotal (INC {{ impuesto_pct|floatformat:"0g" }}%)</span>
                             <span>${{ pedido.total|floatformat:"0g" }}</span>
                         </div>
                         <div class="resumen-row">

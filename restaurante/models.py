@@ -315,3 +315,26 @@ class VProductosInventario(models.Model):
     class Meta:
         managed = False
         db_table = 'v_productos_inventario'
+
+
+class Configuracion(models.Model):
+    """Tabla de una sola fila con los datos generales del restaurante.
+    Siempre se opera sobre el único registro existente (id_configuracion=1),
+    nunca se crea una fila nueva desde la app."""
+    id_configuracion    = models.AutoField(primary_key=True)
+    nombre               = models.CharField(max_length=100)
+    nit                  = models.CharField(max_length=20, blank=True, null=True)
+    telefono             = models.CharField(max_length=20, blank=True, null=True)
+    email                = models.CharField(max_length=100, blank=True, null=True)
+    direccion            = models.CharField(max_length=200, blank=True, null=True)
+    hora_apertura        = models.TimeField(blank=True, null=True)
+    hora_cierre          = models.TimeField(blank=True, null=True)
+    impuesto_pct         = models.DecimalField(max_digits=5, decimal_places=2, default=8.00)
+    fecha_actualizacion  = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'configuracion'
+
+    def __str__(self):
+        return self.nombre

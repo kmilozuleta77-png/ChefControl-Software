@@ -14,7 +14,7 @@ from django.db.models import Sum, F, Count, Q
 from django.core.paginator import Paginator
 from functools import wraps
 
-from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, Cliente, Cargo, Factura, VProductosInventario
+from .models import Empleado, Pedido, Producto, Categoria, Detallepedido, Mesa, Cliente, Cargo, Factura, VProductosInventario, Configuracion
 
 logger = logging.getLogger('restaurante')
 
@@ -471,7 +471,12 @@ def facturacion_view(request):
         .select_related('id_mesa', 'id_empleado')
         .order_by('fecha_pedido')
     )
-    return render(request, 'facturacion.html', {'pedidos': pedidos_listos})
+    config = Configuracion.objects.filter(id_configuracion=1).first()
+    impuesto_pct = config.impuesto_pct if config else Decimal('8.00')
+    return render(request, 'facturacion.html', {
+        'pedidos': pedidos_listos,
+        'impuesto_pct': impuesto_pct,
+    })
 
 
 # -----------------------------------------------------------------------
@@ -505,8 +510,15 @@ def pagar_pedido_api(request, id_pedido):
                 status=400
             )
 
-        # pedido.total ya incluye el INC 8% (Impuesto Nacional al Consumo para restaurantes)
-        subtotal = (pedido.total / Decimal('1.08')).quantize(Decimal('0.01'))
+        # pedido.total ya incluye el impuesto configurado en Configuración (editable por el admin)
+        config_actual = Configuracion.objects.filter(id_configuracion=1).first()
+        if config_actual and config_actual.impuesto_pct is not None:
+            impuesto_pct = config_actual.impuesto_pct
+        else:
+            logger.warning("No se encontró fila de Configuracion; usando impuesto de respaldo 8%%")
+            impuesto_pct = Decimal('8.00')
+        divisor = Decimal('1') + (impuesto_pct / Decimal('100'))
+        subtotal = (pedido.total / divisor).quantize(Decimal('0.01'))
         impuesto = (pedido.total - subtotal).quantize(Decimal('0.01'))
         # total = pedido.total → subtotal + impuesto cuadran exacto por construcción
 
@@ -1256,3 +1268,48 @@ def health_check_view(request):
     except Exception:
         logger.exception("Health check falló: no se pudo conectar a la base de datos")
         return JsonResponse({'status': 'error'}, status=503)
+
+
+# -------------------------------------------------------------------
+# VISTA 19: CONFIGURACIÓN (sección Restaurante)
+# -------------------------------------------------------------------
+@login_required(login_url='login')
+@requiere_rol('Administrador')
+def configuracion_view(request):
+    """Configuración general del restaurante. Tabla de una sola fila:
+    siempre se edita el registro existente, nunca se crea uno nuevo aquí."""
+    config = Configuracion.objects.filter(id_configuracion=1).first()
+
+    if request.method == 'POST':
+        if not config:
+            messages.error(request, 'No se encontró la configuración base. Contacta al desarrollador.')
+            return redirect('configuracion')
+
+        nombre = request.POST.get('nombre', '').strip()
+        if not nombre:
+            messages.error(request, 'El nombre del restaurante es obligatorio.')
+            return redirect('configuracion')
+
+        try:
+            impuesto_pct = Decimal(request.POST.get('impuesto_pct', '8'))
+            if impuesto_pct < 0 or impuesto_pct > 100:
+                raise InvalidOperation
+        except InvalidOperation:
+            messages.error(request, 'El % de impuesto debe ser un número entre 0 y 100.')
+            return redirect('configuracion')
+
+        config.nombre              = nombre
+        config.nit                 = request.POST.get('nit', '').strip() or None
+        config.telefono            = request.POST.get('telefono', '').strip() or None
+        config.email               = request.POST.get('email', '').strip() or None
+        config.direccion           = request.POST.get('direccion', '').strip() or None
+        config.hora_apertura       = request.POST.get('hora_apertura') or None
+        config.hora_cierre         = request.POST.get('hora_cierre') or None
+        config.impuesto_pct        = impuesto_pct
+        config.fecha_actualizacion = timezone.now()
+        config.save()
+
+        messages.success(request, 'Configuración actualizada correctamente.')
+        return redirect('configuracion')
+
+    return render(request, 'configuracion.html', {'config': config})
