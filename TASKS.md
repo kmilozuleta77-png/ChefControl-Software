@@ -35,7 +35,6 @@ Actualiza este archivo al completar o agregar tareas.
 ### CRUD de módulos administrativos (pendiente)
 - [ ] Configuración — sección Mi Cuenta
 - [ ] Configuración — sección Notificaciones
-- [ ] Configuración — sección Seguridad
 - [ ] Configuración — sección Sistema
 - [ ] `v_ventas_empleado` no tiene columna de fecha — no se usa en Reportes (que sí filtra por período); candidata a rediseño futuro si se quiere usar ahí
 
@@ -50,6 +49,7 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Deuda técnica**: el bloque de sidebar completo se repite en 6+ templates — evaluar `{% include 'partials/sidebar.html' %}` para no tener que corregir un link roto en 6 archivos a la vez
 - [ ] **Bug**: `dashboard_view` filtra `Empleado.objects.filter(estado='Descanso')` pero el ENUM real en MySQL es `('Activo','Inactivo')` — "Descanso" no existe, el conteo `empleados_descanso` siempre da 0
 - [ ] **Deuda técnica**: sidebar "Pedidos" quedó sin badge de conteo real (antes mostraba un `4` hardcodeado). Un badge de "pedidos pendientes" real requiere un context processor que calcule el conteo en cada request
+- [ ] Auditar otros `<input type='number'>` que rendericen Decimal/float directo desde el modelo (ej. precio en inventario) — con `LANGUAGE_CODE='es-co'`, Django localiza el separador decimal a coma y el navegador rechaza el value silenciosamente, dejando el campo vacío. Ya se corrigió en `configuracion.html` (`impuesto_pct`) con el filtro `|unlocalize`; revisar si el mismo patrón aplica en otras pantallas con inputs numéricos precargados desde BD.
 
 ### Mejoras de lógica
 - [ ] Propina de monto libre en facturación (actualmente solo porcentaje)
