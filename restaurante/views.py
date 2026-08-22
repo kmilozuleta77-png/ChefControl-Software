@@ -193,16 +193,33 @@ def inventario_view(request):
 
         if nombre and id_categoria and stock and stock_min and precio:
             unidad = request.POST.get('unidad', '')
-            Producto.objects.create(
-                nombre       = nombre,
-                id_categoria = Categoria.objects.get(id_categoria=id_categoria),
-                stock        = stock,
-                stock_minimo = stock_min,
-                precio       = precio,
-                descripcion  = unidad,
-                estado       = 'Disponible'
-            )
-            messages.success(request, f'Producto "{nombre}" agregado correctamente.')
+            categoria_obj = Categoria.objects.get(id_categoria=id_categoria)
+            existente = Producto.objects.filter(nombre=nombre).first()
+
+            if existente and existente.estado == 'No Disponible':
+                # Reactivar: el nombre tiene UNIQUE en BD, así que reutilizamos
+                # el registro en vez de crear uno nuevo (evita duplicados).
+                existente.id_categoria = categoria_obj
+                existente.stock        = stock
+                existente.stock_minimo = stock_min
+                existente.precio       = precio
+                existente.descripcion  = unidad
+                existente.estado       = 'Disponible'
+                existente.save()
+                messages.success(request, f'Producto "{nombre}" reactivado correctamente.')
+            elif existente:
+                messages.error(request, f'Ya existe un producto activo con el nombre "{nombre}".')
+            else:
+                Producto.objects.create(
+                    nombre       = nombre,
+                    id_categoria = categoria_obj,
+                    stock        = stock,
+                    stock_minimo = stock_min,
+                    precio       = precio,
+                    descripcion  = unidad,
+                    estado       = 'Disponible'
+                )
+                messages.success(request, f'Producto "{nombre}" agregado correctamente.')
         else:
             messages.error(request, 'Por favor completa todos los campos.')
 
@@ -704,12 +721,28 @@ def clientes_view(request):
             messages.error(request, 'Nombres y apellidos son obligatorios.')
             return redirect('clientes')
 
-        if cedula and Cliente.objects.filter(cedula=cedula).exists():
-            messages.error(request, f'Ya existe un cliente con la cédula "{cedula}".')
+        existente = Cliente.objects.filter(cedula=cedula).first() if cedula else None
+
+        if existente and existente.estado == 'Inactivo':
+            if email and Cliente.objects.filter(email=email).exclude(estado='Inactivo').exclude(id_cliente=existente.id_cliente).exists():
+                messages.error(request, f'Ya existe un cliente activo con el email "{email}".')
+                return redirect('clientes')
+
+            existente.nombres        = nombres
+            existente.apellidos      = apellidos
+            existente.telefono       = telefono or None
+            existente.email          = email or None
+            existente.direccion      = direccion or None
+            existente.estado         = 'Activo'
+            existente.save()
+            messages.success(request, f'Cliente "{nombres} {apellidos}" reactivado correctamente.')
+            return redirect('clientes')
+        elif existente:
+            messages.error(request, f'Ya existe un cliente activo con la cédula "{cedula}".')
             return redirect('clientes')
 
-        if email and Cliente.objects.filter(email=email).exists():
-            messages.error(request, f'Ya existe un cliente con el email "{email}".')
+        if email and Cliente.objects.filter(email=email).exclude(estado='Inactivo').exists():
+            messages.error(request, f'Ya existe un cliente activo con el email "{email}".')
             return redirect('clientes')
 
         Cliente.objects.create(
@@ -855,12 +888,30 @@ def personal_view(request):
             messages.error(request, 'El cargo seleccionado no existe.')
             return redirect('personal')
 
-        if Empleado.objects.filter(cedula=cedula).exists():
-            messages.error(request, f'Ya existe un empleado con la cédula "{cedula}".')
+        existente = Empleado.objects.filter(cedula=cedula).first()
+
+        if existente and existente.estado == 'Inactivo':
+            if email and Empleado.objects.filter(email=email).exclude(estado='Inactivo').exclude(id_empleado=existente.id_empleado).exists():
+                messages.error(request, f'Ya existe un empleado activo con el email "{email}".')
+                return redirect('personal')
+
+            existente.id_cargo      = cargo
+            existente.nombres       = nombres
+            existente.apellidos     = apellidos
+            existente.telefono      = telefono or None
+            existente.email         = email or None
+            existente.direccion     = direccion or None
+            existente.fecha_ingreso = fecha_ingreso
+            existente.estado        = 'Activo'
+            existente.save()
+            messages.success(request, f'Empleado "{nombres} {apellidos}" reactivado correctamente.')
+            return redirect('personal')
+        elif existente:
+            messages.error(request, f'Ya existe un empleado activo con la cédula "{cedula}".')
             return redirect('personal')
 
-        if email and Empleado.objects.filter(email=email).exists():
-            messages.error(request, f'Ya existe un empleado con el email "{email}".')
+        if email and Empleado.objects.filter(email=email).exclude(estado='Inactivo').exists():
+            messages.error(request, f'Ya existe un empleado activo con el email "{email}".')
             return redirect('personal')
 
         Empleado.objects.create(
