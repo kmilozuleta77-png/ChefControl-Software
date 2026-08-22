@@ -33,14 +33,13 @@ Actualiza este archivo al completar o agregar tareas.
 ## 🏗️ Backend / Lógica de Negocio
 
 ### CRUD de módulos administrativos (pendiente)
-- [ ] **Configuración**: ajustes globales del sistema (nombre del local, IVA, etc.)
+- [ ] Configuración — sección Mi Cuenta
+- [ ] Configuración — sección Notificaciones
+- [ ] Configuración — sección Seguridad
+- [ ] Configuración — sección Sistema
 - [ ] `v_ventas_empleado` no tiene columna de fecha — no se usa en Reportes (que sí filtra por período); candidata a rediseño futuro si se quiere usar ahí
 
 ### Bugs conocidos
-- [ ] **Bug de arquitectura — duplicados al recrear registros desactivados**: al eliminar (soft-delete) un Producto, Cliente o Empleado y luego volver a crear uno con el mismo nombre/cédula/email:
-  - **Producto**: `producto.nombre` no tiene `UNIQUE` en la BD — se duplica literalmente sin ningún aviso (caso detectado: "Empanada" creada múltiples veces).
-  - **Cliente/Empleado/Categoría/Cargo**: sí tienen `UNIQUE` (cédula/email/nombre), pero la validación de "ya existe" en `crear_*_view` no filtra por estado — bloquea la recreación con error, sin ofrecer reactivar el registro inactivo existente.
-  - Fix correcto: patrón "buscar y reactivar" — antes de crear, buscar si ya existe el registro (activo o inactivo) por su identificador único; si existe inactivo, reactivarlo (poniendo estado='Activo' y actualizando campos) en vez de crear uno nuevo. Aplica a las 5 vistas de creación (producto, cliente, empleado, categoría, cargo).
 - [ ] Evaluar mover `<script>` de index.html al final de `</body>` o usar `defer` (evita el patrón de orden para todo el archivo, no urgente)
 - [ ] **Deuda técnica menor**: cambiar `fecha_pedido` a `auto_now_add=True` en modelo `Pedido` para garantizar que nunca quede NULL sin depender de la vista
 - [ ] **Deuda técnica**: ampliar `Factura.metodo_pago` a `max_length=30` con migración — coordinar con Sofía; hoy `'Tarjeta Crédito'` ocupa 14 chars, cabe justo; riesgo si se agregan métodos más largos
