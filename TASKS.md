@@ -50,6 +50,16 @@ Actualiza este archivo al completar o agregar tareas.
 - [ ] **Bug**: `dashboard_view` filtra `Empleado.objects.filter(estado='Descanso')` pero el ENUM real en MySQL es `('Activo','Inactivo')` — "Descanso" no existe, el conteo `empleados_descanso` siempre da 0
 - [ ] **Deuda técnica**: sidebar "Pedidos" quedó sin badge de conteo real (antes mostraba un `4` hardcodeado). Un badge de "pedidos pendientes" real requiere un context processor que calcule el conteo en cada request
 - [ ] Auditar otros `<input type='number'>` que rendericen Decimal/float directo desde el modelo (ej. precio en inventario) — con `LANGUAGE_CODE='es-co'`, Django localiza el separador decimal a coma y el navegador rechaza el value silenciosamente, dejando el campo vacío. Ya se corrigió en `configuracion.html` (`impuesto_pct`) con el filtro `|unlocalize`; revisar si el mismo patrón aplica en otras pantallas con inputs numéricos precargados desde BD.
+- [ ] Reactivar un empleado inactivo (patrón buscar-y-reactivar en
+  personal_view) no reactiva el User de Django asociado si fue
+  desactivado al eliminarlo — el empleado queda "Activo" pero no puede
+  iniciar sesión hasta que alguien reactive el User manualmente en
+  Django Admin. Corregir en la misma rama de reactivación: si existe
+  User con ese email y estado pasa a Activo, poner is_active=True.
+- [ ] El campo email en el modal "Nuevo Empleado" no se marca visualmente
+  como obligatorio cuando se marca "Crear acceso al sistema" — la
+  validación real ya existe en el backend, falta solo el reflejo en UI
+  (asterisco/required dinámico vía JS).
 
 ### Mejoras de lógica
 - [ ] Propina de monto libre en facturación (actualmente solo porcentaje)

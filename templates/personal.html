@@ -431,6 +431,26 @@
                         <label class="field-label" for="direccion">Dirección</label>
                         <input id="direccion" name="direccion" type="text" class="field-input">
                     </div>
+                    <div class="field-group span2" style="margin-top: 4px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color: var(--text-primary); cursor:pointer;">
+                            <input type="checkbox" id="crear_acceso" name="crear_acceso">
+                            Crear acceso al sistema (usuario y contraseña)
+                        </label>
+                    </div>
+                </div>
+                <div id="campos-acceso" class="form-grid" style="display:none;">
+                    <div class="field-group span2">
+                        <label class="field-label" for="username">Usuario</label>
+                        <input id="username" name="username" type="text" class="field-input" placeholder="ej: @NombreApellido">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="password1">Contraseña</label>
+                        <input id="password1" name="password1" type="password" class="field-input">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="password2">Confirmar contraseña</label>
+                        <input id="password2" name="password2" type="password" class="field-input">
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -734,6 +754,9 @@
     document.getElementById('btn-nuevo-empleado').addEventListener('click', () => abrirModal(modalNuevo));
     document.getElementById('modal-cerrar-nuevo').addEventListener('click', () => cerrarModal(modalNuevo));
     document.getElementById('btn-cancelar-nuevo').addEventListener('click', () => cerrarModal(modalNuevo));
+    document.getElementById('crear_acceso').addEventListener('change', function () {
+        document.getElementById('campos-acceso').style.display = this.checked ? 'grid' : 'none';
+    });
 
     /* Editar empleado — precarga el form con los data-* del botón de la fila */
     const modalEditar = document.getElementById('modal-editar-empleado');

@@ -10,8 +10,11 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Sum, F, Count, Q
 from django.core.paginator import Paginator
 from functools import wraps
@@ -878,6 +881,7 @@ def eliminar_cliente_view(request, id_cliente):
 # VISTA 13: PERSONAL / EMPLEADOS (listar + crear)
 # -------------------------------------------------------------------
 @login_required(login_url='login')
+@requiere_rol('Administrador')
 def personal_view(request):
 
     # GUARDAR NUEVO EMPLEADO
@@ -928,19 +932,62 @@ def personal_view(request):
             messages.error(request, f'Ya existe un empleado activo con el email "{email}".')
             return redirect('personal')
 
-        Empleado.objects.create(
-            id_cargo       = cargo,
-            nombres        = nombres,
-            apellidos      = apellidos,
-            cedula         = cedula,
-            telefono       = telefono or None,
-            email          = email or None,
-            direccion      = direccion or None,
-            fecha_ingreso  = fecha_ingreso,
-            estado         = 'Activo',
-            fecha_creacion = timezone.now(),
-        )
-        messages.success(request, f'Empleado "{nombres} {apellidos}" registrado correctamente.')
+        # Acceso al sistema (opcional): crea el User de Django junto con el
+        # Empleado para que el administrador no tenga que salir a Django Admin.
+        crear_acceso = request.POST.get('crear_acceso') == 'on'
+        username      = request.POST.get('username', '').strip()
+        password1     = request.POST.get('password1', '')
+        password2     = request.POST.get('password2', '')
+
+        if crear_acceso:
+            if not email:
+                messages.error(request, 'El email es obligatorio para crear acceso al sistema: es lo que vincula el usuario con el empleado en todo el sistema.')
+                return redirect('personal')
+            if not username:
+                messages.error(request, 'El nombre de usuario es obligatorio para crear acceso al sistema.')
+                return redirect('personal')
+            if User.objects.filter(username=username).exists():
+                messages.error(request, f'Ya existe un usuario con el nombre "{username}".')
+                return redirect('personal')
+            if password1 != password2:
+                messages.error(request, 'Las contraseñas no coinciden.')
+                return redirect('personal')
+            try:
+                validate_password(password1)
+            except DjangoValidationError as e:
+                for error in e.messages:
+                    messages.error(request, error)
+                return redirect('personal')
+
+        # Empleado y User se crean en la misma transacción: si falla la
+        # creación del User, no debe quedar un Empleado huérfano sin acceso.
+        with transaction.atomic():
+            Empleado.objects.create(
+                id_cargo       = cargo,
+                nombres        = nombres,
+                apellidos      = apellidos,
+                cedula         = cedula,
+                telefono       = telefono or None,
+                email          = email or None,
+                direccion      = direccion or None,
+                fecha_ingreso  = fecha_ingreso,
+                estado         = 'Activo',
+                fecha_creacion = timezone.now(),
+            )
+
+            if crear_acceso:
+                User.objects.create_user(
+                    username=username,
+                    email=email or '',
+                    password=password1,
+                    first_name=nombres,
+                    last_name=apellidos,
+                )
+
+        if crear_acceso:
+            messages.success(request, f'Empleado "{nombres} {apellidos}" registrado y con acceso al sistema creado.')
+        else:
+            messages.success(request, f'Empleado "{nombres} {apellidos}" registrado correctamente.')
         return redirect('personal')
 
     # TRAER DATOS (se excluyen los empleados desactivados vía soft-delete)
@@ -980,6 +1027,7 @@ def personal_view(request):
 # VISTA 14: EDITAR EMPLEADO
 # -------------------------------------------------------------------
 @login_required(login_url='login')
+@requiere_rol('Administrador')
 def editar_empleado_view(request, id_empleado):
     if request.method == 'POST':
         try:
@@ -1034,6 +1082,7 @@ def editar_empleado_view(request, id_empleado):
 # VISTA 15: ELIMINAR (DESACTIVAR) EMPLEADO
 # -------------------------------------------------------------------
 @login_required(login_url='login')
+@requiere_rol('Administrador')
 def eliminar_empleado_view(request, id_empleado):
     """Soft-delete: marca el empleado como 'Inactivo' en vez de borrarlo físicamente.
 
@@ -1048,6 +1097,10 @@ def eliminar_empleado_view(request, id_empleado):
             empleado = Empleado.objects.get(id_empleado=id_empleado)
             empleado.estado = 'Inactivo'
             empleado.save()
+
+            if empleado.email:
+                User.objects.filter(email=empleado.email).update(is_active=False)
+
             messages.success(
                 request,
                 f'Empleado "{empleado.nombres} {empleado.apellidos}" eliminado correctamente.'
@@ -1064,6 +1117,7 @@ def eliminar_empleado_view(request, id_empleado):
 # patrón que las categorías de inventario.html.
 # -------------------------------------------------------------------
 @login_required(login_url='login')
+@requiere_rol('Administrador')
 def crear_cargo_view(request):
     """Crea un cargo nuevo. 'nombre' es UNIQUE en la BD, así que se
     valida el duplicado antes de insertar para dar un mensaje claro en
@@ -1094,6 +1148,7 @@ def crear_cargo_view(request):
 # VISTA 15c: EDITAR CARGO
 # -------------------------------------------------------------------
 @login_required(login_url='login')
+@requiere_rol('Administrador')
 def editar_cargo_view(request, id_cargo):
     if request.method == 'POST':
         try:
@@ -1126,6 +1181,7 @@ def editar_cargo_view(request, id_cargo):
 # VISTA 15d: ELIMINAR CARGO
 # -------------------------------------------------------------------
 @login_required(login_url='login')
+@requiere_rol('Administrador')
 def eliminar_cargo_view(request, id_cargo):
     """Borrado físico: cargo no tiene columna de estado para soft-delete.
     empleado.id_cargo es ON DELETE RESTRICT, así que MySQL rechaza el
