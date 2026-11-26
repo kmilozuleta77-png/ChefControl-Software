@@ -75,6 +75,14 @@ Actualiza este archivo al completar o agregar tareas.
   Requiere separar creación de Factura del momento de pago, y decidir
   si aplican todos esos estados a un restaurante o es más propio de
   facturación a crédito. Rediseño de flujo, no ajuste puntual.
+- [ ] **Productos sin cocina** (ej. cerveza, gaseosa): el mesero solo los
+  lleva y los cobra, no deben pasar por el KDS.
+  - Diseño propuesto: campo `requiere_cocina` (BOOLEAN, DEFAULT 1) en la tabla `producto`.
+  - El KDS solo muestra ítems con `requiere_cocina = 1`.
+  - Definir el estado de un pedido que solo tiene ítems sin cocina.
+  - Esquema `managed=False`: requiere `ALTER TABLE` manual en todas las
+    bases (local y TiDB), más modelo, formulario de inventario, vistas y reportes.
+  - Se hace en una rama aparte, después de terminar la prueba de TiDB.
 
 ---
 
